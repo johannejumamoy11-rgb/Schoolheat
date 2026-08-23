@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'schoolheat-v2';  // BUMPED from v1
+const CACHE_VERSION = 'schoolheat-v3';  // BUMPED from v1
 const CACHE_NAME = `${CACHE_VERSION}`;
 
 const APP_SHELL = [
