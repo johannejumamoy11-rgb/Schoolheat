@@ -434,15 +434,31 @@ function getChartTooltipConfig(unit = '°C') {
 }
 
 function getChartZoomConfig() {
+  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   return {
-    pan: { enabled: true, mode: 'xy', modifierKey: null },
+    pan: { 
+      enabled: true, 
+      mode: 'xy', 
+      modifierKey: null,
+      threshold: 10
+    },
     zoom: {
-      wheel: { enabled: true },
+      wheel: { enabled: !isTouch, speed: 0.3 },
       pinch: { enabled: true },
       drag: { enabled: false },
-      mode: 'xy'
+      mode: 'xy',
+      onZoomComplete: function({chart}) {
+        // Prevent over-zooming
+        const yScale = chart.scales.y;
+        if (yScale.max - yScale.min < 5) {
+          chart.resetZoom();
+        }
+      }
     },
-    limits: { x: { minRange: 2 }, y: { minRange: 2 } }
+    limits: { 
+      x: { minRange: 2 }, 
+      y: { minRange: 5, max: 55, min: 15 } 
+    }
   };
 }
 
