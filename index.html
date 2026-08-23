@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#d9534f">
+  <meta name="description" content="Heat Index Monitoring Tool for School Safety">
+  <title>SchoolHeat</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <img src="assets/school-logo.png" alt="Mahaplag National High School logo" class="school-logo">
+      <div class="header-text">
+        <h1>🌡️ SchoolHeat</h1>
+        <p>Heat Index Monitoring System</p>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="monitor">Monitor</button>
+      <button class="tab-btn" data-tab="history">History</button>
+      <button class="tab-btn" data-tab="prediction">🔮 Prediction</button>
+      <button class="tab-btn" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="map">🗺️ Map</button>
+      <button class="tab-btn" data-tab="settings">Settings</button>
+    </nav>
+
+    <!-- Monitor Tab -->
+    <div id="monitor" class="tab-content active">
+      <div class="location-selector">
+        <label for="location-select">Select Location:</label>
+        <select id="location-select"></select>
+      </div>
+
+      <div id="input-section">
+        <label for="temperature">Temperature (°C):</label>
+        <input type="number" id="temperature" placeholder="e.g. 32" step="0.1">
+
+        <label for="humidity">Relative Humidity (%):</label>
+        <input type="number" id="humidity" placeholder="e.g. 65" step="0.1">
+
+        <button id="calculate-btn">Calculate Heat Index</button>
+        <button id="auto-monitor-btn" class="secondary-btn">Start Auto-Monitor (Hourly)</button>
+        <p id="auto-monitor-status"></p>
+      </div>
+
+      <div id="result-section">
+        <div id="heat-gauge-wrapper">
+          <svg id="heat-gauge" viewBox="0 0 220 130" width="220" height="130">
+            <path d="M 15 115 A 95 95 0 0 1 47 33" stroke="#28a745" stroke-width="16" fill="none" stroke-linecap="round"/>
+            <path d="M 47 33 A 95 95 0 0 1 76 15" stroke="#ffc107" stroke-width="16" fill="none" stroke-linecap="round"/>
+            <path d="M 76 15 A 95 95 0 0 1 121 12" stroke="#fd7e14" stroke-width="16" fill="none" stroke-linecap="round"/>
+            <path d="M 121 12 A 95 95 0 0 1 163 30" stroke="#e74c3c" stroke-width="16" fill="none" stroke-linecap="round"/>
+            <path d="M 163 30 A 95 95 0 0 1 205 115" stroke="#c0392b" stroke-width="16" fill="none" stroke-linecap="round"/>
+            <line id="gauge-needle" x1="110" y1="115" x2="110" y2="30" stroke="#333" stroke-width="4" stroke-linecap="round" transform="rotate(-90 110 115)"/>
+            <circle cx="110" cy="115" r="8" fill="#333"/>
+          </svg>
+          <div id="gauge-center-text">
+            <span id="gauge-value">--</span>
+            <span id="gauge-unit">°C</span>
+          </div>
+        </div>
+        <p id="result-text">Result will appear here.</p>
+      </div>
+
+      <div id="alert-section">
+        <h2>⚠️ Alert Settings</h2>
+        <label for="coordinator-phone">DRRM Coordinator Phone (with +63):</label>
+        <input type="tel" id="coordinator-phone" placeholder="+63912345678">
+
+        <label for="head-phone">School Head Phone (with +63):</label>
+        <input type="tel" id="head-phone" placeholder="+63912345678">
+
+        <button id="send-alert-btn">Send Alert via SMS</button>
+        <p id="alert-status"></p>
+      </div>
+    </div>
+
+    <!-- History Tab -->
+    <div id="history" class="tab-content">
+      <div class="history-controls">
+        <label for="history-location">Location:</label>
+        <select id="history-location"></select>
+
+        <label for="chart-type">Chart Type:</label>
+        <select id="chart-type">
+          <option value="line">Line Chart</option>
+          <option value="bar">Bar Chart</option>
+        </select>
+
+        <button id="export-btn">📥 Export Data (CSV)</button>
+        <button id="clear-history-btn" class="danger-btn">Clear History</button>
+      </div>
+
+      <div class="chart-container" data-chart-id="heatIndexChart" data-chart-title="Heat Index Trends">
+        <button class="expand-chart-btn" title="Expand chart">⛶</button><button class="reset-zoom-btn-small" title="Reset zoom">↺</button>
+        <h3>Heat Index Trends</h3>
+        <canvas id="heatIndexChart"></canvas>
+      </div>
+
+      <div class="history-table">
+        <h3>Recent Readings</h3>
+        <table id="history-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Temperature</th>
+              <th>Humidity</th>
+              <th>Heat Index</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div id="dashboard" class="tab-content">
+      <div class="overview-strip">
+        <div class="stat-card">
+          <div class="stat-icon">🏫</div>
+          <div class="stat-value" id="stat-total-locations">0</div>
+          <div class="stat-label">Locations Tracked</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📡</div>
+          <div class="stat-value" id="stat-active-monitors">0</div>
+          <div class="stat-label">Auto-Monitors Active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🌡️</div>
+          <div class="stat-value" id="stat-avg-heat">--</div>
+          <div class="stat-label">Campus Avg Heat Index</div>
+        </div>
+        <div class="stat-card stat-card-alert" id="stat-peak-card">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-value" id="stat-peak-heat">--</div>
+          <div class="stat-label" id="stat-peak-label">Highest Right Now</div>
+        </div>
+        <div class="stat-card" id="stat-danger-card">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-value" id="stat-danger-count">0</div>
+          <div class="stat-label">Locations in Danger</div>
+        </div>
+      </div>
+
+      <button id="generate-report-btn" class="report-btn">📋 Generate Heat Advisory Report</button>
+
+      <div class="dashboard-grid"></div>
+
+      <div class="comparison-chart" data-chart-id="comparisonChart" data-chart-title="Location Comparison">
+        <button class="expand-chart-btn" title="Expand chart">⛶</button><button class="reset-zoom-btn-small" title="Reset zoom">↺</button>
+        <h3>Location Comparison</h3>
+        <canvas id="comparisonChart"></canvas>
+      </div>
+
+      <div class="alerts-log">
+        <h3>⚠️ Recent Warnings</h3>
+        <div id="alerts-log-content">No warnings yet.</div>
+      </div>
+    </div>
+
+    <!-- Prediction Tab (Phase 3) -->
+    <div id="prediction" class="tab-content">
+      <div class="prediction-controls">
+        <label for="prediction-location">Select Location for Forecast:</label>
+        <select id="prediction-location"></select>
+      </div>
+
+      <div class="chart-container" data-chart-id="todayVsTomorrowChart" data-chart-title="Today vs. Tomorrow">
+        <button class="expand-chart-btn" title="Expand chart">⛶</button><button class="reset-zoom-btn-small" title="Reset zoom">↺</button>
+        <h3>📈 Today vs. Tomorrow (Next-Day Hourly Prediction)</h3>
+        <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Each hour of tomorrow is predicted by averaging every past reading recorded at that same hour.</p>
+        <canvas id="todayVsTomorrowChart"></canvas>
+      </div>
+
+      <div class="forecast-summary">
+        <h3>📋 Tomorrow, Hour by Hour</h3>
+        <div id="tomorrow-summary">Loading...</div>
+      </div>
+
+      <div class="chart-container" data-chart-id="predictionChart" data-chart-title="7-Day Heat Index Forecast">
+        <button class="expand-chart-btn" title="Expand chart">⛶</button><button class="reset-zoom-btn-small" title="Reset zoom">↺</button>
+        <h3>📊 7-Day Heat Index Forecast (Trend-Based)</h3>
+        <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Each day starts from the typical peak hour seen in past data, adjusted slightly for any recent day-to-day trend (capped) and weekends.</p>
+        <canvas id="predictionChart"></canvas>
+      </div>
+
+      <div class="forecast-summary">
+        <h3>🔮 Next 7 Days Forecast</h3>
+        <div id="forecast-summary">Loading forecast...</div>
+      </div>
+
+      <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #0066cc;">
+        <h4>Model Information</h4>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+          <li><strong>Tomorrow (hourly):</strong> average of all past readings recorded at each matching hour</li>
+          <li><strong>7-day forecast:</strong> typical daily peak (from same-hour averaging), plus a capped day-over-day trend and a weekend adjustment</li>
+          <li><strong>Data Points:</strong> up to the last 500 readings per location</li>
+          <li><strong>Updates:</strong> as new hourly readings are collected</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Map Tab -->
+    <div id="map" class="tab-content">
+      <div class="map-legend">
+        <span><span class="map-dot" style="background:#28a745"></span>Safe</span>
+        <span><span class="map-dot" style="background:#ffc107"></span>Caution</span>
+        <span><span class="map-dot" style="background:#fd7e14"></span>Extreme Caution</span>
+        <span><span class="map-dot" style="background:#e74c3c"></span>Danger</span>
+        <span><span class="map-dot" style="background:#c0392b"></span>Extreme Danger</span>
+        <span><span class="map-dot" style="background:#cccccc"></span>No data</span>
+      </div>
+      <div class="campus-map-wrapper">
+        <img src="assets/campus-map.jpg" alt="Mahaplag National High School hazard and evacuation map" class="campus-map-image">
+      </div>
+      <p class="map-note">Tap a marker to jump to that location on the Monitor tab. Marker positions are estimated from a photo of the map, not measured precisely — some may need adjusting.</p>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="settings" class="tab-content">
+      <div class="settings-section">
+        <h3>Monitoring Settings</h3>
+        
+        <label for="monitor-interval">Auto-Monitor Interval (minutes):</label>
+        <input type="number" id="monitor-interval" value="60" min="5" max="240">
+
+        <label for="warning-threshold">Heat Index Warning Threshold (°C):</label>
+        <input type="number" id="warning-threshold" value="32" min="20" max="50" step="0.5">
+
+        <label for="alert-sound">
+          <input type="checkbox" id="alert-sound" checked>
+          Enable Alert Sound
+        </label>
+
+        <label for="browser-notification">
+          <input type="checkbox" id="browser-notification" checked>
+          Enable Browser Notifications
+        </label>
+
+        <button id="save-settings-btn">Save Settings</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>Data Management</h3>
+        <p>Storage used: <span id="storage-used">Calculating...</span></p>
+        <button id="backup-btn">📦 Backup Data</button>
+        <button id="restore-btn">📂 Restore Data</button>
+        <input type="file" id="restore-file" accept=".json" style="display: none;">
+      </div>
+
+      <div class="settings-section" id="install-section" style="display: none;">
+        <h3>📲 Install App</h3>
+        <p>Install SchoolHeat on this device to open it like a regular app, with offline access.</p>
+        <button id="install-app-btn">📲 Install SchoolHeat</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>About</h3>
+        <p>SchoolHeat v1.0</p>
+        <p>Heat Index Monitoring System for School Safety</p>
+        <p>© 2026 TUKLAS Project</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Heat Advisory Report Modal -->
+  <div id="report-modal-overlay" class="report-modal-overlay">
+    <div class="report-modal">
+      <button id="report-close-btn" class="report-close-btn">✕</button>
+      <div id="report-content" class="report-content"></div>
+      <div class="report-actions">
+        <button id="report-print-btn">🖨️ Print / Save as PDF</button>
+        <button id="report-close-btn-2">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart Expand Modal -->
+  <div id="chart-modal-overlay" class="report-modal-overlay">
+    <div class="chart-modal">
+      <button id="chart-modal-close-btn" class="report-close-btn">✕</button>
+      <div class="chart-modal-header">
+        <h3 id="chart-modal-title"></h3>
+        <button id="chart-modal-reset-zoom-btn" class="reset-zoom-btn">↺ Reset Zoom</button>
+      </div>
+      <p class="chart-modal-hint">Scroll or pinch to zoom, drag to pan.</p>
+      <div class="chart-modal-canvas-wrap">
+        <canvas id="chart-modal-canvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+
+  <script>
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').then(reg => {
+        console.log('Service Worker registered successfully:', reg);
+      }).catch(err => {
+        console.log('Service Worker registration failed:', err);
+      });
+    }
+  </script>
+</body>
+</html>
