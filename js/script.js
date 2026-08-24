@@ -38,7 +38,6 @@ const SchoolHeat = (() => {
   LOCATIONS.forEach(loc => { LOCATIONS_BY_ID[loc.id] = loc; });
 
   // ====== STATE ======
-  let autoMonitorInterval = null;
   let heatIndexChart = null;
   let comparisonChart = null;
   let todayVsTomorrowChart = null;
@@ -260,7 +259,7 @@ const SchoolHeat = (() => {
     wrapper.querySelectorAll('.map-marker').forEach(m => m.remove());
 
     const img = wrapper.querySelector('.campus-map-image');
-    if (!img || !img.complete) return;
+    if (!img || !img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) return;
 
     const wrapperRect = wrapper.getBoundingClientRect();
     const imgRatio = img.naturalWidth / img.naturalHeight;
@@ -1335,9 +1334,27 @@ const SchoolHeat = (() => {
   function resumeAutoMonitors() {
     Object.keys(autoMonitorActive).forEach(location => {
       if (autoMonitorActive[location]) {
-        // Don't restart UI button state, just the timer
+        // Use the actual last recorded timestamp from history, or current hour if none exists
+        const history = getHistory(location);
         let lastRecordedDate = new Date();
+        if (history.length > 0) {
+          lastRecordedDate = new Date(history[history.length - 1].timestamp);
+        }
         lastRecordedDate.setMinutes(0, 0, 0);
+
+        // Immediate catch-up for any missed hours since last recording
+        const now = new Date();
+        now.setMinutes(0, 0, 0);
+        const diffMs = now.getTime() - lastRecordedDate.getTime();
+        const diffHours = Math.round(diffMs / (60 * 60 * 1000));
+        if (diffHours >= 1) {
+          for (let i = 1; i <= diffHours; i++) {
+            const recordDate = new Date(lastRecordedDate);
+            recordDate.setHours(recordDate.getHours() + i);
+            recordHourlyReading(location, recordDate.getTime());
+          }
+          lastRecordedDate = new Date(now);
+        }
 
         autoMonitorTimers[location] = setInterval(() => {
           if (!autoMonitorActive[location]) {
@@ -1364,6 +1381,23 @@ const SchoolHeat = (() => {
     });
   }
 
+  // Sync auto-monitor button to reflect restored state for current selection
+  function syncMonitorButtonState() {
+    const location = document.getElementById('location-select').value;
+    const btn = document.getElementById('auto-monitor-btn');
+    const statusEl = document.getElementById('auto-monitor-status');
+    const locName = LOCATIONS_BY_ID[location].name;
+    if (autoMonitorActive[location]) {
+      btn.textContent = 'Stop Auto-Monitor';
+      btn.classList.add('active-monitor');
+      statusEl.innerHTML = `<span style="color: green;">✅ Auto-monitoring active for ${escapeHtml(locName)}</span>`;
+    } else {
+      btn.textContent = 'Start Auto-Monitor (Hourly)';
+      btn.classList.remove('active-monitor');
+      statusEl.innerHTML = '';
+    }
+  }
+
   // ====== INITIALIZATION ======
   document.addEventListener('DOMContentLoaded', () => {
     buildLocationDropdowns();
@@ -1376,7 +1410,7 @@ const SchoolHeat = (() => {
     updateDashboard();
     resumeAutoMonitors(); // FIX: Resume monitors after page reload
 
-    document.getElementById('location-select').addEventListener('change', updateDashboard);
+    document.getElementById('location-select').addEventListener('change', () => { updateDashboard(); syncMonitorButtonState(); });
     document.getElementById('history-location').addEventListener('change', updateHistoryChart);
     document.getElementById('chart-type').addEventListener('change', updateHistoryChart);
     document.getElementById('prediction-location').addEventListener('change', () => { updatePredictionChart(); updatePredictionSummary(); updateTodayVsTomorrowChart(); updateTomorrowSummary(); });
@@ -1429,6 +1463,7 @@ const SchoolHeat = (() => {
     });
 
     updateOverviewStats();
+    syncMonitorButtonState();
 
     console.log('🔥 SchoolHeat v2.4 - All bugs fixed: divide-by-zero, monitor persistence, CSV injection, AudioContext leak, map drift, chart updates, input validation, XSS hardening, ARIA labels, CSP ready, IIFE module!');
   });
