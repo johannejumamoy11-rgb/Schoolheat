@@ -87,6 +87,15 @@ const SchoolHeat = (() => {
       .replace(/'/g, '&#039;');
   }
 
+  function safeToFixed(value, decimals = 1) {
+    const num = parseFloat(value);
+    return isNaN(num) ? '--' : num.toFixed(decimals);
+  }
+
+  function safeNumber(value, fallback = 0) {
+    const num = parseFloat(value);
+    return isNaN(num) ? fallback : num;
+  }
   function csvEscape(str) {
     const s = String(str).replace(/"/g, '""');
     if (/^[+=@-]/.test(s)) return "'" + s;
@@ -94,7 +103,11 @@ const SchoolHeat = (() => {
   }
 
   function saveMonitorState() {
-    localStorage.setItem('active_monitors', JSON.stringify(autoMonitorActive));
+    try {
+      localStorage.setItem('active_monitors', JSON.stringify(autoMonitorActive));
+    } catch (e) {
+      console.error('Storage full - could not save monitor state:', e);
+    }
   }
 
   // ====== HEAT INDEX CALCULATION ======
@@ -135,7 +148,12 @@ const SchoolHeat = (() => {
       status: getHeatStatus(heatIndex)
     });
     if (history.length > 500) history.shift();
-    localStorage.setItem(key, JSON.stringify(history));
+    try {
+      localStorage.setItem(key, JSON.stringify(history));
+    } catch (e) {
+      console.error('Storage full - could not save history:', e);
+      alert('Warning: Device storage is full. Please export and clear old data.');
+    }
     return history[history.length - 1];
   }
 
@@ -149,7 +167,7 @@ const SchoolHeat = (() => {
     const angle = -90 + ((clamped - GAUGE_MIN) / (GAUGE_MAX - GAUGE_MIN)) * 180;
 
     needle.setAttribute('transform', `rotate(${angle} 110 115)`);
-    valueEl.textContent = heatIndex.toFixed(1);
+    valueEl.textContent = safeToFixed(heatIndex);
     valueEl.style.color = getStatusColor(getHeatStatus(heatIndex));
   }
 
@@ -259,7 +277,13 @@ const SchoolHeat = (() => {
     wrapper.querySelectorAll('.map-marker').forEach(m => m.remove());
 
     const img = wrapper.querySelector('.campus-map-image');
-    if (!img || !img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) return;
+    if (!img) return;
+    // If image isn't loaded yet, wait for it then build markers
+    if (!img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
+      img.onload = () => { buildCampusMapMarkers(); };
+      img.onerror = () => { console.error('Failed to load campus map image'); };
+      return;
+    }
 
     const wrapperRect = wrapper.getBoundingClientRect();
     const imgRatio = img.naturalWidth / img.naturalHeight;
@@ -294,10 +318,10 @@ const SchoolHeat = (() => {
       marker.style.top = (offsetY + (pos.y / 100) * displayHeight) + 'px';
       marker.style.background = color;
       marker.setAttribute('role', 'button');
-      marker.setAttribute('aria-label', `${loc.number}. ${loc.name}${hasData ? ` — ${latest.heatIndex.toFixed(1)}°C (${latest.status})` : ' — No data yet'}`);
+      marker.setAttribute('aria-label', `${loc.number}. ${loc.name}${hasData ? ` — ${safeToFixed(latest.heatIndex)}°C (${latest.status})` : ' — No data yet'}`);
       marker.setAttribute('tabindex', '0');
       marker.title = `${loc.number}. ${loc.name}` +
-        (hasData ? ` — ${latest.heatIndex.toFixed(1)}°C (${latest.status})` : ' — No data yet');
+        (hasData ? ` — ${safeToFixed(latest.heatIndex)}°C (${latest.status})` : ' — No data yet');
 
       const clickHandler = () => {
         document.getElementById('location-select').value = loc.id;
@@ -362,7 +386,7 @@ const SchoolHeat = (() => {
       resultText.innerHTML = `<strong style="color: ${color};">Heat Index: ${heatIndex.toFixed(1)}°C</strong><br><strong style="color: ${color};">Status: ${status}</strong><br><small>Temp: ${temp}°C | Humidity: ${humidity}% | Location: ${escapeHtml(locName)}</small>`;
       updateGauge(heatIndex);
 
-      lastHeatData = { heatIndex: heatIndex.toFixed(1), temp, humidity, status, location: locName, timestamp: new Date().toLocaleString() };
+      lastHeatData = { heatIndex: safeToFixed(heatIndex), temp, humidity, status, location: locName, timestamp: new Date().toLocaleString() };
 
       const threshold = parseFloat(localStorage.getItem('warning_threshold') || '32');
       if (heatIndex >= threshold) triggerWarning(heatIndex, status, location);
@@ -461,7 +485,7 @@ const SchoolHeat = (() => {
     if (document.getElementById('alert-sound')?.checked) playAlertSound();
     if (document.getElementById('browser-notification')?.checked && 'Notification' in window) {
       if (Notification.permission === 'granted') {
-        new Notification('🔥 SchoolHeat Warning', { body: `Heat Index ${heatIndex.toFixed(1)}°C (${status}) at ${locName}` });
+        new Notification('🔥 SchoolHeat Warning', { body: `Heat Index ${safeToFixed(heatIndex)}°C (${status}) at ${locName}` });
       } else if (Notification.permission !== 'denied') {
         Notification.requestPermission();
       }
@@ -492,7 +516,11 @@ const SchoolHeat = (() => {
     let alerts = JSON.parse(localStorage.getItem('alerts_log') || '[]');
     alerts.push({...data, logTime: new Date().toLocaleString()});
     if (alerts.length > 50) alerts.shift();
-    localStorage.setItem('alerts_log', JSON.stringify(alerts));
+    try {
+      localStorage.setItem('alerts_log', JSON.stringify(alerts));
+    } catch (e) {
+      console.error('Storage full - could not save alert:', e);
+    }
   }
 
   // ====== CHART UTILITIES ======
@@ -650,7 +678,7 @@ const SchoolHeat = (() => {
       if (!heatEl || !statusEl || !timeEl) return;
       if (history.length > 0) {
         const latest = history[history.length - 1];
-        const newText = latest.heatIndex.toFixed(1) + '°C';
+        const newText = safeToFixed(latest.heatIndex) + '°C';
         if (heatEl.textContent !== newText) {
           heatEl.textContent = newText;
           heatEl.classList.remove('value-updated');
@@ -729,7 +757,7 @@ const SchoolHeat = (() => {
 
     const avgEl = document.getElementById('stat-avg-heat');
     if (avgHeat !== null) {
-      animateCountUp(avgEl, avgHeat, 1, '°C');
+      animateCountUp(avgEl, safeNumber(avgHeat), 1, '°C');
     } else {
       avgEl.textContent = '--';
     }
@@ -738,7 +766,7 @@ const SchoolHeat = (() => {
     const peakLabelEl = document.getElementById('stat-peak-label');
     const peakCard = document.getElementById('stat-peak-card');
     if (peak) {
-      animateCountUp(peakEl, peak.latest.heatIndex, 1, '°C');
+      animateCountUp(peakEl, safeNumber(peak.latest.heatIndex), 1, '°C');
       peakLabelEl.textContent = `${peak.loc.number}. ${peak.loc.name}`;
       const isUrgent = peak.latest.status === 'Danger' || peak.latest.status === 'Extreme Danger';
       peakCard.classList.toggle('stat-urgent', isUrgent);
@@ -1129,10 +1157,16 @@ const SchoolHeat = (() => {
       if (isNaN(threshold) || threshold < 20) threshold = 20;
       if (threshold > 50) threshold = 50;
 
-      localStorage.setItem('monitor_interval', interval);
-      localStorage.setItem('warning_threshold', threshold);
-      localStorage.setItem('alert_sound', document.getElementById('alert-sound').checked);
-      localStorage.setItem('browser_notification', document.getElementById('browser-notification').checked);
+      try {
+        localStorage.setItem('monitor_interval', interval);
+        localStorage.setItem('warning_threshold', threshold);
+        localStorage.setItem('alert_sound', document.getElementById('alert-sound').checked);
+        localStorage.setItem('browser_notification', document.getElementById('browser-notification').checked);
+      } catch (e) {
+        console.error('Storage full - could not save settings:', e);
+        alert('Warning: Device storage is full. Please export and clear old data.');
+        return;
+      }
 
       // Update UI to reflect clamped values
       document.getElementById('monitor-interval').value = interval;
@@ -1210,7 +1244,7 @@ const SchoolHeat = (() => {
 
     const withData = latestByLocation.filter(r => r.latest);
     const avgHeat = withData.length > 0
-      ? (withData.reduce((s, r) => s + r.latest.heatIndex, 0) / withData.length).toFixed(1)
+      ? safeToFixed(withData.reduce((s, r) => s + safeNumber(r.latest.heatIndex), 0) / withData.length)
       : 'N/A';
     const dangerLocations = withData.filter(r => r.latest.status === 'Danger' || r.latest.status === 'Extreme Danger');
     let peak = null;
@@ -1238,7 +1272,7 @@ const SchoolHeat = (() => {
         <tr>
           <td>${r.loc.number}</td>
           <td>${escapeHtml(r.loc.name)}</td>
-          <td>${escapeHtml(r.latest.heatIndex.toFixed(1))}°C</td>
+          <td>${escapeHtml(safeToFixed(r.latest.heatIndex))}°C</td>
           <td style="color:${getStatusColor(r.latest.status)}; font-weight:bold;">${escapeHtml(r.latest.status)}</td>
           <td>${escapeHtml(r.latest.time)}</td>
         </tr>`;
