@@ -6,15 +6,15 @@
   <meta name="theme-color" content="#d9534f">
   <meta name="description" content="Heat Index Monitoring Tool for School Safety">
   <!-- FIX: Content Security Policy to prevent XSS and restrict external resources -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data:; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self';">
   <title>SchoolHeat</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+  <!-- NOTE: For production, add integrity="sha384-..." SRI hashes to CDN scripts for extra security --><script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1" crossorigin="anonymous"></script>
 <base target="_blank">
 </head>
 <body>
@@ -314,16 +314,5 @@
   </div>
 
   <script src="js/script.js"></script>
-
-  <script>
-    // Register Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js').then(reg => {
-        console.log('Service Worker registered successfully:', reg);
-      }).catch(err => {
-        console.log('Service Worker registration failed:', err);
-      });
-    }
-  </script>
 </body>
 </html>
