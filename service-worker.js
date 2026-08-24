@@ -67,11 +67,18 @@ self.addEventListener('fetch', (event) => {
       if (response) {
         return response;
       }
-      // FIX: Also try matching CDN URLs that might have different request modes
-      return fetch(event.request).catch(() => {
-        // If network fails and we have a cached version with different URL format, try that
-        return caches.match(event.request.url);
-      });
+      // For CDN resources, try matching by URL only (ignoring request mode differences)
+      const url = event.request.url;
+      if (url.startsWith('https://cdn.jsdelivr.net/')) {
+        return caches.match(url).then((cached) => {
+          if (cached) return cached;
+          return fetch(event.request);
+        });
+      }
+      return fetch(event.request);
+    }).catch(() => {
+      // Network failed - try cache one more time as fallback
+      return caches.match(event.request);
     })
   );
 });
