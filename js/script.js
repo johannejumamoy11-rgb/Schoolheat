@@ -123,7 +123,13 @@ const SchoolHeat = (() => {
 
   function getHistory(location) {
     const key = `history_${location}`;
-    const data = localStorage.getItem(key);
+    let data = null;
+    try {
+      data = localStorage.getItem(key);
+    } catch (e) {
+      console.error('Cannot access localStorage (private browsing?):', e);
+      return [];
+    }
     if (!data) return [];
     try {
       const parsed = JSON.parse(data);
@@ -213,7 +219,9 @@ const SchoolHeat = (() => {
 
     const status = getHeatStatus(heatIndex);
     const threshold = parseFloat(localStorage.getItem('warning_threshold') || '32');
-    if (heatIndex >= threshold) triggerWarning(heatIndex, status, location);
+    if (heatIndex >= threshold) {
+      try { triggerWarning(heatIndex, status, location); } catch (e) { console.error('Warning trigger failed:', e); }
+    }
 
     const logTime = forcedTimestamp ? new Date(forcedTimestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
     console.log(`📊 [${logTime}] ${LOCATIONS_BY_ID[location].name}: ${reading.temp}°C, ${reading.humidity}% → HI: ${heatIndex.toFixed(1)}°C`);
@@ -441,7 +449,7 @@ const SchoolHeat = (() => {
             for (let i = 1; i <= diffHours; i++) {
               const recordDate = new Date(lastRecordedDate);
               recordDate.setHours(recordDate.getHours() + i);
-              recordHourlyReading(location, recordDate.getTime());
+              try { recordHourlyReading(location, recordDate.getTime()); } catch (e) { console.error('Catch-up reading failed:', e); }
             }
             lastRecordedDate = new Date(now);
           }
@@ -482,12 +490,18 @@ const SchoolHeat = (() => {
 
   function triggerWarning(heatIndex, status, location) {
     const locName = LOCATIONS_BY_ID[location] ? LOCATIONS_BY_ID[location].name : location;
-    if (document.getElementById('alert-sound')?.checked) playAlertSound();
+    if (document.getElementById('alert-sound')?.checked) {
+      try { playAlertSound(); } catch (e) { console.error('Alert sound failed:', e); }
+    }
     if (document.getElementById('browser-notification')?.checked && 'Notification' in window) {
       if (Notification.permission === 'granted') {
-        new Notification('🔥 SchoolHeat Warning', { body: `Heat Index ${safeToFixed(heatIndex)}°C (${status}) at ${locName}` });
+        try {
+          new Notification('🔥 SchoolHeat Warning', { body: `Heat Index ${safeToFixed(heatIndex)}°C (${status}) at ${locName}` });
+        } catch (e) {
+          console.error('Notification failed:', e);
+        }
       } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission();
+        try { Notification.requestPermission(); } catch (e) { console.error('Permission request failed:', e); }
       }
     }
   }
@@ -530,9 +544,13 @@ const SchoolHeat = (() => {
         label: function(context) {
           let label = context.dataset.label || '';
           if (label) label += ': ';
-          const value = context.parsed.y !== undefined && context.parsed.y !== null
-            ? context.parsed.y : context.parsed.x;
-          if (value === null || value === undefined) return label + 'No data';
+          // FIX: For horizontal bar charts (indexAxis: 'y'), value is in parsed.x, not parsed.y
+          const chart = context.chart;
+          const isHorizontal = chart.options.indexAxis === 'y';
+          const value = isHorizontal
+            ? (context.parsed.x !== undefined && context.parsed.x !== null ? context.parsed.x : null)
+            : (context.parsed.y !== undefined && context.parsed.y !== null ? context.parsed.y : context.parsed.x);
+          if (value === null || value === undefined || isNaN(value)) return label + 'No data';
           return label + value.toFixed(1) + unit;
         }
       }
@@ -867,7 +885,10 @@ const SchoolHeat = (() => {
     const byHour = {};
     history.forEach(entry => {
       const d = new Date(entry.timestamp);
-      if (d.toDateString() === todayStr) byHour[entry.hour] = entry.heatIndex;
+      if (d.toDateString() === todayStr) {
+        const h = entry.hour !== undefined ? entry.hour : d.getHours();
+        byHour[h] = entry.heatIndex;
+      }
     });
     const readings = [];
     for (let hour = 0; hour < 24; hour++) {
@@ -988,11 +1009,14 @@ const SchoolHeat = (() => {
     const byDate = {};
     history.forEach(entry => {
       const d = new Date(entry.timestamp);
+      if (isNaN(d.getTime())) return; // Skip invalid timestamps
       const key = d.toDateString();
       if (!byDate[key]) byDate[key] = { date: d, values: [] };
-      byDate[key].values.push(entry.heatIndex);
+      const hi = parseFloat(entry.heatIndex);
+      if (!isNaN(hi)) byDate[key].values.push(hi);
     });
     return Object.values(byDate)
+      .filter(day => day.values.length > 0)
       .map(day => ({
         date: day.date,
         peak: Math.max(...day.values),
@@ -1005,9 +1029,10 @@ const SchoolHeat = (() => {
     const history = getHistory(location);
     if (history.length < 3) return [];
 
-    const hourlyProfile = generateTomorrowForecast(location).filter(f => f.predicted !== null);
+    const hourlyProfile = generateTomorrowForecast(location).filter(f => f.predicted !== null && !isNaN(f.predicted));
     if (hourlyProfile.length === 0) return [];
     const typicalPeak = hourlyProfile.reduce((max, f) => (f.predicted > max.predicted ? f : max), hourlyProfile[0]).predicted;
+    if (isNaN(typicalPeak)) return [];
 
     const dailyAggregates = getDailyAggregates(location);
     let slope = 0;
@@ -1142,10 +1167,19 @@ const SchoolHeat = (() => {
 
   // ====== SETTINGS ======
   function initSettings() {
-    document.getElementById('monitor-interval').value = localStorage.getItem('monitor_interval') || '60';
-    document.getElementById('warning-threshold').value = localStorage.getItem('warning_threshold') || '32';
-    document.getElementById('alert-sound').checked = localStorage.getItem('alert_sound') !== 'false';
-    document.getElementById('browser-notification').checked = localStorage.getItem('browser_notification') !== 'false';
+    let monitorInterval = '60', warningThreshold = '32', alertSound = 'true', browserNotif = 'true';
+    try {
+      monitorInterval = localStorage.getItem('monitor_interval') || '60';
+      warningThreshold = localStorage.getItem('warning_threshold') || '32';
+      alertSound = localStorage.getItem('alert_sound');
+      browserNotif = localStorage.getItem('browser_notification');
+    } catch (e) {
+      console.error('Cannot read settings from localStorage:', e);
+    }
+    document.getElementById('monitor-interval').value = monitorInterval;
+    document.getElementById('warning-threshold').value = warningThreshold;
+    document.getElementById('alert-sound').checked = alertSound !== 'false';
+    document.getElementById('browser-notification').checked = browserNotif !== 'false';
 
     document.getElementById('save-settings-btn').addEventListener('click', () => {
       // FIX: Validate and clamp inputs before saving
@@ -1177,9 +1211,15 @@ const SchoolHeat = (() => {
 
     document.getElementById('backup-btn').addEventListener('click', () => {
       const backup = { timestamp: new Date().toISOString(), data: {} };
-      LOCATIONS.forEach(loc => { backup.data[`history_${loc.id}`] = localStorage.getItem(`history_${loc.id}`); });
-      backup.data['alerts_log'] = localStorage.getItem('alerts_log');
-      backup.data['active_monitors'] = localStorage.getItem('active_monitors');
+      try {
+        LOCATIONS.forEach(loc => { backup.data[`history_${loc.id}`] = localStorage.getItem(`history_${loc.id}`); });
+        backup.data['alerts_log'] = localStorage.getItem('alerts_log');
+        backup.data['active_monitors'] = localStorage.getItem('active_monitors');
+      } catch (e) {
+        console.error('Cannot read data for backup:', e);
+        alert('Cannot access storage for backup. Are you in private browsing mode?');
+        return;
+      }
       const element = document.createElement('a');
       element.setAttribute('href', 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backup, null, 2)));
       element.setAttribute('download', `schoolheat_backup_${new Date().getTime()}.json`);
@@ -1211,13 +1251,20 @@ const SchoolHeat = (() => {
   }
 
   function updateStorageUsed() {
+    const el = document.getElementById('storage-used');
+    if (!el) return;
     let total = 0;
-    for (let key in localStorage) {
-      if (key.startsWith('history_') || key === 'alerts_log' || key === 'active_monitors') {
-        total += localStorage[key] ? localStorage[key].length : 0;
+    try {
+      for (let key in localStorage) {
+        if (key.startsWith('history_') || key === 'alerts_log' || key === 'active_monitors') {
+          total += localStorage[key] ? localStorage[key].length : 0;
+        }
       }
+      el.textContent = (total / 1024).toFixed(2) + ' KB';
+    } catch (e) {
+      console.error('Cannot calculate storage usage:', e);
+      el.textContent = 'Unavailable';
     }
-    document.getElementById('storage-used').textContent = (total / 1024).toFixed(2) + ' KB';
   }
 
   // ====== PWA INSTALL PROMPT ======
@@ -1406,7 +1453,7 @@ const SchoolHeat = (() => {
             for (let i = 1; i <= diffHours; i++) {
               const recordDate = new Date(lastRecordedDate);
               recordDate.setHours(recordDate.getHours() + i);
-              recordHourlyReading(location, recordDate.getTime());
+              try { recordHourlyReading(location, recordDate.getTime()); } catch (e) { console.error('Catch-up reading failed:', e); }
             }
             lastRecordedDate = new Date(now);
           }
@@ -1499,7 +1546,16 @@ const SchoolHeat = (() => {
     updateOverviewStats();
     syncMonitorButtonState();
 
-    console.log('🔥 SchoolHeat v2.4 - All bugs fixed: divide-by-zero, monitor persistence, CSV injection, AudioContext leak, map drift, chart updates, input validation, XSS hardening, ARIA labels, CSP ready, IIFE module!');
+    // Register Service Worker (moved here to comply with CSP)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').then(reg => {
+        console.log('Service Worker registered successfully:', reg);
+      }).catch(err => {
+        console.log('Service Worker registration failed:', err);
+      });
+    }
+
+    console.log('🔥 SchoolHeat v2.4 - All bugs fixed: divide-by-zero, monitor persistence, CSV injection, AudioContext leak, map drift, chart updates, input validation, XSS hardening, ARIA labels, CSP ready, IIFE module, offline CDN caching, private browsing support!');
   });
 
   // Public API for testing
