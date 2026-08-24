@@ -662,6 +662,87 @@ const SchoolHeat = (() => {
   }
 
   // FIX: CSV injection protection
+
+  // ====== ARDUINO CSV IMPORT ======
+  function parseArduinoCSV(csvText, targetLocation) {
+    const lines = csvText.trim().split("\n");
+    if (lines.length < 2) return { count: 0, error: "CSV is empty or has no data rows" };
+
+    const headers = lines[0].split(",").map(h => h.trim());
+    const dateIdx = headers.indexOf("Date");
+    const timeIdx = headers.indexOf("Time");
+    const tempIdx = headers.indexOf("Temperature (°C)");
+    const humIdx = headers.indexOf("Humidity (%)");
+
+    if (dateIdx < 0 || timeIdx < 0 || tempIdx < 0 || humIdx < 0) {
+      return { count: 0, error: "CSV missing required columns: Date, Time, Temperature (°C), Humidity (%)" };
+    }
+
+    const imported = [];
+    let skipped = 0;
+
+    for (let i = 1; i < lines.length; i++) {
+      const row = lines[i].split(",");
+      if (row.length < Math.max(dateIdx, timeIdx, tempIdx, humIdx) + 1) {
+        skipped++;
+        continue;
+      }
+
+      const dateStr = row[dateIdx].trim();
+      const timeStr = row[timeIdx].trim();
+      const tempStr = row[tempIdx].trim();
+      const humStr = row[humIdx].trim();
+
+      const temp = parseFloat(tempStr);
+      const humidity = parseFloat(humStr);
+      if (isNaN(temp) || isNaN(humidity)) {
+        skipped++;
+        continue;
+      }
+
+      const dt = new Date(`${dateStr}T${timeStr}`);
+      if (isNaN(dt.getTime())) {
+        skipped++;
+        continue;
+      }
+
+      const heatIndex = calculateHeatIndex(temp, humidity);
+      const status = getHeatStatus(heatIndex);
+
+      imported.push({
+        time: dt.toLocaleString(),
+        timestamp: dt.getTime(),
+        hour: dt.getHours(),
+        temp: parseFloat(temp.toFixed(1)),
+        humidity: parseFloat(humidity.toFixed(1)),
+        heatIndex: parseFloat(heatIndex.toFixed(1)),
+        status: status
+      });
+    }
+
+    if (imported.length === 0) {
+      return { count: 0, error: `No valid readings found. ${skipped} rows skipped.` };
+    }
+
+    // Merge with existing history (deduplicate by timestamp)
+    const existing = getHistory(targetLocation);
+    const existingTimestamps = new Set(existing.map(e => e.timestamp));
+    const newEntries = imported.filter(e => !existingTimestamps.has(e.timestamp));
+
+    if (newEntries.length > 0) {
+      const merged = [...existing, ...newEntries].sort((a, b) => a.timestamp - b.timestamp);
+      // Keep last 500
+      while (merged.length > 500) merged.shift();
+      try {
+        localStorage.setItem(`history_${targetLocation}`, JSON.stringify(merged));
+      } catch (e) {
+        return { count: 0, error: "Storage full. Export and clear old data first." };
+      }
+    }
+
+    return { count: newEntries.length, totalInFile: imported.length, skipped: skipped };
+  }
+
   function exportData() {
     let csv = 'Time,Location Number,Location Name,Temperature,Humidity,Heat Index,Status\n';
     LOCATIONS.forEach(loc => {
@@ -1245,6 +1326,30 @@ const SchoolHeat = (() => {
         } catch (err) {
           alert('Error: ' + err.message);
         }
+      };
+      reader.readAsText(file);
+    });
+
+    // Arduino CSV import
+    document.getElementById('arduino-import-btn').addEventListener('click', () => {
+      document.getElementById('arduino-csv-file').click();
+    });
+    document.getElementById('arduino-csv-file').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const location = document.getElementById('location-select').value;
+      const locName = LOCATIONS_BY_ID[location].name;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const result = parseArduinoCSV(evt.target.result, location);
+        if (result.error) {
+          alert(`Import failed: ${result.error}`);
+        } else {
+          alert(`✅ Imported ${result.count} new readings for ${locName}\n(Total valid in file: ${result.totalInFile}, skipped: ${result.skipped})`);
+          updateDashboard();
+          updateGauge(getHistory(location).length > 0 ? getHistory(location)[getHistory(location).length - 1].heatIndex : 0);
+        }
+        e.target.value = ''; // Reset so same file can be re-imported
       };
       reader.readAsText(file);
     });
