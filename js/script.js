@@ -436,28 +436,35 @@ function getChartTooltipConfig(unit = '°C') {
 function getChartZoomConfig() {
   const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   return {
-    pan: { 
-      enabled: true, 
-      mode: 'xy', 
+    pan: {
+      enabled: true,
+      mode: 'x',              // Only pan horizontally (keeps Y scale stable)
       modifierKey: null,
-      threshold: 10
+      threshold: isTouch ? 8 : 4,  // Slightly higher threshold on touch to avoid accidental pans
+      onPan: function({chart}) {
+        chart.update('none'); // Smooth, no full re-render
+      }
     },
     zoom: {
-      wheel: { enabled: !isTouch, speed: 0.3 },
-      pinch: { enabled: true },
+      wheel: { enabled: !isTouch, speed: 0.2 },
+      pinch: { enabled: isTouch },
       drag: { enabled: false },
-      mode: 'xy',
+      mode: 'x',              // Only zoom X axis (time), keep Y fixed for readability
+      onZoom: function({chart}) {
+        // Smooth animation during zoom
+        chart.update('active');
+      },
       onZoomComplete: function({chart}) {
         // Prevent over-zooming
         const yScale = chart.scales.y;
-        if (yScale.max - yScale.min < 5) {
+        if (yScale && yScale.max - yScale.min < 5) {
           chart.resetZoom();
         }
       }
     },
-    limits: { 
-      x: { minRange: 2 }, 
-      y: { minRange: 5, max: 55, min: 15 } 
+    limits: {
+      x: { minRange: 2 },
+      y: { minRange: 5, max: 55, min: 15 }
     }
   };
 }
@@ -493,9 +500,17 @@ function updateHistoryChart() {
         borderWidth: 2, tension: 0.1, fill: true, pointRadius: 4, pointBackgroundColor: '#d9534f'
       }]
     }, options: {
-      responsive: true, maintainAspectRatio: true,
-      scales: { y: { min: 20, max: 50, ticks: { callback: v => v + '°C' } } },
-      plugins: { tooltip: getChartTooltipConfig(), zoom: getChartZoomConfig() }
+      responsive: true,
+      maintainAspectRatio: true,
+      animation: { duration: 400, easing: 'easeOutQuart' },
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: { min: 20, max: 50, ticks: { callback: v => v + '°C' } }
+      },
+      plugins: {
+        tooltip: getChartTooltipConfig(),
+        zoom: getChartZoomConfig()
+      }
     }
   });
 }
@@ -683,9 +698,16 @@ function updateComparisonChart() {
         backgroundColor: barColors, borderColor: barColors, borderWidth: 1
       }]
     }, options: {
-      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      animation: { duration: 400, easing: 'easeOutQuart' },
+      interaction: { mode: 'index', intersect: false },
       scales: { x: { min: 20, max: 50, ticks: { callback: v => v + '°C' } } },
-      plugins: { tooltip: getChartTooltipConfig(), zoom: getChartZoomConfig() }
+      plugins: {
+        tooltip: getChartTooltipConfig(),
+        zoom: getChartZoomConfig()
+      }
     }
   });
 }
@@ -776,10 +798,15 @@ function updateTodayVsTomorrowChart() {
       ]
     },
     options: {
-      responsive: true, maintainAspectRatio: true,
+      responsive: true,
+      maintainAspectRatio: true,
+      animation: { duration: 600, easing: 'easeOutQuart' },
+      interaction: { mode: 'index', intersect: false },
       scales: { y: { min: 20, max: 50, ticks: { callback: v => v + '°C' } } },
-      animation: { duration: 900, easing: 'easeOutQuart' },
-      plugins: { tooltip: getChartTooltipConfig(), zoom: getChartZoomConfig() }
+      plugins: {
+        tooltip: getChartTooltipConfig(),
+        zoom: getChartZoomConfig()
+      }
     }
   });
 }
@@ -930,14 +957,19 @@ function updatePredictionChart() {
         }
       ]
     }, options: {
-      responsive: true, maintainAspectRatio: true,
-      scales: { y: { min: 20, max: 50, ticks: { callback: v => v + '°C' } } },
+      responsive: true,
+      maintainAspectRatio: true,
       animation: {
-        duration: 900,
+        duration: 600,
         easing: 'easeOutQuart',
         delay: (ctx) => ctx.type === 'data' && ctx.datasetIndex === 1 ? 300 : 0
       },
-      plugins: { tooltip: getChartTooltipConfig(), zoom: getChartZoomConfig() }
+      interaction: { mode: 'index', intersect: false },
+      scales: { y: { min: 20, max: 50, ticks: { callback: v => v + '°C' } } },
+      plugins: {
+        tooltip: getChartTooltipConfig(),
+        zoom: getChartZoomConfig()
+      }
     }
   });
 }
@@ -1162,7 +1194,8 @@ function openChartModal(chartId, title) {
       options: {
         ...srcChart.options,
         maintainAspectRatio: false,
-        animation: { duration: 500 },
+        animation: { duration: 400, easing: 'easeOutQuart' },
+        interaction: { mode: 'index', intersect: false },
         plugins: { ...(srcChart.options.plugins || {}), tooltip: getChartTooltipConfig(), zoom: getChartZoomConfig() }
       }
     });
