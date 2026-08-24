@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#d9534f">
   <meta name="description" content="Heat Index Monitoring Tool for School Safety">
+  <!-- FIX: Content Security Policy to prevent XSS and restrict external resources -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self';">
   <title>SchoolHeat</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="manifest" href="manifest.json">
@@ -13,6 +15,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+<base target="_blank">
 </head>
 <body>
 
@@ -25,18 +28,18 @@
       </div>
     </header>
 
-    <!-- Navigation Tabs -->
-    <nav class="tabs">
-      <button class="tab-btn active" data-tab="monitor">Monitor</button>
-      <button class="tab-btn" data-tab="history">History</button>
-      <button class="tab-btn" data-tab="prediction">🔮 Prediction</button>
-      <button class="tab-btn" data-tab="dashboard">Dashboard</button>
-      <button class="tab-btn" data-tab="map">🗺️ Map</button>
-      <button class="tab-btn" data-tab="settings">Settings</button>
+    <!-- FIX: Added role, aria-label, and aria-selected for accessibility -->
+    <nav class="tabs" role="tablist" aria-label="Main navigation">
+      <button class="tab-btn active" data-tab="monitor" role="tab" aria-selected="true" aria-controls="monitor" id="tab-monitor">Monitor</button>
+      <button class="tab-btn" data-tab="history" role="tab" aria-selected="false" aria-controls="history" id="tab-history">History</button>
+      <button class="tab-btn" data-tab="prediction" role="tab" aria-selected="false" aria-controls="prediction" id="tab-prediction">🔮 Prediction</button>
+      <button class="tab-btn" data-tab="dashboard" role="tab" aria-selected="false" aria-controls="dashboard" id="tab-dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="map" role="tab" aria-selected="false" aria-controls="map" id="tab-map">🗺️ Map</button>
+      <button class="tab-btn" data-tab="settings" role="tab" aria-selected="false" aria-controls="settings" id="tab-settings">Settings</button>
     </nav>
 
     <!-- Monitor Tab -->
-    <div id="monitor" class="tab-content active">
+    <div id="monitor" class="tab-content active" role="tabpanel" aria-labelledby="tab-monitor">
       <div class="location-selector">
         <label for="location-select">Select Location:</label>
         <select id="location-select"></select>
@@ -56,7 +59,9 @@
 
       <div id="result-section">
         <div id="heat-gauge-wrapper">
-          <svg id="heat-gauge" viewBox="0 0 220 130" width="220" height="130">
+          <!-- FIX: Added title and aria-label for screen readers -->
+          <svg id="heat-gauge" viewBox="0 0 220 130" width="220" height="130" role="img" aria-label="Heat index gauge">
+            <title>Heat Index Gauge</title>
             <path d="M 15 115 A 95 95 0 0 1 47 33" stroke="#28a745" stroke-width="16" fill="none" stroke-linecap="round"/>
             <path d="M 47 33 A 95 95 0 0 1 76 15" stroke="#ffc107" stroke-width="16" fill="none" stroke-linecap="round"/>
             <path d="M 76 15 A 95 95 0 0 1 121 12" stroke="#fd7e14" stroke-width="16" fill="none" stroke-linecap="round"/>
@@ -87,7 +92,7 @@
     </div>
 
     <!-- History Tab -->
-    <div id="history" class="tab-content">
+    <div id="history" class="tab-content" role="tabpanel" aria-labelledby="tab-history">
       <div class="history-controls">
         <label for="history-location">Location:</label>
         <select id="history-location"></select>
@@ -103,7 +108,9 @@
       </div>
 
       <div class="chart-container" data-chart-id="heatIndexChart" data-chart-title="Heat Index Trends">
-        <button class="expand-chart-btn" title="Expand chart">⛶</button><button class="reset-zoom-btn-small" title="Reset zoom">↺</button>
+        <!-- FIX: Added aria-label for icon-only buttons -->
+        <button class="expand-chart-btn" title="Expand chart" aria-label="Expand chart">⛶</button>
+        <button class="reset-zoom-btn-small" title="Reset zoom" aria-label="Reset zoom">↺</button>
         <h3>Heat Index Trends</h3>
         <canvas id="heatIndexChart"></canvas>
       </div>
@@ -126,7 +133,7 @@
     </div>
 
     <!-- Dashboard Tab -->
-    <div id="dashboard" class="tab-content">
+    <div id="dashboard" class="tab-content" role="tabpanel" aria-labelledby="tab-dashboard">
       <div class="overview-strip">
         <div class="stat-card">
           <div class="stat-icon">🏫</div>
@@ -160,7 +167,8 @@
       <div class="dashboard-grid"></div>
 
       <div class="comparison-chart" data-chart-id="comparisonChart" data-chart-title="Location Comparison">
-        <button class="expand-chart-btn" title="Expand chart">⛶</button><button class="reset-zoom-btn-small" title="Reset zoom">↺</button>
+        <button class="expand-chart-btn" title="Expand chart" aria-label="Expand chart">⛶</button>
+        <button class="reset-zoom-btn-small" title="Reset zoom" aria-label="Reset zoom">↺</button>
         <h3>Location Comparison</h3>
         <canvas id="comparisonChart"></canvas>
       </div>
@@ -171,15 +179,16 @@
       </div>
     </div>
 
-    <!-- Prediction Tab (Phase 3) -->
-    <div id="prediction" class="tab-content">
+    <!-- Prediction Tab -->
+    <div id="prediction" class="tab-content" role="tabpanel" aria-labelledby="tab-prediction">
       <div class="prediction-controls">
         <label for="prediction-location">Select Location for Forecast:</label>
         <select id="prediction-location"></select>
       </div>
 
       <div class="chart-container" data-chart-id="todayVsTomorrowChart" data-chart-title="Today vs. Tomorrow">
-        <button class="expand-chart-btn" title="Expand chart">⛶</button><button class="reset-zoom-btn-small" title="Reset zoom">↺</button>
+        <button class="expand-chart-btn" title="Expand chart" aria-label="Expand chart">⛶</button>
+        <button class="reset-zoom-btn-small" title="Reset zoom" aria-label="Reset zoom">↺</button>
         <h3>📈 Today vs. Tomorrow (Next-Day Hourly Prediction)</h3>
         <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Each hour of tomorrow is predicted by averaging every past reading recorded at that same hour.</p>
         <canvas id="todayVsTomorrowChart"></canvas>
@@ -191,7 +200,8 @@
       </div>
 
       <div class="chart-container" data-chart-id="predictionChart" data-chart-title="7-Day Heat Index Forecast">
-        <button class="expand-chart-btn" title="Expand chart">⛶</button><button class="reset-zoom-btn-small" title="Reset zoom">↺</button>
+        <button class="expand-chart-btn" title="Expand chart" aria-label="Expand chart">⛶</button>
+        <button class="reset-zoom-btn-small" title="Reset zoom" aria-label="Reset zoom">↺</button>
         <h3>📊 7-Day Heat Index Forecast (Trend-Based)</h3>
         <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Each day starts from the typical peak hour seen in past data, adjusted slightly for any recent day-to-day trend (capped) and weekends.</p>
         <canvas id="predictionChart"></canvas>
@@ -214,7 +224,7 @@
     </div>
 
     <!-- Map Tab -->
-    <div id="map" class="tab-content">
+    <div id="map" class="tab-content" role="tabpanel" aria-labelledby="tab-map">
       <div class="map-legend">
         <span><span class="map-dot" style="background:#28a745"></span>Safe</span>
         <span><span class="map-dot" style="background:#ffc107"></span>Caution</span>
@@ -230,10 +240,10 @@
     </div>
 
     <!-- Settings Tab -->
-    <div id="settings" class="tab-content">
+    <div id="settings" class="tab-content" role="tabpanel" aria-labelledby="tab-settings">
       <div class="settings-section">
         <h3>Monitoring Settings</h3>
-        
+
         <label for="monitor-interval">Auto-Monitor Interval (minutes):</label>
         <input type="number" id="monitor-interval" value="60" min="5" max="240">
 
@@ -269,7 +279,7 @@
 
       <div class="settings-section">
         <h3>About</h3>
-        <p>SchoolHeat v1.0</p>
+        <p>SchoolHeat v2.4</p>
         <p>Heat Index Monitoring System for School Safety</p>
         <p>© 2026 TUKLAS Project</p>
       </div>
@@ -277,9 +287,9 @@
   </div>
 
   <!-- Heat Advisory Report Modal -->
-  <div id="report-modal-overlay" class="report-modal-overlay">
+  <div id="report-modal-overlay" class="report-modal-overlay" role="dialog" aria-modal="true" aria-label="Heat Advisory Report">
     <div class="report-modal">
-      <button id="report-close-btn" class="report-close-btn">✕</button>
+      <button id="report-close-btn" class="report-close-btn" aria-label="Close report">✕</button>
       <div id="report-content" class="report-content"></div>
       <div class="report-actions">
         <button id="report-print-btn">🖨️ Print / Save as PDF</button>
@@ -289,9 +299,9 @@
   </div>
 
   <!-- Chart Expand Modal -->
-  <div id="chart-modal-overlay" class="report-modal-overlay">
+  <div id="chart-modal-overlay" class="report-modal-overlay" role="dialog" aria-modal="true" aria-label="Expanded Chart">
     <div class="chart-modal">
-      <button id="chart-modal-close-btn" class="report-close-btn">✕</button>
+      <button id="chart-modal-close-btn" class="report-close-btn" aria-label="Close chart">✕</button>
       <div class="chart-modal-header">
         <h3 id="chart-modal-title"></h3>
         <button id="chart-modal-reset-zoom-btn" class="reset-zoom-btn">↺ Reset Zoom</button>
