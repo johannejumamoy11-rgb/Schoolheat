@@ -1287,6 +1287,35 @@ tbody tr:last-child td {
     height: 50vh;
   }
 
+  /* Charts - smooth touch */
+  .chart-container canvas,
+  .comparison-chart canvas,
+  #predictionChart,
+  #todayVsTomorrowChart,
+  #heatIndexChart,
+  #comparisonChart {
+    touch-action: pan-y;        /* Allow vertical page scroll, chart handles horizontal */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .chart-container,
+  .comparison-chart {
+    position: relative;
+    touch-action: pan-y;
+  }
+
+  /* Make expand/reset buttons easier to tap */
+  .expand-chart-btn,
+  .reset-zoom-btn-small {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   /* Install section */
   #install-section {
     padding: 14px;
