@@ -51,6 +51,12 @@ test('shows the same labeled 4H gauge range on dashboard and monitor', () => {
   }
 });
 
+test('keeps the latest-reading card neutral instead of using the selected accent as a giant background', () => {
+  assert.doesNotMatch(script, /setProperty\('--latest-reading-bg', accent\)/);
+  assert.match(script, /theme === 'dark' \? '#1d5147' : '#1d5e54'/);
+  assert.match(script, /setProperty\('--latest-reading-text', '#fffdf6'\)/);
+});
+
 test('builds readable full palettes from one selected color in both themes', () => {
   const defaults = context.SchoolHeatCustomPaletteDefaultsForTest;
   const createPalette = context.SchoolHeatCustomPaletteGeneratorForTest;

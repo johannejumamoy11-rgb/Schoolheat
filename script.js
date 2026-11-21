@@ -5074,8 +5074,8 @@ class SchoolHeatApp {
       rootStyle.setProperty('--chart-glow', `rgba(${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}, 0.2)`);
       rootStyle.setProperty('--chart-grid', `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, 0.2)`);
       rootStyle.setProperty('--chart-label', colors.secondaryText);
-      rootStyle.setProperty('--latest-reading-bg', accent);
-      rootStyle.setProperty('--latest-reading-text', buttonText);
+      rootStyle.setProperty('--latest-reading-bg', theme === 'dark' ? '#1d5147' : '#1d5e54');
+      rootStyle.setProperty('--latest-reading-text', '#fffdf6');
       rootStyle.setProperty('--border', border);
       rootStyle.setProperty('--border-hover', `rgba(${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}, 0.55)`);
     }
