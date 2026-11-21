@@ -30,17 +30,25 @@ test('offers one-tap swatches plus one full-spectrum picker', () => {
   const paletteChoices = [...index.matchAll(/data-palette-choice="([^"]+)"/g)]
     .map(match => match[1])
     .sort();
-  assert.deepEqual(paletteChoices, ['canopy', 'lagoon', 'schoolheat']);
+  assert.deepEqual(paletteChoices, ['canopy', 'lagoon', 'schoolheat', 'solar', 'twilight']);
   const accentChoices = [...index.matchAll(/data-custom-accent-choice="([^"]+)"/g)]
     .map(match => match[1])
     .sort();
   assert.deepEqual(accentChoices, [...context.SchoolHeatCustomAccentChoicesForTest].sort());
-  assert.equal(accentChoices.length, 16);
+  assert.equal(accentChoices.length, 24);
   assert.match(index, /input id="setting-any-color" type="color"/);
   assert.equal((index.match(/type="color"/g) || []).length, 1);
   assert.doesNotMatch(index, /data-custom-palette-field/);
   assert.doesNotMatch(script, /readCustomPaletteInputs|setCustomPaletteStatus/);
   assert.match(script, /addEventListener\('change', \(\) => applyCustomAccent\(anyColorPicker\.value\)\)/);
+});
+
+test('shows the same labeled 4H gauge range on dashboard and monitor', () => {
+  assert.equal((index.match(/class="gauge-range-key/g) || []).length, 2);
+  assert.match(index, /aria-label="DepEd 4H heat-index range"/);
+  for (const label of ['Hayo', 'Hinay', 'Hinga', 'Hinto']) {
+    assert.ok(index.includes(`>${label}</span>`));
+  }
 });
 
 test('builds readable full palettes from one selected color in both themes', () => {
@@ -105,7 +113,9 @@ test('validates full custom palettes for readable text in each theme', () => {
     const palettes = [
       defaults[theme],
       context.SchoolHeatColorPalettesForTest.canopy[theme],
-      context.SchoolHeatColorPalettesForTest.lagoon[theme]
+      context.SchoolHeatColorPalettesForTest.lagoon[theme],
+      context.SchoolHeatColorPalettesForTest.solar[theme],
+      context.SchoolHeatColorPalettesForTest.twilight[theme]
     ];
     palettes.forEach(colors => {
       assert.equal(validation(colors), '');

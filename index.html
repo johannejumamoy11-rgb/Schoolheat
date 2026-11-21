@@ -302,6 +302,9 @@
               <span>DepEd 4H classification</span>
               <span class="status-pill nodata" id="latest-status">No Data</span>
             </div>
+            <div class="gauge-range-key" aria-label="DepEd 4H heat-index range">
+              <span class="safe">Hayo</span><span class="caution">Hinay</span><span class="danger">Hinga</span><span class="extreme">Hinto</span>
+            </div>
             <span class="sr-only" id="latest-hi">—</span>
           </div>
           <div class="reading-details dashboard-reading-metrics">
@@ -494,6 +497,9 @@
             <div class="monitor-gauge-unit">°C Heat Index</div>
             <div class="monitor-gauge-status" id="monitor-gauge-status">No Data</div>
           </div>
+        </div>
+        <div class="gauge-range-key monitor-range-key" aria-label="DepEd 4H heat-index range">
+          <span class="safe">Hayo</span><span class="caution">Hinay</span><span class="danger">Hinga</span><span class="extreme">Hinto</span>
         </div>
         <div class="monitor-scales">
           <div class="monitor-scale">
@@ -1139,6 +1145,18 @@
               </span>
               <span>Lagoon</span>
             </button>
+            <button class="palette-choice" type="button" data-palette-choice="solar" aria-pressed="false">
+              <span class="palette-choice-swatches" aria-hidden="true">
+                <i data-palette-preview-field="background" style="--swatch-color: #1c1712;"></i><i data-palette-preview-field="surface" style="--swatch-color: #2a2219;"></i><i data-palette-preview-field="accent" style="--swatch-color: #f2ad57;"></i><i data-palette-preview-field="secondaryAccent" style="--swatch-color: #ef795d;"></i>
+              </span>
+              <span>Solar</span>
+            </button>
+            <button class="palette-choice" type="button" data-palette-choice="twilight" aria-pressed="false">
+              <span class="palette-choice-swatches" aria-hidden="true">
+                <i data-palette-preview-field="background" style="--swatch-color: #171426;"></i><i data-palette-preview-field="surface" style="--swatch-color: #24213b;"></i><i data-palette-preview-field="accent" style="--swatch-color: #8f82df;"></i><i data-palette-preview-field="secondaryAccent" style="--swatch-color: #eb87b3;"></i>
+              </span>
+              <span>Twilight</span>
+            </button>
           </div>
           <div class="custom-color-picker">
             <div class="accent-palette-label" id="setting-color-choice-label">Choose a color</div>
@@ -1207,6 +1225,38 @@
               <button class="color-choice" type="button" data-custom-accent-choice="#b49b24" aria-pressed="false">
                 <span class="color-choice-swatch" style="--choice-color: #b49b24;" aria-hidden="true"></span>
                 <span>Yellow</span>
+              </button>
+              <button class="color-choice" type="button" data-custom-accent-choice="#55a8d9" aria-pressed="false">
+                <span class="color-choice-swatch" style="--choice-color: #55a8d9;" aria-hidden="true"></span>
+                <span>Sky</span>
+              </button>
+              <button class="color-choice" type="button" data-custom-accent-choice="#315ee8" aria-pressed="false">
+                <span class="color-choice-swatch" style="--choice-color: #315ee8;" aria-hidden="true"></span>
+                <span>Cobalt</span>
+              </button>
+              <button class="color-choice" type="button" data-custom-accent-choice="#1f73c3" aria-pressed="false">
+                <span class="color-choice-swatch" style="--choice-color: #1f73c3;" aria-hidden="true"></span>
+                <span>Ocean</span>
+              </button>
+              <button class="color-choice" type="button" data-custom-accent-choice="#9a72d1" aria-pressed="false">
+                <span class="color-choice-swatch" style="--choice-color: #9a72d1;" aria-hidden="true"></span>
+                <span>Lilac</span>
+              </button>
+              <button class="color-choice" type="button" data-custom-accent-choice="#d84bb0" aria-pressed="false">
+                <span class="color-choice-swatch" style="--choice-color: #d84bb0;" aria-hidden="true"></span>
+                <span>Magenta</span>
+              </button>
+              <button class="color-choice" type="button" data-custom-accent-choice="#96613e" aria-pressed="false">
+                <span class="color-choice-swatch" style="--choice-color: #96613e;" aria-hidden="true"></span>
+                <span>Brown</span>
+              </button>
+              <button class="color-choice" type="button" data-custom-accent-choice="#74ad35" aria-pressed="false">
+                <span class="color-choice-swatch" style="--choice-color: #74ad35;" aria-hidden="true"></span>
+                <span>Lime</span>
+              </button>
+              <button class="color-choice" type="button" data-custom-accent-choice="#e2a32e" aria-pressed="false">
+                <span class="color-choice-swatch" style="--choice-color: #e2a32e;" aria-hidden="true"></span>
+                <span>Amber</span>
               </button>
             </div>
             <details class="any-color-picker">

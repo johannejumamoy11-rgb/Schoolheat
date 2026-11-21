@@ -197,6 +197,46 @@ const APP_COLOR_PALETTES = Object.freeze({
       secondaryAccent: '#93503a'
     })
   }),
+  solar: Object.freeze({
+    dark: Object.freeze({
+      background: '#1c1712',
+      surface: '#2a2219',
+      border: '#806f59',
+      text: '#fff7e8',
+      secondaryText: '#d8cbb6',
+      accent: '#f2ad57',
+      secondaryAccent: '#ef795d'
+    }),
+    light: Object.freeze({
+      background: '#f7f1e6',
+      surface: '#fffaf1',
+      border: '#927d60',
+      text: '#382c20',
+      secondaryText: '#685941',
+      accent: '#9a5c13',
+      secondaryAccent: '#9a4938'
+    })
+  }),
+  twilight: Object.freeze({
+    dark: Object.freeze({
+      background: '#171426',
+      surface: '#24213b',
+      border: '#777196',
+      text: '#f7f3ff',
+      secondaryText: '#cbc5dd',
+      accent: '#8f82df',
+      secondaryAccent: '#eb87b3'
+    }),
+    light: Object.freeze({
+      background: '#f3eff8',
+      surface: '#fcfaff',
+      border: '#817895',
+      text: '#302946',
+      secondaryText: '#625977',
+      accent: '#5849a3',
+      secondaryAccent: '#994d76'
+    })
+  }),
   custom: null
 });
 
@@ -259,7 +299,15 @@ const CUSTOM_ACCENT_CHOICES = Object.freeze([
   '#ba6048',
   '#bd6c23',
   '#bd8218',
-  '#b49b24'
+  '#b49b24',
+  '#55a8d9',
+  '#315ee8',
+  '#1f73c3',
+  '#9a72d1',
+  '#d84bb0',
+  '#96613e',
+  '#74ad35',
+  '#e2a32e'
 ]);
 
 function createCustomPaletteColors(theme, selectedAccent) {
@@ -2354,6 +2402,14 @@ class SchoolHeatApp {
     ctx.lineCap = 'round';
     ctx.stroke();
 
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius + lineWidth * 0.65, Math.PI * 0.75, Math.PI * 2.25);
+    ctx.strokeStyle = getDesignToken('--accent-cyan', '#82c4a8');
+    ctx.globalAlpha = 0.12;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
     const segments = [
       { start: Math.PI * 0.75, end: Math.PI * 1.125, color: STATUS_COLORS.safe },
       { start: Math.PI * 1.125, end: Math.PI * 1.5, color: STATUS_COLORS.caution },
@@ -2872,6 +2928,28 @@ class SchoolHeatApp {
       ctx.stroke();
       ctx.globalAlpha = 1;
     });
+
+    ctx.save();
+    ctx.strokeStyle = getDesignToken('--accent-cyan', '#82c4a8');
+    ctx.globalAlpha = 0.12;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius + lineWidth * 0.95, startAngle, startAngle + sweep);
+    ctx.stroke();
+    ctx.restore();
+
+    for (let i = 0; i <= 10; i++) {
+      const tickAngle = startAngle + (i / 10) * sweep;
+      const major = i % 5 === 0;
+      const outer = radius + lineWidth * 0.65;
+      const inner = outer - (major ? 7 : 4);
+      ctx.beginPath();
+      ctx.moveTo(centerX + Math.cos(tickAngle) * inner, centerY + Math.sin(tickAngle) * inner);
+      ctx.lineTo(centerX + Math.cos(tickAngle) * outer, centerY + Math.sin(tickAngle) * outer);
+      ctx.strokeStyle = major ? 'rgba(255,255,255,0.42)' : 'rgba(255,255,255,0.16)';
+      ctx.lineWidth = major ? 1.5 : 1;
+      ctx.stroke();
+    }
 
     const angle = startAngle + (Math.min(value, maxVal) / maxVal) * sweep;
     const status = this.getStatus(value);

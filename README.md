@@ -16,7 +16,7 @@ canopy green, and restrained sun and terracotta accents. It has a collapsible
 desktop navigation rail and a mobile navigation drawer. The theme can be
 changed in Settings. Adaptive campus accents and the unified accent mode apply
 to the default SchoolHeat palette. Users can choose one of the SchoolHeat,
-Canopy, or Lagoon palettes, pick from 16 one-tap color swatches, or open the
+Canopy, Lagoon, Solar, or Twilight palettes, pick from 24 one-tap color swatches, or open the
 optional full-spectrum color picker. The selected color subtly tints backgrounds
 and surfaces; text, borders, and accents are adjusted for contrast in both themes.
 Reset to SchoolHeat restores the default visual system. Heat-risk colors remain
