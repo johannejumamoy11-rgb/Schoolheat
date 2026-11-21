@@ -1161,6 +1161,20 @@
           <div class="custom-color-picker">
             <div class="accent-palette-label" id="setting-color-choice-label">Choose a color</div>
             <p class="setting-hint">Tap one color to apply a balanced palette across the app.</p>
+            <div class="palette-harmony-picker" role="group" aria-label="Palette harmony">
+              <button type="button" data-custom-palette-style="balanced" aria-pressed="true">
+                <span class="harmony-preview balanced" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span>Balanced</span>
+              </button>
+              <button type="button" data-custom-palette-style="warm" aria-pressed="false">
+                <span class="harmony-preview warm" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span>Warm</span>
+              </button>
+              <button type="button" data-custom-palette-style="cool" aria-pressed="false">
+                <span class="harmony-preview cool" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span>Cool</span>
+              </button>
+            </div>
             <div class="color-choice-grid" role="group" aria-labelledby="setting-color-choice-label">
               <button class="color-choice" type="button" data-custom-accent-choice="#4f8d5a" aria-pressed="false">
                 <span class="color-choice-swatch" style="--choice-color: #4f8d5a;" aria-hidden="true"></span>

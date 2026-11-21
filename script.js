@@ -310,7 +310,7 @@ const CUSTOM_ACCENT_CHOICES = Object.freeze([
   '#e2a32e'
 ]);
 
-function createCustomPaletteColors(theme, selectedAccent) {
+function createCustomPaletteColors(theme, selectedAccent, paletteStyle = 'balanced') {
   const defaults = CUSTOM_THEME_COLOR_DEFAULTS[theme];
   if (!defaults || !HEX_COLOR_PATTERN.test(selectedAccent || '')) {
     throw new TypeError('A supported theme and valid accent color are required.');
@@ -320,6 +320,16 @@ function createCustomPaletteColors(theme, selectedAccent) {
   const background = mixHexColors(defaults.background, selectedAccent, tint);
   const surface = mixHexColors(defaults.surface, selectedAccent, tint * 1.25);
   const surfaces = [background, surface];
+  const harmonyTargets = {
+    balanced: defaults.secondaryAccent,
+    warm: '#e58e6b',
+    cool: '#82c4a8'
+  };
+  const secondaryBase = harmonyTargets[paletteStyle] || harmonyTargets.balanced;
+  const secondaryAccent = getAccessibleAccent(
+    mixHexColors(selectedAccent, secondaryBase, paletteStyle === 'balanced' ? 0.48 : 0.62),
+    surfaces
+  ) || defaults.secondaryAccent;
   const palette = {
     background,
     surface,
@@ -331,10 +341,7 @@ function createCustomPaletteColors(theme, selectedAccent) {
     text: defaults.text,
     secondaryText: defaults.secondaryText,
     accent: getAccessibleAccent(selectedAccent, surfaces) || defaults.accent,
-    secondaryAccent: getAccessibleAccent(
-      mixHexColors(defaults.secondaryAccent, selectedAccent, 0.2),
-      surfaces
-    ) || defaults.secondaryAccent
+    secondaryAccent
   };
   if (getCustomPaletteValidationError(palette)) {
     throw new Error('The selected color could not produce a readable app palette.');
@@ -370,7 +377,7 @@ const HISTORY_PAGE_SIZE = 50;
 
 class SchoolHeatApp {
   constructor() {
-    const defaultSettings = { firebase: true, browserNotifications: false, pushAlerts: false, smsAlerts: false, smsNumbers: '', outlier: true, spike: true, demoMode: false, tempOffset: 0, humidityOffset: 0, darkMode: true, colorMode: 'automatic', accentPalette: 'schoolheat', customAccentColor: '#287985', customPaletteColors: null, language: 'en' };
+    const defaultSettings = { firebase: true, browserNotifications: false, pushAlerts: false, smsAlerts: false, smsNumbers: '', outlier: true, spike: true, demoMode: false, tempOffset: 0, humidityOffset: 0, darkMode: true, colorMode: 'automatic', accentPalette: 'schoolheat', customAccentColor: '#287985', customPaletteStyle: 'balanced', customPaletteColors: null, language: 'en' };
     try {
       const storedReadings = JSON.parse(localStorage.getItem('sh_readings') || '[]');
       this.readings = Array.isArray(storedReadings) ? storedReadings : [];
@@ -388,6 +395,9 @@ class SchoolHeatApp {
     }
     if (!['automatic', 'unified'].includes(this.settings.colorMode)) {
       this.settings.colorMode = 'automatic';
+    }
+    if (!['balanced', 'warm', 'cool'].includes(this.settings.customPaletteStyle)) {
+      this.settings.customPaletteStyle = 'balanced';
     }
     if (!Object.prototype.hasOwnProperty.call(APP_COLOR_PALETTES, this.settings.accentPalette)) {
       this.settings.accentPalette = 'schoolheat';
@@ -906,6 +916,7 @@ class SchoolHeatApp {
     const colorModeSelect = document.getElementById('setting-color-mode');
     const paletteChoiceButtons = document.querySelectorAll('[data-palette-choice]');
     const customAccentChoiceButtons = document.querySelectorAll('[data-custom-accent-choice]');
+    const customPaletteStyleButtons = document.querySelectorAll('[data-custom-palette-style]');
     const anyColorPicker = document.getElementById('setting-any-color');
     const resetPaletteButton = document.getElementById('setting-reset-palette');
     if (calTemp) calTemp.addEventListener('change', () => this.saveSettings());
@@ -936,11 +947,24 @@ class SchoolHeatApp {
       this.settings.accentPalette = 'custom';
       this.settings.customAccentColor = selectedAccent;
       ['dark', 'light'].forEach(theme => {
-        this.settings.customPaletteColors[theme] = createCustomPaletteColors(theme, selectedAccent);
+        this.settings.customPaletteColors[theme] = createCustomPaletteColors(theme, selectedAccent, this.settings.customPaletteStyle);
       });
       this.applyTheme();
       this.saveSettings(false);
     };
+    customPaletteStyleButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        this.settings.customPaletteStyle = button.dataset.customPaletteStyle;
+        if (HEX_COLOR_PATTERN.test(this.settings.customAccentColor || '')) {
+          ['dark', 'light'].forEach(theme => {
+            this.settings.customPaletteColors[theme] = createCustomPaletteColors(theme, this.settings.customAccentColor, this.settings.customPaletteStyle);
+          });
+          this.settings.accentPalette = 'custom';
+        }
+        this.applyTheme();
+        this.saveSettings(false);
+      });
+    });
     customAccentChoiceButtons.forEach(button => {
       button.addEventListener('click', () => applyCustomAccent(button.dataset.customAccentChoice));
     });
@@ -2950,6 +2974,18 @@ class SchoolHeatApp {
       ctx.lineWidth = major ? 1.5 : 1;
       ctx.stroke();
     }
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.72)';
+    ctx.font = '600 8px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ['0', '27', '42', '50'].forEach((label, index) => {
+      const labelAngle = startAngle + (index / 3) * sweep;
+      const labelRadius = radius + lineWidth * 1.2;
+      ctx.fillText(label, centerX + Math.cos(labelAngle) * labelRadius, centerY + Math.sin(labelAngle) * labelRadius);
+    });
+    ctx.restore();
 
     const angle = startAngle + (Math.min(value, maxVal) / maxVal) * sweep;
     const status = this.getStatus(value);
@@ -5031,6 +5067,17 @@ class SchoolHeatApp {
       const selected = palette === 'custom' && button.dataset.customAccentChoice === this.settings.customAccentColor;
       button.setAttribute('aria-pressed', String(selected));
       button.classList.toggle('is-selected', selected);
+    });
+    document.querySelectorAll('[data-custom-palette-style]').forEach(button => {
+      const selected = button.dataset.customPaletteStyle === this.settings.customPaletteStyle;
+      button.setAttribute('aria-pressed', String(selected));
+      button.classList.toggle('is-selected', selected);
+      const preview = button.querySelectorAll('.harmony-preview i');
+      if (preview.length === 3 && palette === 'custom') {
+        preview[0].style.setProperty('--harmony-color', colors.accent);
+        preview[1].style.setProperty('--harmony-color', colors.secondaryAccent);
+        preview[2].style.setProperty('--harmony-color', colors.surface);
+      }
     });
 
     if (colors && !getCustomPaletteValidationError(colors)) {

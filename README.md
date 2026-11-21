@@ -19,6 +19,8 @@ to the default SchoolHeat palette. Users can choose one of the SchoolHeat,
 Canopy, Lagoon, Solar, or Twilight palettes, pick from 24 one-tap color swatches, or open the
 optional full-spectrum color picker. The selected color subtly tints backgrounds
 and surfaces; text, borders, and accents are adjusted for contrast in both themes.
+Custom choices also offer Balanced, Warm, and Cool harmony modes that generate
+a coordinated accent pair rather than replacing the full app with one flat color.
 Reset to SchoolHeat restores the default visual system. Heat-risk colors remain
 fixed so their meanings do not change. None of these options changes
 measurements, heat-index categories, or forecasts. The About tab explains

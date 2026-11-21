@@ -43,6 +43,18 @@ test('offers one-tap swatches plus one full-spectrum picker', () => {
   assert.match(script, /addEventListener\('change', \(\) => applyCustomAccent\(anyColorPicker\.value\)\)/);
 });
 
+test('offers balanced warm and cool palette harmonies instead of a one-color system', () => {
+  assert.equal((index.match(/data-custom-palette-style="[^"]+"/g) || []).length, 3);
+  assert.match(index, /data-custom-palette-style="balanced"/);
+  assert.match(index, /data-custom-palette-style="warm"/);
+  assert.match(index, /data-custom-palette-style="cool"/);
+  assert.match(script, /customPaletteStyle: 'balanced'/);
+  for (const style of ['balanced', 'warm', 'cool']) {
+    const palette = context.SchoolHeatCustomPaletteGeneratorForTest('dark', '#287985', style);
+    assert.notEqual(palette.accent, palette.secondaryAccent);
+  }
+});
+
 test('shows the same labeled 4H gauge range on dashboard and monitor', () => {
   assert.equal((index.match(/class="gauge-range-key/g) || []).length, 2);
   assert.match(index, /aria-label="DepEd 4H heat-index range"/);

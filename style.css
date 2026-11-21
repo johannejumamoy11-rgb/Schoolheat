@@ -3624,20 +3624,59 @@ html[data-theme="light"] #tab-dashboard .status-card .status-range { color: #617
 .about-principle-card h4 { margin: 2px 0 6px; }
 .about-faq { margin-bottom: 20px; }
 .about-faq-item {
-  margin-top: 8px;
-  padding: 0 17px;
+  margin-top: 10px;
+  padding: 0;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--bg-card);
+  overflow: hidden;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+.about-faq-item[open] {
+  border-color: color-mix(in srgb, var(--brand-teal) 42%, var(--border));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--brand-teal) 5%, var(--bg-card)), var(--bg-card));
 }
 .about-faq-item summary {
-  padding: 15px 24px 15px 0;
+  position: relative;
+  min-height: 58px;
+  padding: 18px 54px 18px 18px;
   color: var(--text-primary);
   cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 720;
+  font-size: 0.88rem;
+  font-weight: 760;
+  line-height: 1.35;
+  list-style: none;
 }
-.about-faq-item p { margin: 0; padding: 0 0 15px; color: var(--text-secondary); font-size: 0.77rem; line-height: 1.65; }
+.about-faq-item summary::-webkit-details-marker { display: none; }
+.about-faq-item summary::after {
+  content: "+";
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  transform: translateY(-50%);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--brand-teal);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.about-faq-item[open] summary::after {
+  content: "−";
+  border-color: var(--brand-teal);
+  background: color-mix(in srgb, var(--brand-teal) 10%, var(--bg-card));
+}
+.about-faq-item p {
+  margin: 0;
+  padding: 0 18px 18px;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.65;
+}
 @media (max-width: 760px) {
   .about-hero { grid-template-columns: 1fr; gap: 20px; padding: 24px; }
   .about-hero-stat { min-height: 0; padding: 18px; }
@@ -5238,6 +5277,77 @@ html[data-theme="dark"] .hotline-nav-btn.active {
 .accent-color-hint {
   margin-top: 8px;
 }
+
+.palette-harmony-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 8px 0 10px;
+}
+
+.palette-harmony-picker button {
+  min-height: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.palette-harmony-picker button:hover,
+.palette-harmony-picker button.is-selected {
+  border-color: var(--brand-teal);
+  background: var(--surface-raised);
+}
+
+.palette-harmony-picker button.is-selected {
+  box-shadow: inset 0 0 0 1px var(--brand-teal);
+}
+
+.harmony-preview {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+}
+
+.harmony-preview i {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--harmony-color, var(--accent-cyan));
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+}
+
+.harmony-preview i:nth-child(2) {
+  background: var(--harmony-color, var(--accent-purple));
+  transform: translateY(-3px);
+}
+
+.harmony-preview i:nth-child(3) {
+  background: var(--harmony-color, var(--accent-pink));
+  transform: translateY(3px);
+}
+
+.harmony-preview.balanced i:first-child { --harmony-color: var(--accent-cyan); }
+.harmony-preview.balanced i:nth-child(2) { --harmony-color: var(--accent-purple); }
+.harmony-preview.balanced i:nth-child(3) { --harmony-color: var(--accent-pink); }
+.harmony-preview.warm i:first-child { --harmony-color: #e58e6b; }
+.harmony-preview.warm i:nth-child(2) { --harmony-color: #f0c66c; }
+.harmony-preview.warm i:nth-child(3) { --harmony-color: #a64f36; }
+.harmony-preview.cool i:first-child { --harmony-color: #82c4a8; }
+.harmony-preview.cool i:nth-child(2) { --harmony-color: #70b9c7; }
+.harmony-preview.cool i:nth-child(3) { --harmony-color: #3777a8; }
 
 @media (prefers-reduced-motion: reduce) {
   *,
