@@ -30,7 +30,7 @@ test('offers one-tap swatches plus one full-spectrum picker', () => {
   const paletteChoices = [...index.matchAll(/data-palette-choice="([^"]+)"/g)]
     .map(match => match[1])
     .sort();
-  assert.deepEqual(paletteChoices, ['canopy', 'lagoon', 'schoolheat', 'solar', 'twilight']);
+  assert.deepEqual(paletteChoices, ['canopy','coral','lagoon','mint','monochrome','ocean','schoolheat','solar','sunset','twilight','violet','warmfield']);
   const accentChoices = [...index.matchAll(/data-custom-accent-choice="([^"]+)"/g)]
     .map(match => match[1])
     .sort();
@@ -44,12 +44,12 @@ test('offers one-tap swatches plus one full-spectrum picker', () => {
 });
 
 test('offers balanced warm and cool palette harmonies instead of a one-color system', () => {
-  assert.equal((index.match(/data-custom-palette-style="[^"]+"/g) || []).length, 3);
+  assert.equal((index.match(/data-custom-palette-style="[^"]+"/g) || []).length, 6);
   assert.match(index, /data-custom-palette-style="balanced"/);
   assert.match(index, /data-custom-palette-style="warm"/);
   assert.match(index, /data-custom-palette-style="cool"/);
   assert.match(script, /customPaletteStyle: 'balanced'/);
-  for (const style of ['balanced', 'warm', 'cool']) {
+  for (const style of ['balanced', 'warm', 'cool', 'analogous', 'complementary', 'monochrome']) {
     const palette = context.SchoolHeatCustomPaletteGeneratorForTest('dark', '#287985', style);
     assert.notEqual(palette.accent, palette.secondaryAccent);
   }
@@ -133,7 +133,14 @@ test('validates full custom palettes for readable text in each theme', () => {
       context.SchoolHeatColorPalettesForTest.canopy[theme],
       context.SchoolHeatColorPalettesForTest.lagoon[theme],
       context.SchoolHeatColorPalettesForTest.solar[theme],
-      context.SchoolHeatColorPalettesForTest.twilight[theme]
+      context.SchoolHeatColorPalettesForTest.twilight[theme],
+      context.SchoolHeatColorPalettesForTest.sunset[theme],
+      context.SchoolHeatColorPalettesForTest.coral[theme],
+      context.SchoolHeatColorPalettesForTest.mint[theme],
+      context.SchoolHeatColorPalettesForTest.ocean[theme],
+      context.SchoolHeatColorPalettesForTest.violet[theme],
+      context.SchoolHeatColorPalettesForTest.monochrome[theme],
+      context.SchoolHeatColorPalettesForTest.warmfield[theme]
     ];
     palettes.forEach(colors => {
       assert.equal(validation(colors), '');

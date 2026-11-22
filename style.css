@@ -4381,7 +4381,7 @@ html[data-color-mode="automatic"][data-active-tab="hotlines"] {
 }
 
 .palette-choice-grid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .palette-choice {
@@ -4449,7 +4449,7 @@ html[data-color-mode="automatic"][data-active-tab="hotlines"] {
 
 @media (max-width: 760px) {
   .palette-choice-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .color-choice-grid {
@@ -5097,7 +5097,7 @@ html[data-theme="dark"] .hotline-nav-btn.active {
 
 .palette-choice-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
   margin-top: 8px;
 }
@@ -5280,7 +5280,7 @@ html[data-theme="dark"] .hotline-nav-btn.active {
 
 .palette-harmony-picker {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
   margin: 8px 0 10px;
 }
@@ -5348,6 +5348,47 @@ html[data-theme="dark"] .hotline-nav-btn.active {
 .harmony-preview.cool i:first-child { --harmony-color: #82c4a8; }
 .harmony-preview.cool i:nth-child(2) { --harmony-color: #70b9c7; }
 .harmony-preview.cool i:nth-child(3) { --harmony-color: #3777a8; }
+
+.custom-palette-preview {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 62px;
+  margin: 8px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent-cyan) 7%, var(--bg-card)), var(--bg-card));
+}
+
+.custom-preview-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+
+.custom-preview-header strong {
+  color: var(--text-primary);
+  font-size: 0.78rem;
+}
+
+.custom-preview-swatches {
+  display: flex;
+  gap: 4px;
+}
+
+.custom-preview-swatches i {
+  display: block;
+  width: 24px;
+  height: 38px;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -5634,11 +5675,17 @@ html[data-theme] .header-title {
 
 @media (max-width: 760px) {
   .palette-choice-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .color-choice-grid {
     grid-template-columns: repeat(4, minmax(58px, 1fr));
+  }
+  .palette-harmony-picker {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .custom-preview-swatches i {
+    width: 20px;
   }
 }
 
@@ -5667,5 +5714,140 @@ html[data-theme] .header-title {
 
   #tab-dashboard .dashboard-reading-metric {
     min-height: 68px;
+  }
+}
+
+/* Advanced field-atlas atmosphere */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+body::before {
+  opacity: 0.32;
+  background:
+    linear-gradient(90deg, transparent 49.82%, color-mix(in srgb, var(--accent-cyan) 7%, transparent) 50%, transparent 50.18%),
+    linear-gradient(0deg, transparent 49.82%, color-mix(in srgb, var(--accent-cyan) 5%, transparent) 50%, transparent 50.18%);
+  background-size: 84px 84px;
+  mask-image: linear-gradient(to bottom, transparent 0, rgba(0,0,0,0.72) 18%, rgba(0,0,0,0.72) 82%, transparent 100%);
+}
+
+body::after {
+  opacity: 0.16;
+  background:
+    radial-gradient(ellipse at 18% 30%, transparent 0 48px, color-mix(in srgb, var(--accent-cyan) 12%, transparent) 49px 50px, transparent 51px),
+    radial-gradient(ellipse at 18% 30%, transparent 0 78px, color-mix(in srgb, var(--accent-cyan) 8%, transparent) 79px 80px, transparent 81px),
+    radial-gradient(ellipse at 82% 62%, transparent 0 58px, color-mix(in srgb, var(--accent-purple) 9%, transparent) 59px 60px, transparent 61px);
+  background-size: 100% 100%;
+}
+
+.tab-panel.active {
+  animation: schoolheat-panel-enter 260ms cubic-bezier(.22,.61,.36,1) both;
+}
+
+.tab-panel.active > .glass-card,
+.tab-panel.active .status-card,
+.tab-panel.active .dashboard-preview-card,
+.tab-panel.active .campus-coverage-card {
+  animation: schoolheat-card-enter 420ms cubic-bezier(.22,.61,.36,1) both;
+}
+
+.tab-panel.active > .glass-card:nth-of-type(2),
+.tab-panel.active .dashboard-preview-card:nth-of-type(2) { animation-delay: 55ms; }
+.tab-panel.active > .glass-card:nth-of-type(3),
+.tab-panel.active .dashboard-preview-card:nth-of-type(3) { animation-delay: 110ms; }
+.tab-panel.active > .glass-card:nth-of-type(4),
+.tab-panel.active .dashboard-preview-card:nth-of-type(4) { animation-delay: 165ms; }
+
+@keyframes schoolheat-panel-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes schoolheat-card-enter {
+  from { opacity: 0; transform: translateY(10px) scale(.995); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.app-header {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.glass-card,
+.status-card,
+.palette-choice,
+.color-choice,
+.about-faq-item {
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.glass-card:hover,
+.status-card:hover,
+.palette-choice:hover,
+.color-choice:hover,
+.about-faq-item:hover {
+  transform: translateY(-2px);
+}
+
+#tab-dashboard .latest-reading {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.035), transparent 45%),
+    var(--latest-reading-bg);
+}
+
+#tab-dashboard .reading-gauge-wrap {
+  overflow: visible;
+}
+
+#tab-dashboard .dashboard-gauge-block {
+  position: relative;
+}
+
+#tab-dashboard .dashboard-gauge-block::before {
+  content: "";
+  position: absolute;
+  width: 112%;
+  height: 112%;
+  left: -6%;
+  top: -6%;
+  border: 1px solid color-mix(in srgb, var(--accent-cyan) 16%, transparent);
+  border-radius: 50%;
+  transform: scaleY(.88);
+  pointer-events: none;
+  mask-image: linear-gradient(135deg, #000 0 48%, transparent 49% 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after,
+  .tab-panel.active,
+  .tab-panel.active > .glass-card,
+  .tab-panel.active .status-card,
+  .tab-panel.active .dashboard-preview-card,
+  .tab-panel.active .campus-coverage-card,
+  .glass-card,
+  .status-card,
+  .palette-choice,
+  .color-choice,
+  .about-faq-item {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .glass-card:hover,
+  .status-card:hover,
+  .palette-choice:hover,
+  .color-choice:hover,
+  .about-faq-item:hover {
+    transform: none;
   }
 }

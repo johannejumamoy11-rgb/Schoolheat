@@ -1157,6 +1157,27 @@
               </span>
               <span>Twilight</span>
             </button>
+            <button class="palette-choice" type="button" data-palette-choice="sunset" aria-pressed="false">
+              <span class="palette-choice-swatches" aria-hidden="true"><i data-palette-preview-field="background" style="--swatch-color:#1d1718"></i><i data-palette-preview-field="surface" style="--swatch-color:#302326"></i><i data-palette-preview-field="accent" style="--swatch-color:#ef9567"></i><i data-palette-preview-field="secondaryAccent" style="--swatch-color:#efc066"></i></span><span>Sunset</span>
+            </button>
+            <button class="palette-choice" type="button" data-palette-choice="coral" aria-pressed="false">
+              <span class="palette-choice-swatches" aria-hidden="true"><i data-palette-preview-field="background" style="--swatch-color:#211719"></i><i data-palette-preview-field="surface" style="--swatch-color:#322326"></i><i data-palette-preview-field="accent" style="--swatch-color:#ee7d79"></i><i data-palette-preview-field="secondaryAccent" style="--swatch-color:#79bfc1"></i></span><span>Coral</span>
+            </button>
+            <button class="palette-choice" type="button" data-palette-choice="mint" aria-pressed="false">
+              <span class="palette-choice-swatches" aria-hidden="true"><i data-palette-preview-field="background" style="--swatch-color:#101d1a"></i><i data-palette-preview-field="surface" style="--swatch-color:#1a2b27"></i><i data-palette-preview-field="accent" style="--swatch-color:#72cda9"></i><i data-palette-preview-field="secondaryAccent" style="--swatch-color:#82afdf"></i></span><span>Mint</span>
+            </button>
+            <button class="palette-choice" type="button" data-palette-choice="ocean" aria-pressed="false">
+              <span class="palette-choice-swatches" aria-hidden="true"><i data-palette-preview-field="background" style="--swatch-color:#0f1923"></i><i data-palette-preview-field="surface" style="--swatch-color:#182738"></i><i data-palette-preview-field="accent" style="--swatch-color:#63aee8"></i><i data-palette-preview-field="secondaryAccent" style="--swatch-color:#68c3b4"></i></span><span>Ocean</span>
+            </button>
+            <button class="palette-choice" type="button" data-palette-choice="violet" aria-pressed="false">
+              <span class="palette-choice-swatches" aria-hidden="true"><i data-palette-preview-field="background" style="--swatch-color:#191521"></i><i data-palette-preview-field="surface" style="--swatch-color:#2a2338"></i><i data-palette-preview-field="accent" style="--swatch-color:#a58ae0"></i><i data-palette-preview-field="secondaryAccent" style="--swatch-color:#da86b2"></i></span><span>Violet</span>
+            </button>
+            <button class="palette-choice" type="button" data-palette-choice="monochrome" aria-pressed="false">
+              <span class="palette-choice-swatches" aria-hidden="true"><i data-palette-preview-field="background" style="--swatch-color:#141414"></i><i data-palette-preview-field="surface" style="--swatch-color:#242424"></i><i data-palette-preview-field="accent" style="--swatch-color:#bcbcbc"></i><i data-palette-preview-field="secondaryAccent" style="--swatch-color:#8a8a85"></i></span><span>Monochrome</span>
+            </button>
+            <button class="palette-choice" type="button" data-palette-choice="warmfield" aria-pressed="false">
+              <span class="palette-choice-swatches" aria-hidden="true"><i data-palette-preview-field="background" style="--swatch-color:#1c1912"></i><i data-palette-preview-field="surface" style="--swatch-color:#2b281d"></i><i data-palette-preview-field="accent" style="--swatch-color:#d0ba67"></i><i data-palette-preview-field="secondaryAccent" style="--swatch-color:#c98858"></i></span><span>Warm field</span>
+            </button>
           </div>
           <div class="custom-color-picker">
             <div class="accent-palette-label" id="setting-color-choice-label">Choose a color</div>
@@ -1174,6 +1195,15 @@
                 <span class="harmony-preview cool" aria-hidden="true"><i></i><i></i><i></i></span>
                 <span>Cool</span>
               </button>
+              <button type="button" data-custom-palette-style="analogous" aria-pressed="false"><span class="harmony-preview analogous" aria-hidden="true"><i></i><i></i><i></i></span><span>Analogous</span></button>
+              <button type="button" data-custom-palette-style="complementary" aria-pressed="false"><span class="harmony-preview complementary" aria-hidden="true"><i></i><i></i><i></i></span><span>Complementary</span></button>
+              <button type="button" data-custom-palette-style="monochrome" aria-pressed="false"><span class="harmony-preview monochrome" aria-hidden="true"><i></i><i></i><i></i></span><span>Mono</span></button>
+            </div>
+            <div class="custom-palette-preview" id="custom-palette-preview" aria-label="Custom palette live preview">
+              <div class="custom-preview-header"><span>Palette preview</span><strong id="custom-palette-preview-name">Balanced</strong></div>
+              <div class="custom-preview-swatches" aria-hidden="true">
+                <i id="custom-preview-background"></i><i id="custom-preview-surface"></i><i id="custom-preview-accent"></i><i id="custom-preview-secondary"></i><i id="custom-preview-text"></i>
+              </div>
             </div>
             <div class="color-choice-grid" role="group" aria-labelledby="setting-color-choice-label">
               <button class="color-choice" type="button" data-custom-accent-choice="#4f8d5a" aria-pressed="false">

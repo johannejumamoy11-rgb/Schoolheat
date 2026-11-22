@@ -237,6 +237,34 @@ const APP_COLOR_PALETTES = Object.freeze({
       secondaryAccent: '#994d76'
     })
   }),
+  sunset: Object.freeze({
+    dark: Object.freeze({ background:'#1d1718', surface:'#302326', border:'#80666a', text:'#fff4ef', secondaryText:'#dcc8c4', accent:'#ef9567', secondaryAccent:'#efc066' }),
+    light: Object.freeze({ background:'#faf0e9', surface:'#fffaf6', border:'#927a73', text:'#402f29', secondaryText:'#70574f', accent:'#9e4d32', secondaryAccent:'#956522' })
+  }),
+  coral: Object.freeze({
+    dark: Object.freeze({ background:'#211719', surface:'#322326', border:'#80676a', text:'#fff4f1', secondaryText:'#dac5c3', accent:'#ee7d79', secondaryAccent:'#79bfc1' }),
+    light: Object.freeze({ background:'#fbf0ed', surface:'#fff9f7', border:'#927975', text:'#42302e', secondaryText:'#705956', accent:'#9b4541', secondaryAccent:'#3e7779' })
+  }),
+  mint: Object.freeze({
+    dark: Object.freeze({ background:'#101d1a', surface:'#1a2b27', border:'#627d76', text:'#edf8f4', secondaryText:'#bfd2cc', accent:'#72cda9', secondaryAccent:'#82afdf' }),
+    light: Object.freeze({ background:'#edf7f2', surface:'#fafffc', border:'#718e85', text:'#263a34', secondaryText:'#526b63', accent:'#34765c', secondaryAccent:'#4a719c' })
+  }),
+  ocean: Object.freeze({
+    dark: Object.freeze({ background:'#0f1923', surface:'#182738', border:'#63778b', text:'#edf6ff', secondaryText:'#bfd0de', accent:'#63aee8', secondaryAccent:'#68c3b4' }),
+    light: Object.freeze({ background:'#edf4fa', surface:'#fafdff', border:'#71859a', text:'#263847', secondaryText:'#546979', accent:'#2f6694', secondaryAccent:'#347f75' })
+  }),
+  violet: Object.freeze({
+    dark: Object.freeze({ background:'#191521', surface:'#2a2338', border:'#756c87', text:'#f8f3ff', secondaryText:'#cfc5dd', accent:'#a58ae0', secondaryAccent:'#da86b2' }),
+    light: Object.freeze({ background:'#f4f0f8', surface:'#fcfaff', border:'#817893', text:'#342f45', secondaryText:'#625a70', accent:'#64519c', secondaryAccent:'#945379' })
+  }),
+  monochrome: Object.freeze({
+    dark: Object.freeze({ background:'#141414', surface:'#242424', border:'#747474', text:'#f7f7f2', secondaryText:'#c7c7c2', accent:'#bcbcbc', secondaryAccent:'#8a8a85' }),
+    light: Object.freeze({ background:'#f2f2ed', surface:'#fdfdf9', border:'#777772', text:'#292927', secondaryText:'#5d5d58', accent:'#3f3f3d', secondaryAccent:'#686865' })
+  }),
+  warmfield: Object.freeze({
+    dark: Object.freeze({ background:'#1c1912', surface:'#2b281d', border:'#7b7562', text:'#fbf6df', secondaryText:'#cdc8ae', accent:'#d0ba67', secondaryAccent:'#c98858' }),
+    light: Object.freeze({ background:'#f7f3e4', surface:'#fffdf2', border:'#8c8467', text:'#39372a', secondaryText:'#66634f', accent:'#75641c', secondaryAccent:'#8c5535' })
+  }),
   custom: null
 });
 
@@ -323,7 +351,10 @@ function createCustomPaletteColors(theme, selectedAccent, paletteStyle = 'balanc
   const harmonyTargets = {
     balanced: defaults.secondaryAccent,
     warm: '#e58e6b',
-    cool: '#82c4a8'
+    cool: '#82c4a8',
+    analogous: mixHexColors(selectedAccent, '#82c4a8', 0.55),
+    complementary: mixHexColors(selectedAccent, '#ffffff', 0.72),
+    monochrome: mixHexColors(selectedAccent, '#8a8a85', 0.65)
   };
   const secondaryBase = harmonyTargets[paletteStyle] || harmonyTargets.balanced;
   const secondaryAccent = getAccessibleAccent(
@@ -396,7 +427,7 @@ class SchoolHeatApp {
     if (!['automatic', 'unified'].includes(this.settings.colorMode)) {
       this.settings.colorMode = 'automatic';
     }
-    if (!['balanced', 'warm', 'cool'].includes(this.settings.customPaletteStyle)) {
+    if (!['balanced', 'warm', 'cool', 'analogous', 'complementary', 'monochrome'].includes(this.settings.customPaletteStyle)) {
       this.settings.customPaletteStyle = 'balanced';
     }
     if (!Object.prototype.hasOwnProperty.call(APP_COLOR_PALETTES, this.settings.accentPalette)) {
@@ -5079,6 +5110,23 @@ class SchoolHeatApp {
         preview[2].style.setProperty('--harmony-color', colors.surface);
       }
     });
+    const palettePreviewName = document.getElementById('custom-palette-preview-name');
+    if (palettePreviewName) palettePreviewName.textContent = palette === 'custom'
+      ? this.settings.customPaletteStyle.charAt(0).toUpperCase() + this.settings.customPaletteStyle.slice(1)
+      : 'Preset';
+    const previewFields = colors ? {
+      'custom-preview-background': colors.background,
+      'custom-preview-surface': colors.surface,
+      'custom-preview-accent': colors.accent,
+      'custom-preview-secondary': colors.secondaryAccent,
+      'custom-preview-text': colors.text
+    } : null;
+    if (previewFields) {
+      Object.entries(previewFields).forEach(([id, color]) => {
+        const element = document.getElementById(id);
+        if (element) element.style.background = color;
+      });
+    }
 
     if (colors && !getCustomPaletteValidationError(colors)) {
       const surfaces = [colors.background, colors.surface];
