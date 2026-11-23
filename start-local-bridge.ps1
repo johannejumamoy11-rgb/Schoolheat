@@ -27,6 +27,7 @@ function Send-Response {
     $Context.Response.ContentType = 'application/json; charset=utf-8'
     $Context.Response.ContentLength64 = $bytes.Length
     $Context.Response.Headers['Access-Control-Allow-Origin'] = $allowedOrigin
+    $Context.Response.Headers['Access-Control-Allow-Private-Network'] = 'true'
     $Context.Response.Headers['Vary'] = 'Origin'
     $Context.Response.Headers['Cache-Control'] = 'no-store'
     $Context.Response.OutputStream.Write($bytes, 0, $bytes.Length)
@@ -37,6 +38,10 @@ try {
     $listener.Start()
 } catch {
     Write-Error "Could not start the localhost bridge on port 8765: $($_.Exception.Message)"
+    if ($_.Exception.Message -match 'denied|permission|access') {
+        Write-Error 'Windows HTTP.SYS may need a URL ACL for this user. Run this once in an elevated PowerShell:'
+        Write-Error 'netsh http add urlacl url=http://localhost:8765/ user=%USERNAME%'
+    }
     Write-Error 'Close any other bridge using port 8765, then try again.'
     exit 1
 }
@@ -60,6 +65,7 @@ try {
         if ($request.HttpMethod -eq 'OPTIONS') {
             $context.Response.StatusCode = 204
             $context.Response.Headers['Access-Control-Allow-Origin'] = $allowedOrigin
+            $context.Response.Headers['Access-Control-Allow-Private-Network'] = 'true'
             $context.Response.Headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
             $context.Response.Headers['Access-Control-Allow-Headers'] = 'Content-Type'
             $context.Response.Headers['Access-Control-Max-Age'] = '600'

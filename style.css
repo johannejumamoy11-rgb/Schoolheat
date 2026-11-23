@@ -5506,7 +5506,8 @@ html[data-theme] .header-title {
   pointer-events: none;
 }
 
-.dashboard-hero-illustration img {
+.dashboard-hero-illustration img,
+.dashboard-hero-illustration svg {
   display: block;
   width: 100%;
   height: auto;

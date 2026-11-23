@@ -562,3 +562,39 @@ test('shows zero mapped-pin coverage without making an empty map look complete',
   assert.equal(coverageAttributes['aria-valuemax'], '29');
   assert.equal(coverageFill.style.transform, 'scaleX(0)');
 });
+
+test('escapes imported location names in the forecast summary', () => {
+  assert.ok(script.includes("this.escapeHTML(modelResult.location || 'the current location')"));
+});
+
+test('removes a queued SMS by id after re-reading storage', () => {
+  assert.ok((script.match(/removeQueuedSmsItem\(item\.id\)/g) || []).length >= 2);
+  assert.match(script, /const queue = this\.readPendingSmsQueue\(\);\s*const index = queue\.findIndex/);
+  assert.doesNotMatch(script, /queue\.shift\(\)/);
+});
+
+test('keeps the offline shell independent of the optional campus illustration', () => {
+  const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
+  assert.doesNotMatch(serviceWorker, /campus-heat-atlas\.svg/);
+  assert.doesNotMatch(index, /campus-heat-atlas\.svg/);
+});
+
+test('demo readings never receive future timestamps', () => {
+  const previousTZ = process.env.TZ;
+  process.env.TZ = 'Asia/Manila';
+  try {
+    const demoApp = Object.create(context.SchoolHeatAppForTest.prototype);
+    demoApp.readings = [];
+    demoApp.saveReadings = () => {};
+    demoApp.updateDashboard = () => {};
+    demoApp.renderHistory = () => {};
+    demoApp.renderMap = () => {};
+    demoApp.generateDemoData(true);
+    const now = Date.now();
+    assert.ok(demoApp.readings.length > 0);
+    assert.ok(demoApp.readings.every(reading => Date.parse(reading.timestamp) <= now));
+  } finally {
+    if (previousTZ === undefined) delete process.env.TZ;
+    else process.env.TZ = previousTZ;
+  }
+});

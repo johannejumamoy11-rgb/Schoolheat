@@ -1426,6 +1426,23 @@ class SchoolHeatApp {
     this.updateSmsQueueCancelButton(queue.length);
   }
 
+  pendingSmsCount() {
+    try {
+      return this.readPendingSmsQueue().length;
+    } catch {
+      return 0;
+    }
+  }
+
+  removeQueuedSmsItem(itemId) {
+    const queue = this.readPendingSmsQueue();
+    const index = queue.findIndex(item => item.id === itemId);
+    if (index === -1) return this.pendingSmsCount();
+    queue.splice(index, 1);
+    this.savePendingSmsQueue(queue);
+    return queue.length;
+  }
+
   updateSmsQueueCancelButton(queueLength) {
     const button = document.getElementById('setting-sms-cancel-queue');
     if (button) button.hidden = queueLength === 0;
@@ -1583,19 +1600,17 @@ class SchoolHeatApp {
           ? ` (provider HTTP ${result.providerStatus})`
           : '';
         this.toast(`SMS remains queued: ${errorDetail}${providerStatus} It will retry in about ${retryAfterSeconds} seconds while SchoolHeat is open.`, 'warning');
-        this.scheduleSmsRetry(retryAfterSeconds * 1000);
+        if (this.pendingSmsCount()) this.scheduleSmsRetry(retryAfterSeconds * 1000);
         return;
       }
       if (!response.ok) {
-        queue.shift();
-        this.savePendingSmsQueue(queue);
+        const remaining = this.removeQueuedSmsItem(item.id);
         this.toast(`SMS was not accepted: ${result.error || `request failed (${response.status})`}`, 'error');
-        if (queue.length) this.scheduleSmsRetry();
+        if (remaining) this.scheduleSmsRetry();
         return;
       }
 
-      queue.shift();
-      this.savePendingSmsQueue(queue);
+      const remaining = this.removeQueuedSmsItem(item.id);
       const sent = Number(result.sent) || 0;
       const failed = Number(result.failed) || 0;
       if (sent) {
@@ -1603,7 +1618,7 @@ class SchoolHeatApp {
       } else {
         this.toast('SMS was not accepted by CLOUDSMS.', 'warning');
       }
-      if (queue.length) this.scheduleSmsRetry();
+      if (remaining) this.scheduleSmsRetry();
     } catch (error) {
       console.error('SMS delivery attempt failed:', error);
       this.toast('SMS remains queued on this device and will be retried when the service is available.', 'warning');
@@ -4456,7 +4471,7 @@ class SchoolHeatApp {
           <span>Current: <strong>${modelResult.current.value.toFixed(1)}°C</strong></span>
           <span>Best prediction: <strong style="color:${predictionColor}">${forecast.value.toFixed(1)}°C</strong></span>
         </div>
-        <div style="margin-top:6px;font-size:0.72rem;color:var(--text-muted);">${bestModel.label} uses the latest ${modelResult.trainingSamples} same-location examples at ${modelResult.location || 'the current location'} to predict 30 minutes ahead.</div>
+        <div style="margin-top:6px;font-size:0.72rem;color:var(--text-muted);">${bestModel.label} uses the latest ${modelResult.trainingSamples} same-location examples at ${this.escapeHTML(modelResult.location || 'the current location')} to predict 30 minutes ahead.</div>
       `;
     }
 
@@ -4766,11 +4781,16 @@ class SchoolHeatApp {
     for (let d = 6; d >= 0; d--) {
       const dayBase = new Date(now);
       dayBase.setDate(dayBase.getDate() - d);
+      const isToday = d === 0;
+      const maxHour = isToday ? now.getHours() : 15;
+      if (maxHour < 7) continue;
       const numReadings = 3 + Math.floor(Math.random() * 5);
       for (let i = 0; i < numReadings; i++) {
         const loc = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)].name;
-        const hour = 7 + Math.floor(Math.random() * 9);
-        const minute = Math.floor(Math.random() * 60);
+        const hour = 7 + Math.floor(Math.random() * (maxHour - 7 + 1));
+        const minute = isToday && hour === now.getHours()
+          ? Math.floor(Math.random() * (now.getMinutes() + 1))
+          : Math.floor(Math.random() * 60);
         const temp = 26 + Math.random() * 14 + (hour - 12) * 0.3;
         const hum = 50 + Math.random() * 40;
         const ts = new Date(dayBase);
