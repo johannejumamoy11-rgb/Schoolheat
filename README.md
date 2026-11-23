@@ -235,18 +235,18 @@ treated as active heat warnings. A recent saved reading still does not prove
 that a sensor is currently connected. The Worker verifies Firebase
 Anonymous Auth and App Check tokens, keeps the SMS provider API key in
 Cloudflare secrets, and allows one SMS request every five minutes per account,
-including test messages. The Worker uses the free **SMS API PH** when
-`SMSAPIPH_API_KEY` is set, then **PhilSMS** when `PHILSMS_API_TOKEN` is set,
-then **ExSender** when `EXSENDER_API_KEY` is set, and falls back to **SMS.to**
-when only `SMSTO_API_KEY` is set. SMS API PH is Philippine-only, needs no
-credits or hardware, and allows one message every 10 seconds, so multiple
-recipients are paced by the Worker. PhilSMS is configured as a backup only:
-the free Standard plan shown in the new dashboard has **0 SMS units**, a top-up
-is required to send, and Sender ID registration requires business documents and
-does not accept academic projects. Store its API token as the
-`PHILSMS_API_TOKEN` Worker secret and optionally set `PHILSMS_SENDER_ID`
-(default: `SchoolHeat`, which still needs approval). Verify Globe, Smart/TNT,
-and DITO support and sender approval before relying on delivery. No local bridge is needed for SMS (the
+including test messages. The Worker uses **IPROG SMS** when `IPROG_API_TOKEN`
+is set, then **PhilSMS** when `PHILSMS_API_TOKEN` is set, then **ExSender**
+when `EXSENDER_API_KEY` is set, and falls back to **SMS.to** when only
+`SMSTO_API_KEY` is set. SMS API PH is no longer used. IPROG SMS is
+Philippine-only, gives 5 free credits after student verification, and supports
+a custom SMS header chosen during that verification; student verification is
+automatic and usually finishes within minutes. Store the token as the
+`IPROG_API_TOKEN` Worker secret. PhilSMS is configured as a backup only: the
+free Standard plan in the new dashboard has **0 SMS units**, a top-up is
+required, and Sender ID registration requires business documents and does not
+accept academic projects. Verify Globe, Smart/TNT, and DITO support and sender
+approval before relying on delivery. No local bridge is needed for SMS (the
 bridge remains optional for ESP32 Wi-Fi sync).
 
 The **Hotlines** tab provides a one-tap link to the Philippine emergency

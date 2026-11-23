@@ -7,12 +7,11 @@ const FIREBASE_PROJECT_ID = "schoolheat-final";
 const FIREBASE_PROJECT_NUMBER = "960776018094";
 const FIREBASE_APP_ID = "1:960776018094:web:2d61dc050347340c86f53f";
 const RATE_LIMIT_MS = 5 * 60 * 1000;
-const SMS_API_PH_MIN_INTERVAL_MS = 10 * 1000;
 const MAX_BODY_BYTES = 16 * 1024;
 const NUMBER_PATTERN = /^(?:\+?63|0)?9\d{9}$/;
+const IPROG_API_URL = "https://www.iprogsms.com/api/v1/sms_messages/send_bulk";
 const PHILSMS_API_URL = "https://dashboard.philsms.com/api/v3/sms/send";
 const PHILSMS_DEFAULT_SENDER_ID = "SchoolHeat";
-const SMS_API_PH_URL = "https://smsapiph.onrender.com/api/v1/send/sms";
 const EXSENDER_API_URL = "https://exsender.com/api/v1/sms/send";
 
 const APP_CHECK_JWKS_URL = "https://firebaseappcheck.googleapis.com/v1/jwks";
@@ -211,27 +210,23 @@ export function createMessage(payload) {
 }
 
 export function getSmsProvider(env) {
-  if (env.SMSAPIPH_API_KEY?.trim()) return "smsapiph";
+  if (env.IPROG_API_TOKEN?.trim()) return "iprog";
   if (env.PHILSMS_API_TOKEN?.trim()) return "philsms";
   if (env.EXSENDER_API_KEY?.trim()) return "exsender";
   if (env.SMSTO_API_KEY?.trim()) return "smsto";
   return null;
 }
 
-export async function sendSms(env, numbers, message, fetchImpl = fetch, waitImpl = defaultWait) {
+export async function sendSms(env, numbers, message, fetchImpl = fetch) {
   const provider = getSmsProvider(env);
   if (!provider) {
     throw new Error("No SMS provider is configured on the SMS Worker.");
   }
-  if (provider === "smsapiph") return sendViaSmsApiPh(env, numbers, message, fetchImpl, waitImpl);
+  if (provider === "iprog") return sendViaIprog(env, numbers, message, fetchImpl);
   if (provider === "philsms") return sendViaPhilSms(env, numbers, message, fetchImpl);
   return provider === "exsender"
     ? sendViaExSender(env, numbers, message, fetchImpl)
     : sendViaSmsTo(env, numbers, message, fetchImpl);
-}
-
-function defaultWait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function sendViaPhilSms(env, numbers, message, fetchImpl) {
@@ -319,87 +314,91 @@ async function sendViaPhilSms(env, numbers, message, fetchImpl) {
   };
 }
 
-async function sendViaSmsApiPh(env, numbers, message, fetchImpl, waitImpl) {
-  const apiKey = env.SMSAPIPH_API_KEY.trim();
-  let sent = 0;
+async function sendViaIprog(env, numbers, message, fetchImpl) {
+  const apiToken = env.IPROG_API_TOKEN.trim();
+  const body = {
+    api_token: apiToken,
+    phone_number: numbers.join(","),
+    message
+  };
+  let response;
+  try {
+    response = await fetchImpl(IPROG_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+  } catch {
+    return {
+      status: 409,
+      body: { error: "IPROG SMS's response was unclear. Check IPROG message logs before sending this alert again." }
+    };
+  }
 
-  for (const number of numbers) {
-    let response;
-    try {
-      response = await fetchImpl(SMS_API_PH_URL, {
-        method: "POST",
-        headers: {
-          "x-api-key": apiKey,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ recipient: `+${number}`, message })
-      });
-    } catch {
-      return {
-        status: 409,
-        body: { error: "SMS API PH's response was unclear. Check SMS API PH message logs before sending this alert again." }
-      };
-    }
+  if (response.status === 429) {
+    const retryAfterSeconds = Number(response.headers.get("Retry-After"));
+    return {
+      status: 503,
+      body: {
+        error: "IPROG SMS is temporarily rate-limiting requests; the alert can be retried.",
+        providerStatus: response.status,
+        retryAfterSeconds: Math.max(
+          RATE_LIMIT_MS / 1000,
+          Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+            ? Math.ceil(retryAfterSeconds)
+            : 0
+        )
+      }
+    };
+  }
+  if (response.status >= 500) {
+    console.warn("IPROG SMS returned a server error.", response.status);
+    return {
+      status: 409,
+      body: { error: "IPROG SMS returned an unclear result. Check IPROG message logs before sending this alert again." }
+    };
+  }
+  if (!response.ok) {
+    console.warn("IPROG SMS rejected the SMS request.", response.status);
+    return {
+      status: 422,
+      body: {
+        error: "IPROG SMS rejected the request. Check the API token, approved sender name, recipient numbers, and credit balance.",
+        providerStatus: response.status
+      }
+    };
+  }
 
-    if (response.status === 429) {
-      const retryAfterSeconds = Number(response.headers.get("Retry-After"));
-      return {
-        status: 503,
-        body: {
-          error: "SMS API PH is temporarily rate-limiting requests; the alert can be retried.",
-          providerStatus: response.status,
-          retryAfterSeconds: Math.max(
-            RATE_LIMIT_MS / 1000,
-            Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
-              ? Math.ceil(retryAfterSeconds)
-              : 0
-          )
-        }
-      };
-    }
-    if (response.status >= 500) {
-      console.warn("SMS API PH returned a server error.", response.status);
-      return {
-        status: 409,
-        body: { error: "SMS API PH returned an unclear result. Check SMS API PH message logs before sending this alert again." }
-      };
-    }
-    if (!response.ok) {
-      console.warn("SMS API PH rejected the SMS request.", response.status);
-      return {
-        status: 422,
-        body: {
-          error: "SMS API PH rejected the request. Check the API key, recipient numbers, and service status.",
-          providerStatus: response.status
-        }
-      };
-    }
-
-    let data;
-    try {
-      data = await response.json();
-    } catch {
-      return {
-        status: 409,
-        body: { error: "SMS API PH returned an unreadable result. Check SMS API PH message logs before sending this alert again." }
-      };
-    }
-    if (data?.success !== true) {
-      return {
-        status: 422,
-        body: {
-          error: "SMS API PH rejected the request. Check the API key, recipient numbers, and service status.",
-          providerStatus: response.status
-        }
-      };
-    }
-    sent += 1;
-    if (sent < numbers.length) await waitImpl(SMS_API_PH_MIN_INTERVAL_MS);
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    return {
+      status: 409,
+      body: { error: "IPROG SMS returned an unreadable result. Check IPROG message logs before sending this alert again." }
+    };
+  }
+  const messageIds = typeof data?.message_ids === "string" ? data.message_ids : "";
+  if (data?.status !== 200 || !messageIds.trim()) {
+    return {
+      status: 422,
+      body: {
+        error: "IPROG SMS rejected the request. Check the API token, approved sender name, recipient numbers, and credit balance.",
+        providerStatus: response.status
+      }
+    };
+  }
+  const queuedIds = messageIds.split(",").map(id => id.trim()).filter(Boolean);
+  if (queuedIds.length < 1) {
+    return {
+      status: 409,
+      body: { error: "IPROG SMS returned an unclear result. Check IPROG message logs before sending this alert again." }
+    };
   }
 
   return {
     status: 200,
-    body: { sent, failed: numbers.length - sent, queued: true }
+    body: { sent: numbers.length, failed: 0, queued: true }
   };
 }
 
