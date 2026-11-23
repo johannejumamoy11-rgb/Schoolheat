@@ -9,6 +9,7 @@ const FIREBASE_APP_ID = "1:960776018094:web:2d61dc050347340c86f53f";
 const RATE_LIMIT_MS = 5 * 60 * 1000;
 const MAX_BODY_BYTES = 16 * 1024;
 const NUMBER_PATTERN = /^(?:\+?63|0)?9\d{9}$/;
+const EXSENDER_API_URL = "https://exsender.com/api/v1/sms/send";
 
 const APP_CHECK_JWKS_URL = "https://firebaseappcheck.googleapis.com/v1/jwks";
 const AUTH_JWKS_URL = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
@@ -205,12 +206,115 @@ export function createMessage(payload) {
   return `SchoolHeat ${level} warning at ${location.slice(0, 60)}: ${temperature.toFixed(1)}C, RH ${humidity.toFixed(1)}%, heat index ${heatIndex.toFixed(1)}C (reading ${timeLabel}).`;
 }
 
+export function getSmsProvider(env) {
+  if (env.EXSENDER_API_KEY?.trim()) return "exsender";
+  if (env.SMSTO_API_KEY?.trim()) return "smsto";
+  return null;
+}
+
 export async function sendSms(env, numbers, message, fetchImpl = fetch) {
-  const apiKey = env.SMSTO_API_KEY?.trim();
-  const senderId = env.SMSTO_SENDER_ID?.trim();
-  if (!apiKey) {
-    throw new Error("SMS.to is not configured on the SMS Worker.");
+  const provider = getSmsProvider(env);
+  if (!provider) {
+    throw new Error("No SMS provider is configured on the SMS Worker.");
   }
+  return provider === "exsender"
+    ? sendViaExSender(env, numbers, message, fetchImpl)
+    : sendViaSmsTo(env, numbers, message, fetchImpl);
+}
+
+async function sendViaExSender(env, numbers, message, fetchImpl) {
+  const apiKey = env.EXSENDER_API_KEY.trim();
+  const senderId = env.EXSENDER_SENDER_ID?.trim();
+  const body = {
+    to: numbers.map(number => `+${number}`),
+    message,
+    type: "transactional",
+    ...(senderId ? { senderId } : {})
+  };
+  let response;
+  try {
+    response = await fetchImpl(EXSENDER_API_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+  } catch {
+    return {
+      status: 409,
+      body: { error: "ExSender's response was unclear. Check ExSender message logs before sending this alert again." }
+    };
+  }
+
+  if (response.status === 429) {
+    const retryAfterSeconds = Number(response.headers.get("Retry-After"));
+    return {
+      status: 503,
+      body: {
+        error: "ExSender is temporarily rate-limiting requests; the alert can be retried.",
+        providerStatus: response.status,
+        retryAfterSeconds: Math.max(
+          RATE_LIMIT_MS / 1000,
+          Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+            ? Math.ceil(retryAfterSeconds)
+            : 0
+        )
+      }
+    };
+  }
+  if (response.status >= 500) {
+    console.warn("ExSender returned a server error.", response.status);
+    return {
+      status: 409,
+      body: { error: "ExSender returned an unclear result. Check ExSender message logs before sending this alert again." }
+    };
+  }
+  if (!response.ok) {
+    console.warn("ExSender rejected the SMS request.", response.status);
+    return {
+      status: 422,
+      body: {
+        error: "ExSender rejected the request. Check the API key, account balance, sender ID approval, and recipient numbers.",
+        providerStatus: response.status
+      }
+    };
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    return {
+      status: 409,
+      body: { error: "ExSender returned an unreadable result. Check ExSender message logs before sending this alert again." }
+    };
+  }
+  const accepted = data?.totals?.accepted;
+  const recipients = data?.recipients;
+  if (data?.ok !== true || !Number.isFinite(accepted) || accepted < 1 ||
+      !Array.isArray(recipients) || recipients.length < 1 ||
+      recipients.some(recipient => typeof recipient?.id !== "string" || !recipient.id.trim())) {
+    return {
+      status: 409,
+      body: { error: "ExSender returned an unclear result. Check ExSender message logs before sending this alert again." }
+    };
+  }
+
+  return {
+    status: 200,
+    body: {
+      sent: accepted,
+      failed: Math.max(0, numbers.length - accepted),
+      queued: true
+    }
+  };
+}
+
+async function sendViaSmsTo(env, numbers, message, fetchImpl) {
+  const apiKey = env.SMSTO_API_KEY.trim();
+  const senderId = env.SMSTO_SENDER_ID?.trim();
 
   const body = {
     message,
@@ -339,8 +443,8 @@ async function handleSms(request, env) {
     return jsonResponse(origin, 400, { error: error.message });
   }
 
-  if (!env.SMSTO_API_KEY?.trim()) {
-    return jsonResponse(origin, 503, { error: "SMS.to is not configured in the Cloudflare Worker." });
+  if (!getSmsProvider(env)) {
+    return jsonResponse(origin, 503, { error: "No SMS provider is configured in the Cloudflare Worker." });
   }
 
   const limiterId = env.SMS_RATE_LIMITER.idFromName(userId);

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import worker, { createMessage, normalizeNumbers, sendSms, SmsRateLimiter } from "../src/index.js";
+import worker, { createMessage, getSmsProvider, normalizeNumbers, sendSms, SmsRateLimiter } from "../src/index.js";
 
 test("normalizes Philippine mobile numbers and removes duplicates", () => {
   assert.deepEqual(
@@ -86,15 +86,140 @@ test("trims SMS.to credentials and includes an approved sender ID when configure
   });
 });
 
-test("requires an SMS.to API key", async () => {
+test("requires a configured SMS provider", async () => {
   await assert.rejects(
     sendSms(
       { SMSTO_API_KEY: "   " },
       ["639123456789"],
       "test message"
     ),
-    /SMS.to is not configured/
+    /No SMS provider is configured/
   );
+});
+
+const exSenderCredentials = {
+  EXSENDER_API_KEY: "psk_live_test_key"
+};
+const exSenderAcceptedResponse = () => new Response(JSON.stringify({
+  ok: true,
+  campaignId: "camp_test",
+  totals: { accepted: 1, failed: 0, invalid: 0 },
+  recipients: [{ id: "msg_test", to: "+639123456789", status: "pending" }]
+}), { status: 201 });
+
+test("prefers ExSender when its key is configured and falls back to SMS.to", () => {
+  assert.equal(getSmsProvider({ EXSENDER_API_KEY: " key " }), "exsender");
+  assert.equal(getSmsProvider({ EXSENDER_API_KEY: "  ", SMSTO_API_KEY: " key " }), "smsto");
+  assert.equal(getSmsProvider({ EXSENDER_API_KEY: " key ", SMSTO_API_KEY: " key " }), "exsender");
+  assert.equal(getSmsProvider({}), null);
+});
+
+test("sends through ExSender with Bearer auth and E.164 recipients", async () => {
+  let captured;
+  const result = await sendSms(
+    exSenderCredentials,
+    ["639123456789", "639987654321"],
+    "test message",
+    async (url, options) => {
+      captured = { url, options };
+      return new Response(JSON.stringify({
+        ok: true,
+        campaignId: "camp_test",
+        totals: { accepted: 2, failed: 0, invalid: 0 },
+        recipients: [
+          { id: "msg_one", to: "+639123456789", status: "pending" },
+          { id: "msg_two", to: "+639987654321", status: "pending" }
+        ]
+      }), { status: 201 });
+    }
+  );
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, { sent: 2, failed: 0, queued: true });
+  assert.equal(captured.url, "https://exsender.com/api/v1/sms/send");
+  assert.equal(captured.options.method, "POST");
+  assert.equal(captured.options.headers["Content-Type"], "application/json");
+  assert.equal(captured.options.headers.Authorization, "Bearer psk_live_test_key");
+  assert.deepEqual(JSON.parse(captured.options.body), {
+    to: ["+639123456789", "+639987654321"],
+    message: "test message",
+    type: "transactional"
+  });
+});
+
+test("trims ExSender credentials and includes a configured sender ID", async () => {
+  let captured;
+  await sendSms(
+    {
+      EXSENDER_API_KEY: "  psk_live_test_key  ",
+      EXSENDER_SENDER_ID: " SchoolHeat "
+    },
+    ["639123456789"],
+    "test message",
+    async (url, options) => {
+      captured = { url, options };
+      return exSenderAcceptedResponse();
+    }
+  );
+  assert.equal(captured.options.headers.Authorization, "Bearer psk_live_test_key");
+  assert.deepEqual(JSON.parse(captured.options.body), {
+    to: ["+639123456789"],
+    message: "test message",
+    type: "transactional",
+    senderId: "SchoolHeat"
+  });
+});
+
+test("reports ExSender rate limits and respects the five-minute retry minimum", async () => {
+  const result = await sendSms(
+    exSenderCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response("too many", {
+      status: 429,
+      headers: { "Retry-After": "42" }
+    })
+  );
+  assert.equal(result.status, 503);
+  assert.deepEqual(result.body, {
+    error: "ExSender is temporarily rate-limiting requests; the alert can be retried.",
+    providerStatus: 429,
+    retryAfterSeconds: 300
+  });
+});
+
+test("does not automatically retry unclear or rejected ExSender responses", async () => {
+  const unclear = await sendSms(
+    exSenderCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response("server error", { status: 500 })
+  );
+  assert.equal(unclear.status, 409);
+  assert.match(unclear.body.error, /Check ExSender message logs/);
+
+  const rejected = await sendSms(
+    exSenderCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response(JSON.stringify({ error: "insufficient_balance" }), { status: 402 })
+  );
+  assert.equal(rejected.status, 422);
+  assert.match(rejected.body.error, /ExSender rejected the request/);
+});
+
+test("does not report acceptance when ExSender omits message IDs", async () => {
+  const result = await sendSms(
+    exSenderCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response(JSON.stringify({
+      ok: true,
+      totals: { accepted: 1, failed: 0, invalid: 0 },
+      recipients: [{ to: "+639123456789", status: "pending" }]
+    }), { status: 201 })
+  );
+  assert.equal(result.status, 409);
+  assert.match(result.body.error, /Check ExSender message logs/);
 });
 
 test("does not automatically retry when SMS.to response status is uncertain", async () => {

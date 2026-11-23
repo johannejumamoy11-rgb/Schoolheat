@@ -1504,7 +1504,7 @@ class SchoolHeatApp {
 
   cancelPendingSmsQueue() {
     if (this.smsSendInProgress) {
-      this.toast('An SMS attempt is already in progress and cannot be cancelled. Check SMS.to message activity before trying again.', 'warning');
+      this.toast('An SMS attempt is already in progress and cannot be cancelled. Check the SMS provider message logs before trying again.', 'warning');
       return;
     }
 
@@ -1525,7 +1525,7 @@ class SchoolHeatApp {
     const alertLabel = `${alertCount} queued SMS alert${alertCount === 1 ? '' : 's'}`;
     if (!confirm(`Cancel ${alertLabel} on this device? Saved recipient numbers and SMS settings will stay unchanged.`)) return;
     if (this.smsSendInProgress) {
-      this.toast('An SMS attempt started before the queue could be cancelled. Check SMS.to message activity before trying again.', 'warning');
+      this.toast('An SMS attempt started before the queue could be cancelled. Check the SMS provider message logs before trying again.', 'warning');
       return;
     }
 
@@ -1605,7 +1605,7 @@ class SchoolHeatApp {
       }
       if (response.status === 409) {
         const remaining = this.removeQueuedSmsItem(item.id);
-        this.toast(`${result.error || 'SMS.to returned an unclear result.'} This alert will not be retried automatically.`, 'warning');
+        this.toast(`${result.error || 'The SMS provider returned an unclear result.'} This alert will not be retried automatically.`, 'warning');
         if (remaining) this.scheduleSmsRetry();
         return;
       }
@@ -1620,9 +1620,9 @@ class SchoolHeatApp {
       const sent = Number(result.sent) || 0;
       const failed = Number(result.failed) || 0;
       if (sent) {
-        this.toast(`SMS.to queued SMS for ${sent} recipient${sent === 1 ? '' : 's'}${failed ? `; ${failed} failed` : ''}. Check SMS.to message activity for delivery status.`, failed ? 'warning' : 'success');
+        this.toast(`SMS provider queued SMS for ${sent} recipient${sent === 1 ? '' : 's'}${failed ? `; ${failed} failed` : ''}. Check the provider message logs for delivery status.`, failed ? 'warning' : 'success');
       } else {
-        this.toast('SMS was not accepted by SMS.to.', 'warning');
+        this.toast('SMS was not accepted by the SMS provider.', 'warning');
       }
       if (remaining) this.scheduleSmsRetry();
     } catch (error) {
