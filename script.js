@@ -1504,7 +1504,7 @@ class SchoolHeatApp {
 
   cancelPendingSmsQueue() {
     if (this.smsSendInProgress) {
-      this.toast('An SMS attempt is already in progress and cannot be cancelled. Check CLOUDSMS message activity before trying again.', 'warning');
+      this.toast('An SMS attempt is already in progress and cannot be cancelled. Check SMS.to message activity before trying again.', 'warning');
       return;
     }
 
@@ -1525,7 +1525,7 @@ class SchoolHeatApp {
     const alertLabel = `${alertCount} queued SMS alert${alertCount === 1 ? '' : 's'}`;
     if (!confirm(`Cancel ${alertLabel} on this device? Saved recipient numbers and SMS settings will stay unchanged.`)) return;
     if (this.smsSendInProgress) {
-      this.toast('An SMS attempt started before the queue could be cancelled. Check CLOUDSMS message activity before trying again.', 'warning');
+      this.toast('An SMS attempt started before the queue could be cancelled. Check SMS.to message activity before trying again.', 'warning');
       return;
     }
 
@@ -1603,6 +1603,12 @@ class SchoolHeatApp {
         if (this.pendingSmsCount()) this.scheduleSmsRetry(retryAfterSeconds * 1000);
         return;
       }
+      if (response.status === 409) {
+        const remaining = this.removeQueuedSmsItem(item.id);
+        this.toast(`${result.error || 'SMS.to returned an unclear result.'} This alert will not be retried automatically.`, 'warning');
+        if (remaining) this.scheduleSmsRetry();
+        return;
+      }
       if (!response.ok) {
         const remaining = this.removeQueuedSmsItem(item.id);
         this.toast(`SMS was not accepted: ${result.error || `request failed (${response.status})`}`, 'error');
@@ -1614,9 +1620,9 @@ class SchoolHeatApp {
       const sent = Number(result.sent) || 0;
       const failed = Number(result.failed) || 0;
       if (sent) {
-        this.toast(`CLOUDSMS accepted SMS for ${sent} recipient${sent === 1 ? '' : 's'}${failed ? `; ${failed} failed` : ''}. Check CLOUDSMS message activity for delivery status.`, failed ? 'warning' : 'success');
+        this.toast(`SMS.to queued SMS for ${sent} recipient${sent === 1 ? '' : 's'}${failed ? `; ${failed} failed` : ''}. Check SMS.to message activity for delivery status.`, failed ? 'warning' : 'success');
       } else {
-        this.toast('SMS was not accepted by CLOUDSMS.', 'warning');
+        this.toast('SMS was not accepted by SMS.to.', 'warning');
       }
       if (remaining) this.scheduleSmsRetry();
     } catch (error) {

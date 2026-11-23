@@ -205,106 +205,98 @@ export function createMessage(payload) {
   return `SchoolHeat ${level} warning at ${location.slice(0, 60)}: ${temperature.toFixed(1)}C, RH ${humidity.toFixed(1)}%, heat index ${heatIndex.toFixed(1)}C (reading ${timeLabel}).`;
 }
 
-export async function sendSms(env, numbers, message, requestId, fetchImpl = fetch) {
-  const apiKey = env.CLOUDSMS_API_KEY?.trim();
-  const apiSecret = env.CLOUDSMS_API_SECRET?.trim();
-  if (!apiKey || !apiSecret) {
-    throw new Error("CLOUDSMS is not configured on the SMS Worker.");
+export async function sendSms(env, numbers, message, fetchImpl = fetch) {
+  const apiKey = env.SMSTO_API_KEY?.trim();
+  const senderId = env.SMSTO_SENDER_ID?.trim();
+  if (!apiKey) {
+    throw new Error("SMS.to is not configured on the SMS Worker.");
   }
 
-  const endpoint = "https://api.cloudsms.io/v1/sms/send";
-  const authorization = `Basic ${btoa(`${apiKey}:${apiSecret}`)}`;
-  const attempts = await Promise.all(numbers.map(async (number, index) => {
-    let response;
-    try {
-      response = await fetchImpl(endpoint, {
-        method: "POST",
-        headers: {
-          "Authorization": authorization,
-          "Content-Type": "application/json",
-          "X-Idempotency-Key": `${requestId}-${index}`
-        },
-        body: JSON.stringify({ destination: number, message })
-      });
-    } catch {
-      return { kind: "retryable" };
-    }
-
-    if (response.status === 429 || response.status >= 500) {
-      return {
-        kind: "retryable",
-        providerStatus: response.status,
-        retryAfterSeconds: Number(response.headers.get("Retry-After"))
-      };
-    }
-    if (!response.ok) {
-      console.warn("CLOUDSMS rejected a recipient request.", response.status);
-      return { kind: "rejected", providerStatus: response.status };
-    }
-
-    let data;
-    try {
-      data = await response.json();
-    } catch {
-      return { kind: "uncertain" };
-    }
-    if (data?.success !== true || !data.data || typeof data.data !== "object") {
-      return { kind: "rejected", providerStatus: response.status };
-    }
-
-    const messageId = data.data.message_id;
-    let status = data.data.status;
-    if (Array.isArray(data.data.destinations)) {
-      const destination = data.data.destinations.find(item => item?.destination === number);
-      if (!destination) return { kind: "uncertain" };
-      status = destination.status;
-    }
-    if (typeof messageId !== "string" || !messageId.trim() || typeof status !== "string") {
-      return { kind: "uncertain" };
-    }
-    if (["CREATED", "QUEUED", "SENT"].includes(status)) return { kind: "accepted" };
-    if (["FAILED", "REJECTED", "CANCELLED"].includes(status)) return { kind: "rejected" };
-    return { kind: "uncertain" };
-  }));
-
-  const accepted = attempts.filter(attempt => attempt.kind === "accepted").length;
-  if (accepted > 0) {
-    return {
-      status: 200,
-      body: { sent: accepted, failed: Math.max(numbers.length - accepted, 0), queued: true }
-    };
-  }
-  if (attempts.some(attempt => attempt.kind === "uncertain")) {
+  const body = {
+    message,
+    to: numbers.map(number => `+${number}`),
+    ...(senderId ? { sender_id: senderId } : {})
+  };
+  let response;
+  try {
+    response = await fetchImpl("https://api.sms.to/sms/send", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+  } catch {
     return {
       status: 409,
-      body: { error: "CLOUDSMS returned an unclear response. Check CLOUDSMS message activity before retrying." }
+      body: { error: "SMS.to's response was unclear. Check SMS.to message activity before sending this alert again." }
     };
   }
-  if (attempts.some(attempt => attempt.kind === "retryable")) {
-    const retryAfterSeconds = Math.max(
-      RATE_LIMIT_MS / 1000,
-      ...attempts.map(attempt =>
-        Number.isFinite(attempt.retryAfterSeconds) && attempt.retryAfterSeconds > 0
-          ? Math.ceil(attempt.retryAfterSeconds)
-          : 0
-      )
-    );
-    const providerStatus = attempts.find(attempt => attempt.providerStatus)?.providerStatus;
-    console.warn("CLOUDSMS returned a retryable response.", providerStatus);
+
+  if (response.status === 429) {
+    const retryAfterSeconds = Number(response.headers.get("Retry-After"));
     return {
       status: 503,
       body: {
-        error: "CLOUDSMS is temporarily unavailable; the alert can be retried.",
-        ...(providerStatus ? { providerStatus } : {}),
-        retryAfterSeconds
+        error: "SMS.to is temporarily rate-limiting requests; the alert can be retried.",
+        providerStatus: response.status,
+        retryAfterSeconds: Math.max(
+          RATE_LIMIT_MS / 1000,
+          Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+            ? Math.ceil(retryAfterSeconds)
+            : 0
+        )
       }
     };
   }
+  if (response.status >= 500) {
+    console.warn("SMS.to returned a server error.", response.status);
+    return {
+      status: 409,
+      body: {
+        error: "SMS.to returned an unclear result. Check SMS.to message activity before sending this alert again."
+      }
+    };
+  }
+  if (!response.ok) {
+    console.warn("SMS.to rejected the SMS request.", response.status);
+    return {
+      status: 422,
+      body: {
+        error: "SMS.to rejected the request. Check the API key, Sender ID approval, account balance, and recipient numbers.",
+        providerStatus: response.status
+      }
+    };
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    return {
+      status: 409,
+      body: { error: "SMS.to returned an unreadable result. Check SMS.to message activity before sending this alert again." }
+    };
+  }
+  if (data?.success === false) {
+    console.warn("SMS.to rejected the SMS request.", response.status);
+    return {
+      status: 422,
+      body: { error: "SMS.to rejected the request. Check the API key, Sender ID approval, account balance, and recipient numbers." }
+    };
+  }
+  if (data?.success !== true ||
+      ![data.message_id, data.campaign_id].some(value => typeof value === "string" && value.trim())) {
+    return {
+      status: 409,
+      body: { error: "SMS.to returned an unclear result. Check SMS.to message activity before sending this alert again." }
+    };
+  }
+
   return {
-    status: 422,
-    body: {
-      error: "CLOUDSMS rejected the request. Check the API credentials, approved Sender ID, account balance, and recipient numbers."
-    }
+    status: 200,
+    body: { sent: numbers.length, failed: 0, queued: true }
   };
 }
 
@@ -347,8 +339,8 @@ async function handleSms(request, env) {
     return jsonResponse(origin, 400, { error: error.message });
   }
 
-  if (!env.CLOUDSMS_API_KEY?.trim() || !env.CLOUDSMS_API_SECRET?.trim()) {
-    return jsonResponse(origin, 503, { error: "CLOUDSMS is not configured in the Cloudflare Worker." });
+  if (!env.SMSTO_API_KEY?.trim()) {
+    return jsonResponse(origin, 503, { error: "SMS.to is not configured in the Cloudflare Worker." });
   }
 
   const limiterId = env.SMS_RATE_LIMITER.idFromName(userId);
@@ -375,7 +367,7 @@ async function handleSms(request, env) {
     });
   }
 
-  const result = await sendSms(env, numbers, message, requestId);
+  const result = await sendSms(env, numbers, message);
   if (result.status !== 503) {
     await limiter.fetch("https://sms-rate-limit/complete", {
       method: "POST",

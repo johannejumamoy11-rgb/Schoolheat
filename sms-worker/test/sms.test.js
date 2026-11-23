@@ -14,25 +14,19 @@ test("rejects invalid recipient lists", () => {
   assert.throws(() => normalizeNumbers(["12345"]), /Philippine mobile/);
 });
 
-const cloudSmsCredentials = {
-  CLOUDSMS_API_KEY: "csk_test-key",
-  CLOUDSMS_API_SECRET: "css_test-secret"
+const smsToCredentials = {
+  SMSTO_API_KEY: "sms-to-test-key"
 };
-const cloudSmsAcceptedResponse = number => new Response(JSON.stringify({
+const smsToAcceptedResponse = () => new Response(JSON.stringify({
   success: true,
-  data: {
-    message_id: "msg_test",
-    status: "CREATED",
-    destinations: [{ destination: number, status: "CREATED" }]
-  }
-}), { status: 201 });
+  campaign_id: "campaign-test"
+}), { status: 200 });
 
-test("reports retryable CLOUDSMS status and enforces the five-minute retry limit", async () => {
+test("reports SMS.to rate limits and respects the five-minute retry minimum", async () => {
   const result = await sendSms(
-    cloudSmsCredentials,
+    smsToCredentials,
     ["639123456789"],
     "test message",
-    "request-one",
     async () => new Response("temporarily unavailable", {
       status: 429,
       headers: { "Retry-After": "42" }
@@ -40,129 +34,117 @@ test("reports retryable CLOUDSMS status and enforces the five-minute retry limit
   );
   assert.equal(result.status, 503);
   assert.deepEqual(result.body, {
-    error: "CLOUDSMS is temporarily unavailable; the alert can be retried.",
+    error: "SMS.to is temporarily rate-limiting requests; the alert can be retried.",
     providerStatus: 429,
     retryAfterSeconds: 300
   });
-  assert.equal(JSON.stringify(result).includes("test-secret"), false);
 });
 
-test("sends each SMS through CLOUDSMS with Basic auth and stable idempotency keys", async () => {
-  const captured = [];
+test("sends one campaign through SMS.to using Bearer auth and E.164 recipients", async () => {
+  let captured;
   const result = await sendSms(
-    cloudSmsCredentials,
+    smsToCredentials,
     ["639123456789", "639987654321"],
     "test message",
-    "request-one",
     async (url, options) => {
-      captured.push({ url, options });
-      const body = JSON.parse(options.body);
-      return cloudSmsAcceptedResponse(body.destination);
+      captured = { url, options };
+      return smsToAcceptedResponse();
     }
   );
   assert.equal(result.status, 200);
   assert.deepEqual(result.body, { sent: 2, failed: 0, queued: true });
-  assert.equal(captured.length, 2);
-  for (const [index, request] of captured.entries()) {
-    assert.equal(request.url, "https://api.cloudsms.io/v1/sms/send");
-    assert.equal(request.options.method, "POST");
-    assert.equal(request.options.headers["Content-Type"], "application/json");
-    assert.equal(
-      request.options.headers.Authorization,
-      `Basic ${btoa("csk_test-key:css_test-secret")}`
-    );
-    assert.equal(request.options.headers["X-Idempotency-Key"], `request-one-${index}`);
-  }
-  assert.deepEqual(
-    captured.map(request => JSON.parse(request.options.body)),
-    [
-      { destination: "639123456789", message: "test message" },
-      { destination: "639987654321", message: "test message" }
-    ]
-  );
-  assert.equal(JSON.stringify(result).includes("csk_test-key"), false);
-  assert.equal(JSON.stringify(result).includes("css_test-secret"), false);
+  assert.equal(captured.url, "https://api.sms.to/sms/send");
+  assert.equal(captured.options.method, "POST");
+  assert.equal(captured.options.headers["Content-Type"], "application/json");
+  assert.equal(captured.options.headers.Authorization, "Bearer sms-to-test-key");
+  assert.deepEqual(JSON.parse(captured.options.body), {
+    message: "test message",
+    to: ["+639123456789", "+639987654321"]
+  });
+  assert.equal(captured.options.headers["X-Idempotency-Key"], undefined);
 });
 
-test("trims CLOUDSMS credentials before sending", async () => {
+test("trims SMS.to credentials and includes an approved sender ID when configured", async () => {
   let captured;
   await sendSms(
     {
-      CLOUDSMS_API_KEY: "  csk_test-key  ",
-      CLOUDSMS_API_SECRET: " css_test-secret "
+      SMSTO_API_KEY: "  sms-to-test-key  ",
+      SMSTO_SENDER_ID: " SchoolHeat "
     },
     ["639123456789"],
     "test message",
-    "request-one",
     async (url, options) => {
       captured = { url, options };
-      return cloudSmsAcceptedResponse(JSON.parse(options.body).destination);
+      return smsToAcceptedResponse();
     }
   );
-  assert.equal(
-    captured.options.headers.Authorization,
-    `Basic ${btoa("csk_test-key:css_test-secret")}`
-  );
+  assert.equal(captured.options.headers.Authorization, "Bearer sms-to-test-key");
+  assert.deepEqual(JSON.parse(captured.options.body), {
+    message: "test message",
+    to: ["+639123456789"],
+    sender_id: "SchoolHeat"
+  });
 });
 
-test("requires both CLOUDSMS API credentials", async () => {
+test("requires an SMS.to API key", async () => {
   await assert.rejects(
     sendSms(
-      { CLOUDSMS_API_KEY: "csk_test-key", CLOUDSMS_API_SECRET: "   " },
+      { SMSTO_API_KEY: "   " },
       ["639123456789"],
-      "test message",
-      "request-one"
+      "test message"
     ),
-    /CLOUDSMS is not configured/
+    /SMS.to is not configured/
   );
 });
 
-test("reports partial CLOUDSMS acceptance without retrying accepted recipients", async () => {
-  let requestIndex = 0;
+test("does not automatically retry when SMS.to response status is uncertain", async () => {
   const result = await sendSms(
-    cloudSmsCredentials,
+    smsToCredentials,
     ["639123456789", "639987654321"],
     "test message",
-    "request-one",
-    async () => {
-      requestIndex += 1;
-      return requestIndex === 1
-        ? cloudSmsAcceptedResponse("639123456789")
-        : new Response("rejected", { status: 422 });
-    }
-  );
-  assert.equal(result.status, 200);
-  assert.deepEqual(result.body, { sent: 1, failed: 1, queued: true });
-});
-
-test("does not automatically retry when CLOUDSMS acceptance is uncertain", async () => {
-  const result = await sendSms(
-    cloudSmsCredentials,
-    ["639123456789"],
-    "test message",
-    "request-one",
-    async () => new Response("unreadable response", { status: 200 })
+    async () => new Response("temporary provider error", { status: 500 })
   );
   assert.equal(result.status, 409);
-  assert.match(result.body.error, /Check CLOUDSMS message activity before retrying/);
+  assert.match(result.body.error, /Check SMS\.to message activity before sending this alert again/);
 });
 
-test("does not report acceptance for an unmatched destination response", async () => {
+test("does not automatically retry when the SMS.to connection fails", async () => {
   const result = await sendSms(
-    cloudSmsCredentials,
+    smsToCredentials,
     ["639123456789"],
     "test message",
-    "request-one",
+    async () => { throw new Error("network failed"); }
+  );
+  assert.equal(result.status, 409);
+  assert.match(result.body.error, /Check SMS\.to message activity before sending this alert again/);
+});
+
+test("does not report acceptance when SMS.to returns no campaign or message ID", async () => {
+  const result = await sendSms(
+    smsToCredentials,
+    ["639123456789"],
+    "test message",
     async () => new Response(JSON.stringify({
       success: true,
-      data: {
-        message_id: "msg_test",
-        status: "CREATED",
-        destinations: [{ destination: "639987654321", status: "CREATED" }]
-      }
-    }), { status: 201 })
+      message: "Message queued"
+    }), { status: 200 })
   );
   assert.equal(result.status, 409);
+  assert.match(result.body.error, /Check SMS\.to message activity/);
+});
+
+test("does not accept an explicit SMS.to rejection", async () => {
+  const result = await sendSms(
+    smsToCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response(JSON.stringify({
+      success: false,
+      message: "Invalid sender"
+    }), { status: 200 })
+  );
+  assert.equal(result.status, 422);
+  assert.match(result.body.error, /SMS\.to rejected the request/);
 });
 
 

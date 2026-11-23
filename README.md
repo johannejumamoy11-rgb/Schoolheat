@@ -214,7 +214,7 @@ outage; after it restarts, the laptop must reconnect to set its clock. Any
 backlog from a reboot that was never time-synchronized is retained on the
 ESP32 and is not imported with invented timestamps. Phone push and SMS need
 internet and do not work while the laptop is off. SMS uses the hosted
-Cloudflare Worker and CLOUDSMS; it does not use the local ESP32 bridge or
+Cloudflare Worker and SMS.to; it does not use the local ESP32 bridge or
 Firebase Functions.
 
 The browser cannot directly fetch the ESP32's HTTP API from GitHub Pages HTTPS
@@ -222,9 +222,9 @@ in browsers that block mixed content. Use the local bridge for Wi-Fi sync or
 Bluetooth sync to avoid that HTTP request. Keep the ESP32 API on its
 password-protected access point; do not connect it to a public network.
 
-SchoolHeat supports browser push and optional CLOUDSMS text alerts for
+SchoolHeat supports browser push and optional SMS.to text alerts for
 Hinga/Hinto heat warnings. SMS is disabled by default. In **Settings**, enter
-up to five Philippine mobile numbers and enable **SMS Alerts (CLOUDSMS)**.
+up to five Philippine mobile numbers and enable **SMS Alerts (SMS.to)**.
 Numbers are saved in that browser's local settings and sent through the
 Cloudflare Worker only when an SMS alert is requested; only enter numbers
 with their owners' consent. The in-app high-heat banner and notifications are
@@ -233,11 +233,12 @@ freshness window. Repeated readings at the same risk level do not resend an
 alert. Old, demo, and incomplete readings remain visible in history but are not
 treated as active heat warnings. A recent saved reading still does not prove
 that a sensor is currently connected. The Worker verifies Firebase
-Anonymous Auth and App Check tokens, keeps the CLOUDSMS API key and secret in
+Anonymous Auth and App Check tokens, keeps the SMS.to API key in
 Cloudflare secrets, and allows one SMS request every five minutes per account,
-including test messages. CLOUDSMS requires a configured Sender ID; its public
-network list does not explicitly confirm TNT, so verify route and sender
-approval before relying on delivery. No local bridge is needed for SMS (the
+including test messages. Configure an approved SMS.to Sender ID if required by
+the account. SMS.to's public materials do not enumerate all Philippine carrier
+routes, so verify Globe, Smart/TNT, and DITO support and sender approval before
+relying on delivery. No local bridge is needed for SMS (the
 bridge remains optional for ESP32 Wi-Fi sync).
 
 The **Hotlines** tab provides a one-tap link to the Philippine emergency
@@ -246,7 +247,7 @@ responder contacts are intentionally not listed until the school verifies
 them. SchoolHeat is not an emergency dispatch or medical service; SMS alerts
 do not contact emergency responders.
 
-The app's cached offline shell does not make CLOUDSMS available offline:
+The app's cached offline shell does not make SMS.to available offline:
 delivery needs internet. If internet is unavailable, up to 20 pending SMS are
 saved in this browser and retried when the app is online again. The browser
 must remain open for automatic retries. If the app is reopened with queued
@@ -256,22 +257,24 @@ to resume or **Cancel Queued SMS** to remove all pending SMS on this device
 without clearing recipients or SMS settings. An SMS already being sent cannot
 be cancelled. Queued phone numbers and message details remain in this
 browser's local storage until sent; clearing the browser's site data deletes
-them. The Worker and CLOUDSMS idempotency keys protect retries from creating
-duplicate messages. Retryable errors keep the message queued and show the
-provider HTTP status and retry delay when available. If CLOUDSMS returns an
-unclear response, check its message activity before manually resending. For a
+them. The Worker caches completed requests by request ID to prevent replaying a
+completed submission. SMS.to does not document send-request idempotency, so
+unclear provider responses are not retried automatically; check SMS.to message
+activity before manually resending. Retryable rate-limit responses keep the
+message queued and show the provider HTTP status and retry delay when available. For a
 no-modem setup, keep the
 laptop on its normal internet connection and sync readings over Bluetooth. If
 using ESP32 Wi-Fi sync, the laptop needs a separate internet connection at the
 same time (for example, wired Ethernet). The ESP32 access point itself does not
 provide internet.
 
-CLOUDSMS advertises a starting rate of ₱0.50/SMS. Confirm current network
-rates, minimum top-up, trial-credit terms, and Sender ID requirements before
-adding funds. TNT delivery is not explicitly listed on its public homepage.
-Test SMS messages may use credits.
+SMS.to advertises a free trial with no credit card and displays a general
+pay-as-you-go rate; confirm the Philippines rate, trial allowance, minimum
+top-up, and Sender ID requirements before adding funds. Public documentation
+does not confirm every Philippine carrier route. Test SMS messages may use
+trial credits or account balance.
 
-Push does not use CLOUDSMS credits; receiving phones need Wi-Fi or mobile
+Push does not use SMS.to credits; receiving phones need Wi-Fi or mobile
 data. Firebase Cloud Functions are used for phone push only. Deploying them
 requires a Firebase billing-enabled (Blaze) project, and Google Cloud usage
 may be billed. SMS needs Firebase Anonymous Auth and App Check, but does not
@@ -282,10 +285,10 @@ check current pricing and quotas.
 ## Requirements
 
 - A public HTTPS hosting domain for SchoolHeat.
-- A CLOUDSMS account with an API key and API secret, and an approved Sender ID.
-- Confirm recipient-network support and Sender ID requirements with CLOUDSMS
-  before using Smart/TNT numbers; TNT is not explicitly listed in its public
-  network coverage.
+- An SMS.to account and API key. Configure an approved Sender ID if SMS.to
+  requires one for the account.
+- Confirm SMS.to trial eligibility, Philippines rates, and delivery to Globe,
+  Smart/TNT, and DITO before relying on the service.
 - For SMS: a Cloudflare account, Node.js/npm, a Firebase project configured in
   `cloud_config.js`, Firebase Anonymous Auth, and Firebase App Check.
 - For phone push only: the Firebase CLI, an FCM Web Push certificate key, and
@@ -329,26 +332,27 @@ or Firebase Blaze billing.
    npm test
    npx wrangler login
    npm run deploy
-   npx wrangler secret put CLOUDSMS_API_KEY
-   npx wrangler secret put CLOUDSMS_API_SECRET
+   npx wrangler secret put SMSTO_API_KEY
+   # Optional: only if SMS.to has approved a sender ID for the account.
+   npx wrangler secret put SMSTO_SENDER_ID
    ```
 
-   Enter the CLOUDSMS API key and secret only at Wrangler's secret prompts.
-   Configure an approved Sender ID in CLOUDSMS. After deploy,
+   Enter the SMS.to API key only at Wrangler's secret prompt. If configured,
+   enter the approved Sender ID at its prompt. After deploy,
    copy the Worker URL printed by Wrangler into `smsWorkerUrl` in
    `cloud_config.js`, then publish the updated website. Do not put the API key
-   or secret in `cloud_config.js` or browser code. Check CLOUDSMS pricing and
+   or sender ID in `cloud_config.js` or browser code. Check SMS.to pricing and
    Cloudflare's current limits and
    pricing for Workers and Durable Objects before deployment.
 
 7. Deploy the web app to the configured HTTPS domain. In **Settings**, enter
-   recipient numbers and enable **SMS Alerts (CLOUDSMS)**. Use **Send Test
+   recipient numbers and enable **SMS Alerts (SMS.to)**. Use **Send Test
    SMS** only when ready to spend credits. To use push, enable **Phone Push
    Alerts** on the laptop running SchoolHeat and on each receiving phone, allow
    browser notifications, and use **Send Test Phone Push**.
 
 The device running SchoolHeat must be on to process new sensor readings and
-send alerts. SMS needs internet and CLOUDSMS credits; up to 20 alerts are
+send alerts. SMS needs internet and SMS.to credits; up to 20 alerts are
 queued in the browser while offline and retried after connectivity returns.
 SMS is rate-limited to one request every five minutes per Firebase account.
 Push recipients need internet to receive notifications, and phone push is limited
