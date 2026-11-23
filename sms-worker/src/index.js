@@ -10,7 +10,7 @@ const RATE_LIMIT_MS = 5 * 60 * 1000;
 const SMS_API_PH_MIN_INTERVAL_MS = 10 * 1000;
 const MAX_BODY_BYTES = 16 * 1024;
 const NUMBER_PATTERN = /^(?:\+?63|0)?9\d{9}$/;
-const PHILSMS_API_URL = "https://app.philsms.com/api/v3/sms/send";
+const PHILSMS_API_URL = "https://dashboard.philsms.com/api/v3/sms/send";
 const PHILSMS_DEFAULT_SENDER_ID = "SchoolHeat";
 const SMS_API_PH_URL = "https://smsapiph.onrender.com/api/v1/send/sms";
 const EXSENDER_API_URL = "https://exsender.com/api/v1/sms/send";
@@ -211,8 +211,8 @@ export function createMessage(payload) {
 }
 
 export function getSmsProvider(env) {
-  if (env.PHILSMS_API_TOKEN?.trim()) return "philsms";
   if (env.SMSAPIPH_API_KEY?.trim()) return "smsapiph";
+  if (env.PHILSMS_API_TOKEN?.trim()) return "philsms";
   if (env.EXSENDER_API_KEY?.trim()) return "exsender";
   if (env.SMSTO_API_KEY?.trim()) return "smsto";
   return null;
@@ -223,8 +223,8 @@ export async function sendSms(env, numbers, message, fetchImpl = fetch, waitImpl
   if (!provider) {
     throw new Error("No SMS provider is configured on the SMS Worker.");
   }
-  if (provider === "philsms") return sendViaPhilSms(env, numbers, message, fetchImpl);
   if (provider === "smsapiph") return sendViaSmsApiPh(env, numbers, message, fetchImpl, waitImpl);
+  if (provider === "philsms") return sendViaPhilSms(env, numbers, message, fetchImpl);
   return provider === "exsender"
     ? sendViaExSender(env, numbers, message, fetchImpl)
     : sendViaSmsTo(env, numbers, message, fetchImpl);

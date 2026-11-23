@@ -118,7 +118,7 @@ test("sends one PhilSMS campaign with Bearer auth and comma-separated recipients
   );
   assert.equal(result.status, 200);
   assert.deepEqual(result.body, { sent: 2, failed: 0, queued: true });
-  assert.equal(captured.url, "https://app.philsms.com/api/v3/sms/send");
+  assert.equal(captured.url, "https://dashboard.philsms.com/api/v3/sms/send");
   assert.equal(captured.options.method, "POST");
   assert.equal(captured.options.headers.Authorization, "Bearer philsms-test-token");
   assert.equal(captured.options.headers.Accept, "application/json");
@@ -213,12 +213,12 @@ const exSenderAcceptedResponse = () => new Response(JSON.stringify({
   recipients: [{ id: "msg_test", to: "+639123456789", status: "pending" }]
 }), { status: 201 });
 
-test("prefers PhilSMS, then SMS API PH, then ExSender, then SMS.to", () => {
-  assert.equal(getSmsProvider({ PHILSMS_API_TOKEN: " token " }), "philsms");
-  assert.equal(getSmsProvider({ PHILSMS_API_TOKEN: "  ", SMSAPIPH_API_KEY: " key " }), "smsapiph");
-  assert.equal(getSmsProvider({ PHILSMS_API_TOKEN: "  ", SMSAPIPH_API_KEY: "  ", EXSENDER_API_KEY: " key " }), "exsender");
-  assert.equal(getSmsProvider({ PHILSMS_API_TOKEN: "  ", SMSAPIPH_API_KEY: "  ", EXSENDER_API_KEY: "  ", SMSTO_API_KEY: " key " }), "smsto");
-  assert.equal(getSmsProvider({ PHILSMS_API_TOKEN: " token ", SMSAPIPH_API_KEY: " key ", EXSENDER_API_KEY: " key ", SMSTO_API_KEY: " key " }), "philsms");
+test("prefers SMS API PH, then PhilSMS, then ExSender, then SMS.to", () => {
+  assert.equal(getSmsProvider({ SMSAPIPH_API_KEY: " key " }), "smsapiph");
+  assert.equal(getSmsProvider({ SMSAPIPH_API_KEY: "  ", PHILSMS_API_TOKEN: " token " }), "philsms");
+  assert.equal(getSmsProvider({ SMSAPIPH_API_KEY: "  ", PHILSMS_API_TOKEN: "  ", EXSENDER_API_KEY: " key " }), "exsender");
+  assert.equal(getSmsProvider({ SMSAPIPH_API_KEY: "  ", PHILSMS_API_TOKEN: "  ", EXSENDER_API_KEY: "  ", SMSTO_API_KEY: " key " }), "smsto");
+  assert.equal(getSmsProvider({ SMSAPIPH_API_KEY: " key ", PHILSMS_API_TOKEN: " token ", EXSENDER_API_KEY: " key ", SMSTO_API_KEY: " key " }), "smsapiph");
   assert.equal(getSmsProvider({}), null);
 });
 
