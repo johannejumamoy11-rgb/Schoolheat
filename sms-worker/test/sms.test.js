@@ -97,6 +97,112 @@ test("requires a configured SMS provider", async () => {
   );
 });
 
+const philSmsCredentials = {
+  PHILSMS_API_TOKEN: "philsms-test-token"
+};
+const philSmsAcceptedResponse = () => new Response(JSON.stringify({
+  status: "success",
+  data: { messages: [{ id: "msg_test", status: "queued" }] }
+}), { status: 200 });
+
+test("sends one PhilSMS campaign with Bearer auth and comma-separated recipients", async () => {
+  let captured;
+  const result = await sendSms(
+    philSmsCredentials,
+    ["639123456789", "639987654321"],
+    "test message",
+    async (url, options) => {
+      captured = { url, options };
+      return philSmsAcceptedResponse();
+    }
+  );
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, { sent: 2, failed: 0, queued: true });
+  assert.equal(captured.url, "https://app.philsms.com/api/v3/sms/send");
+  assert.equal(captured.options.method, "POST");
+  assert.equal(captured.options.headers.Authorization, "Bearer philsms-test-token");
+  assert.equal(captured.options.headers.Accept, "application/json");
+  assert.equal(captured.options.headers["Content-Type"], "application/json");
+  assert.deepEqual(JSON.parse(captured.options.body), {
+    recipient: "639123456789,639987654321",
+    sender_id: "SchoolHeat",
+    type: "plain",
+    message: "test message"
+  });
+});
+
+test("trims PhilSMS credentials and uses a configured sender ID", async () => {
+  let captured;
+  await sendSms(
+    {
+      PHILSMS_API_TOKEN: "  philsms-test-token  ",
+      PHILSMS_SENDER_ID: " SchoolHeat "
+    },
+    ["639123456789"],
+    "test message",
+    async (url, options) => {
+      captured = { url, options };
+      return philSmsAcceptedResponse();
+    }
+  );
+  assert.equal(captured.options.headers.Authorization, "Bearer philsms-test-token");
+  assert.deepEqual(JSON.parse(captured.options.body), {
+    recipient: "639123456789",
+    sender_id: "SchoolHeat",
+    type: "plain",
+    message: "test message"
+  });
+});
+
+test("reports PhilSMS rate limits and respects the five-minute retry minimum", async () => {
+  const result = await sendSms(
+    philSmsCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response("too many", {
+      status: 429,
+      headers: { "Retry-After": "42" }
+    })
+  );
+  assert.equal(result.status, 503);
+  assert.deepEqual(result.body, {
+    error: "PhilSMS is temporarily rate-limiting requests; the alert can be retried.",
+    providerStatus: 429,
+    retryAfterSeconds: 300
+  });
+});
+
+test("does not automatically retry unclear or rejected PhilSMS responses", async () => {
+  const unclear = await sendSms(
+    philSmsCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response("server error", { status: 500 })
+  );
+  assert.equal(unclear.status, 409);
+  assert.match(unclear.body.error, /Check PhilSMS message logs/);
+
+  const rejected = await sendSms(
+    philSmsCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response(JSON.stringify({ status: "error", message: "invalid_token" }), { status: 200 })
+  );
+  assert.equal(rejected.status, 422);
+  assert.match(rejected.body.error, /PhilSMS rejected the request/);
+});
+
+test("does not automatically retry when the PhilSMS connection fails", async () => {
+  const result = await sendSms(
+    philSmsCredentials,
+    ["639123456789"],
+    "test message",
+    async () => { throw new Error("network failed"); }
+  );
+  assert.equal(result.status, 409);
+  assert.match(result.body.error, /Check PhilSMS message logs/);
+});
+
 const exSenderCredentials = {
   EXSENDER_API_KEY: "psk_live_test_key"
 };
@@ -107,11 +213,12 @@ const exSenderAcceptedResponse = () => new Response(JSON.stringify({
   recipients: [{ id: "msg_test", to: "+639123456789", status: "pending" }]
 }), { status: 201 });
 
-test("prefers SMS API PH, then ExSender, then SMS.to", () => {
-  assert.equal(getSmsProvider({ SMSAPIPH_API_KEY: " key " }), "smsapiph");
-  assert.equal(getSmsProvider({ SMSAPIPH_API_KEY: "  ", EXSENDER_API_KEY: " key " }), "exsender");
-  assert.equal(getSmsProvider({ SMSAPIPH_API_KEY: "  ", EXSENDER_API_KEY: "  ", SMSTO_API_KEY: " key " }), "smsto");
-  assert.equal(getSmsProvider({ SMSAPIPH_API_KEY: " key ", EXSENDER_API_KEY: " key ", SMSTO_API_KEY: " key " }), "smsapiph");
+test("prefers PhilSMS, then SMS API PH, then ExSender, then SMS.to", () => {
+  assert.equal(getSmsProvider({ PHILSMS_API_TOKEN: " token " }), "philsms");
+  assert.equal(getSmsProvider({ PHILSMS_API_TOKEN: "  ", SMSAPIPH_API_KEY: " key " }), "smsapiph");
+  assert.equal(getSmsProvider({ PHILSMS_API_TOKEN: "  ", SMSAPIPH_API_KEY: "  ", EXSENDER_API_KEY: " key " }), "exsender");
+  assert.equal(getSmsProvider({ PHILSMS_API_TOKEN: "  ", SMSAPIPH_API_KEY: "  ", EXSENDER_API_KEY: "  ", SMSTO_API_KEY: " key " }), "smsto");
+  assert.equal(getSmsProvider({ PHILSMS_API_TOKEN: " token ", SMSAPIPH_API_KEY: " key ", EXSENDER_API_KEY: " key ", SMSTO_API_KEY: " key " }), "philsms");
   assert.equal(getSmsProvider({}), null);
 });
 

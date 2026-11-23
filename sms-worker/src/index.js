@@ -10,6 +10,8 @@ const RATE_LIMIT_MS = 5 * 60 * 1000;
 const SMS_API_PH_MIN_INTERVAL_MS = 10 * 1000;
 const MAX_BODY_BYTES = 16 * 1024;
 const NUMBER_PATTERN = /^(?:\+?63|0)?9\d{9}$/;
+const PHILSMS_API_URL = "https://app.philsms.com/api/v3/sms/send";
+const PHILSMS_DEFAULT_SENDER_ID = "SchoolHeat";
 const SMS_API_PH_URL = "https://smsapiph.onrender.com/api/v1/send/sms";
 const EXSENDER_API_URL = "https://exsender.com/api/v1/sms/send";
 
@@ -209,6 +211,7 @@ export function createMessage(payload) {
 }
 
 export function getSmsProvider(env) {
+  if (env.PHILSMS_API_TOKEN?.trim()) return "philsms";
   if (env.SMSAPIPH_API_KEY?.trim()) return "smsapiph";
   if (env.EXSENDER_API_KEY?.trim()) return "exsender";
   if (env.SMSTO_API_KEY?.trim()) return "smsto";
@@ -220,6 +223,7 @@ export async function sendSms(env, numbers, message, fetchImpl = fetch, waitImpl
   if (!provider) {
     throw new Error("No SMS provider is configured on the SMS Worker.");
   }
+  if (provider === "philsms") return sendViaPhilSms(env, numbers, message, fetchImpl);
   if (provider === "smsapiph") return sendViaSmsApiPh(env, numbers, message, fetchImpl, waitImpl);
   return provider === "exsender"
     ? sendViaExSender(env, numbers, message, fetchImpl)
@@ -228,6 +232,91 @@ export async function sendSms(env, numbers, message, fetchImpl = fetch, waitImpl
 
 function defaultWait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function sendViaPhilSms(env, numbers, message, fetchImpl) {
+  const apiToken = env.PHILSMS_API_TOKEN.trim();
+  const senderId = env.PHILSMS_SENDER_ID?.trim() || PHILSMS_DEFAULT_SENDER_ID;
+  let response;
+  try {
+    response = await fetchImpl(PHILSMS_API_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiToken}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({
+        recipient: numbers.join(","),
+        sender_id: senderId,
+        type: "plain",
+        message
+      })
+    });
+  } catch {
+    return {
+      status: 409,
+      body: { error: "PhilSMS's response was unclear. Check PhilSMS message logs before sending this alert again." }
+    };
+  }
+
+  if (response.status === 429) {
+    const retryAfterSeconds = Number(response.headers.get("Retry-After"));
+    return {
+      status: 503,
+      body: {
+        error: "PhilSMS is temporarily rate-limiting requests; the alert can be retried.",
+        providerStatus: response.status,
+        retryAfterSeconds: Math.max(
+          RATE_LIMIT_MS / 1000,
+          Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+            ? Math.ceil(retryAfterSeconds)
+            : 0
+        )
+      }
+    };
+  }
+  if (response.status >= 500) {
+    console.warn("PhilSMS returned a server error.", response.status);
+    return {
+      status: 409,
+      body: { error: "PhilSMS returned an unclear result. Check PhilSMS message logs before sending this alert again." }
+    };
+  }
+  if (!response.ok) {
+    console.warn("PhilSMS rejected the SMS request.", response.status);
+    return {
+      status: 422,
+      body: {
+        error: "PhilSMS rejected the request. Check the API token, recipient numbers, and service status.",
+        providerStatus: response.status
+      }
+    };
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    return {
+      status: 409,
+      body: { error: "PhilSMS returned an unreadable result. Check PhilSMS message logs before sending this alert again." }
+    };
+  }
+  if (data?.status !== "success") {
+    return {
+      status: 422,
+      body: {
+        error: "PhilSMS rejected the request. Check the API token, recipient numbers, and service status.",
+        providerStatus: response.status
+      }
+    };
+  }
+
+  return {
+    status: 200,
+    body: { sent: numbers.length, failed: 0, queued: true }
+  };
 }
 
 async function sendViaSmsApiPh(env, numbers, message, fetchImpl, waitImpl) {
