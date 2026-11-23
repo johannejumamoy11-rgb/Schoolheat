@@ -107,10 +107,11 @@ const exSenderAcceptedResponse = () => new Response(JSON.stringify({
   recipients: [{ id: "msg_test", to: "+639123456789", status: "pending" }]
 }), { status: 201 });
 
-test("prefers ExSender when its key is configured and falls back to SMS.to", () => {
-  assert.equal(getSmsProvider({ EXSENDER_API_KEY: " key " }), "exsender");
-  assert.equal(getSmsProvider({ EXSENDER_API_KEY: "  ", SMSTO_API_KEY: " key " }), "smsto");
-  assert.equal(getSmsProvider({ EXSENDER_API_KEY: " key ", SMSTO_API_KEY: " key " }), "exsender");
+test("prefers SMS API PH, then ExSender, then SMS.to", () => {
+  assert.equal(getSmsProvider({ SMSAPIPH_API_KEY: " key " }), "smsapiph");
+  assert.equal(getSmsProvider({ SMSAPIPH_API_KEY: "  ", EXSENDER_API_KEY: " key " }), "exsender");
+  assert.equal(getSmsProvider({ SMSAPIPH_API_KEY: "  ", EXSENDER_API_KEY: "  ", SMSTO_API_KEY: " key " }), "smsto");
+  assert.equal(getSmsProvider({ SMSAPIPH_API_KEY: " key ", EXSENDER_API_KEY: " key ", SMSTO_API_KEY: " key " }), "smsapiph");
   assert.equal(getSmsProvider({}), null);
 });
 
@@ -220,6 +221,112 @@ test("does not report acceptance when ExSender omits message IDs", async () => {
   );
   assert.equal(result.status, 409);
   assert.match(result.body.error, /Check ExSender message logs/);
+});
+
+const smsApiPhCredentials = {
+  SMSAPIPH_API_KEY: "sms-api-ph-test-key"
+};
+const smsApiPhAcceptedResponse = () => new Response(JSON.stringify({
+  success: true,
+  message: "Message sent",
+  data: { id: "msg_test" }
+}), { status: 200 });
+
+test("sends each recipient through SMS API PH with x-api-key auth and E.164 numbers", async () => {
+  const captured = [];
+  const waits = [];
+  const result = await sendSms(
+    smsApiPhCredentials,
+    ["639123456789", "639987654321"],
+    "test message",
+    async (url, options) => {
+      captured.push({ url, options });
+      return smsApiPhAcceptedResponse();
+    },
+    async ms => waits.push(ms)
+  );
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, { sent: 2, failed: 0, queued: true });
+  assert.equal(captured.length, 2);
+  assert.ok(captured.every(call => call.url === "https://smsapiph.onrender.com/api/v1/send/sms"));
+  assert.deepEqual(JSON.parse(captured[0].options.body), {
+    recipient: "+639123456789",
+    message: "test message"
+  });
+  assert.deepEqual(JSON.parse(captured[1].options.body), {
+    recipient: "+639987654321",
+    message: "test message"
+  });
+  assert.ok(captured.every(call => call.options.method === "POST"));
+  assert.ok(captured.every(call => call.options.headers["x-api-key"] === "sms-api-ph-test-key"));
+  assert.ok(captured.every(call => call.options.headers["Content-Type"] === "application/json"));
+  assert.deepEqual(waits, [10000]);
+});
+
+test("trims SMS API PH credentials before sending", async () => {
+  let captured;
+  const waits = [];
+  await sendSms(
+    { SMSAPIPH_API_KEY: "  sms-api-ph-test-key  " },
+    ["639123456789"],
+    "test message",
+    async (url, options) => {
+      captured = { url, options };
+      return smsApiPhAcceptedResponse();
+    },
+    async ms => waits.push(ms)
+  );
+  assert.equal(captured.options.headers["x-api-key"], "sms-api-ph-test-key");
+  assert.deepEqual(waits, []);
+});
+
+test("reports SMS API PH rate limits and respects the five-minute retry minimum", async () => {
+  const result = await sendSms(
+    smsApiPhCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response("too many", {
+      status: 429,
+      headers: { "Retry-After": "42" }
+    })
+  );
+  assert.equal(result.status, 503);
+  assert.deepEqual(result.body, {
+    error: "SMS API PH is temporarily rate-limiting requests; the alert can be retried.",
+    providerStatus: 429,
+    retryAfterSeconds: 300
+  });
+});
+
+test("does not automatically retry unclear or rejected SMS API PH responses", async () => {
+  const unclear = await sendSms(
+    smsApiPhCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response("server error", { status: 500 })
+  );
+  assert.equal(unclear.status, 409);
+  assert.match(unclear.body.error, /Check SMS API PH message logs/);
+
+  const rejected = await sendSms(
+    smsApiPhCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response(JSON.stringify({ success: false, error: "invalid_key" }), { status: 200 })
+  );
+  assert.equal(rejected.status, 422);
+  assert.match(rejected.body.error, /SMS API PH rejected the request/);
+});
+
+test("does not automatically retry when the SMS API PH connection fails", async () => {
+  const result = await sendSms(
+    smsApiPhCredentials,
+    ["639123456789"],
+    "test message",
+    async () => { throw new Error("network failed"); }
+  );
+  assert.equal(result.status, 409);
+  assert.match(result.body.error, /Check SMS API PH message logs/);
 });
 
 test("does not automatically retry when SMS.to response status is uncertain", async () => {

@@ -235,9 +235,14 @@ treated as active heat warnings. A recent saved reading still does not prove
 that a sensor is currently connected. The Worker verifies Firebase
 Anonymous Auth and App Check tokens, keeps the SMS provider API key in
 Cloudflare secrets, and allows one SMS request every five minutes per account,
-including test messages. The Worker uses **ExSender** when `EXSENDER_API_KEY` is
-set and falls back to **SMS.to** when only `SMSTO_API_KEY` is set. Configure an
-approved Sender ID if required by the active account. Verify Globe, Smart/TNT,
+including test messages. The Worker uses **SMS API PH** when
+`SMSAPIPH_API_KEY` is set, then **ExSender** when `EXSENDER_API_KEY` is set, and
+falls back to **SMS.to** when only `SMSTO_API_KEY` is set. The free
+**SMS API PH** option is Philippine-only, needs no credits or hardware, and
+allows one message every 10 seconds, so multiple recipients are paced by the
+Worker. Create the key at `https://smsapiph.netlify.app/register` and store it
+as the `SMSAPIPH_API_KEY` Worker secret. Configure an approved Sender ID if
+required by the active account. Verify Globe, Smart/TNT,
 and DITO support and sender approval before relying on delivery. No local bridge is needed for SMS (the
 bridge remains optional for ESP32 Wi-Fi sync).
 
