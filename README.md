@@ -27,7 +27,9 @@ measurements, heat-index categories, or forecasts. The About tab explains
 SchoolHeat's purpose, workflow, the DepEd 4H heat-index bands, data limits, and
 heat-safety guardrails. It also links to the Sensor Monitor, Campus Map, and
 Hotlines. This visual update does not change heat-index calculations, stored
-readings, sensor communication, or forecast evaluation.
+readings, sensor communication, or forecast evaluation. See
+`APP_OPERATION_MANUAL.md` for a step-by-step end-user guide to the app screens
+and daily workflows.
 Reading freshness describes the age of saved data; it is not proof that a
 sensor is currently connected. Each navigation item now opens one distinct
 page: device sync is part of Sensor Monitor, analytics stays with Reading
