@@ -31,7 +31,7 @@ firebase.messaging().onBackgroundMessage(payload => {
   console.warn('SchoolHeat push notifications require internet access:', error);
 }
 
-const CACHE_NAME = 'schoolheat-v105';
+const CACHE_NAME = 'schoolheat-v106';
 const ASSETS = [
   './',
   './index.html',
@@ -40,6 +40,7 @@ const ASSETS = [
   './script.js',
   './cloud_config.js',
   './manifest.json',
+  './manual/index.html',
   './manual/APP_OPERATION_MANUAL-en.md',
   './manual/APP_OPERATION_MANUAL-tl.md',
   './manual/APP_OPERATION_MANUAL-ceb.md',

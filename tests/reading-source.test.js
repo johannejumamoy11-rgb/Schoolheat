@@ -606,17 +606,28 @@ test('offers a downloadable user manual that follows the app language', () => {
   const manuals = ['en', 'tl', 'ceb', 'war'];
 
   assert.equal((index.match(/class="btn-secondary manual-download-link"/g) || []).length, 2);
-  assert.match(index, /href="manual\/APP_OPERATION_MANUAL-en\.md"/);
+  assert.match(index, /href="manual\/index\.html#en"/);
+  assert.match(index, /target="_blank" rel="noopener"/);
+  assert.doesNotMatch(index, /class="btn-secondary manual-download-link"[^>]*\sdownload=/);
   assert.match(script, /updateManualLinks\(\)/);
+  assert.match(script, /manual\/index\.html#\$\{language\}/);
+  assert.match(script, /removeAttribute\('download'\)/);
+  const readerPath = path.join(manualDir, 'index.html');
+  assert.ok(fs.existsSync(readerPath), `${readerPath} exists`);
+  const reader = fs.readFileSync(readerPath, 'utf8');
+  assert.match(reader, /function renderMarkdown\(markdown\)/);
+  assert.match(reader, /id="download"/);
+  assert.match(reader, /location\.hash\.replace\(\/\^#\/, ''\)/);
+  assert.match(reader, /App_Operation_Manual-\$\{lang\.code\}\.md/);
+  assert.match(serviceWorker, /\.\/manual\/index\.html/);
   for (const language of manuals) {
-    assert.match(script, new RegExp(`APP_OPERATION_MANUAL-${language}\\.md`));
     const manualPath = path.join(manualDir, `APP_OPERATION_MANUAL-${language}.md`);
     assert.ok(fs.existsSync(manualPath), `${manualPath} exists`);
     const manual = fs.readFileSync(manualPath, 'utf8');
     assert.ok((manual.match(/^## /gm) || []).length >= 10);
     assert.match(serviceWorker, new RegExp(`APP_OPERATION_MANUAL-${language}\\.md`));
   }
-  assert.match(locales, /'User Manual': 'Manwal ng Gumagamit'/);
-  assert.match(locales, /'User Manual': 'Manwal sa Gumagamit'/);
-  assert.match(locales, /'User Manual': 'Manwal han Nagamit'/);
+  assert.match(locales, /'Open User Manual': 'Buksan ang Manwal ng Gumagamit'/);
+  assert.match(locales, /'Open User Manual': 'Abliha ang Manwal sa Gumagamit'/);
+  assert.match(locales, /'Open User Manual': 'Abliha an Manwal han Nagamit'/);
 });

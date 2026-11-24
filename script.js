@@ -4692,18 +4692,14 @@ class SchoolHeatApp {
   }
 
   updateManualLinks() {
-    const manualFiles = {
-      en: 'APP_OPERATION_MANUAL-en.md',
-      tl: 'APP_OPERATION_MANUAL-tl.md',
-      ceb: 'APP_OPERATION_MANUAL-ceb.md',
-      war: 'APP_OPERATION_MANUAL-war.md'
-    };
-    const language = manualFiles[this.language] ? this.language : 'en';
-    const fileName = manualFiles[language];
+    const supported = ['en', 'tl', 'ceb', 'war'];
+    const language = supported.includes(this.language) ? this.language : 'en';
     const languageLabel = window.SCHOOLHEAT_I18N?.languages?.[language]?.label || 'English';
     document.querySelectorAll('.manual-download-link').forEach(link => {
-      link.setAttribute('href', `manual/${fileName}`);
-      link.setAttribute('download', `SchoolHeat_App_Operation_Manual-${language}.md`);
+      link.setAttribute('href', `manual/index.html#${language}`);
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener');
+      link.removeAttribute('download');
     });
     document.querySelectorAll('.manual-language-name').forEach(label => {
       label.textContent = languageLabel;

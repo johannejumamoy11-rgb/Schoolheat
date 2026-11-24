@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en-PH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SchoolHeat User Manual</title>
+  <style>
+    :root {
+      --bg: #111b1a;
+      --surface: #192624;
+      --surface-2: #1f302c;
+      --text: #e9f0ea;
+      --muted: #a9bdb2;
+      --accent: #82c4a8;
+      --border: #2c403a;
+      --warn: #e58e6b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+      line-height: 1.65;
+    }
+    .bar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: rgba(17, 27, 26, 0.94);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+    .back, .download {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .back:hover, .download:hover { text-decoration: underline; }
+    .langs { display: flex; flex-wrap: wrap; gap: 8px; }
+    .langs button {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 14px;
+    }
+    .langs button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #10201a;
+      font-weight: 700;
+    }
+    main { max-width: 920px; margin: 0 auto; padding: 28px 20px 64px; }
+    .hero {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 22px;
+      margin-bottom: 26px;
+      background: linear-gradient(135deg, var(--surface), var(--surface-2));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+    }
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      font-weight: 800;
+    }
+    h1 { margin: 0; font-size: clamp(28px, 5vw, 42px); line-height: 1.15; }
+    .hero p:last-child { margin: 8px 0 0; color: var(--muted); }
+    .download {
+      display: inline-block;
+      padding: 10px 16px;
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    article {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+    }
+    article h2 {
+      margin-top: 34px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      color: var(--accent);
+      font-size: 23px;
+    }
+    article h3 { margin-top: 26px; color: #bfe0cd; font-size: 18px; }
+    article h4 { margin-top: 20px; color: var(--text); font-size: 16px; }
+    article p, article li { color: #dce8df; }
+    article code {
+      background: #0f1917;
+      color: #f0c9a8;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-size: 0.92em;
+    }
+    article table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 15px;
+    }
+    article th, article td {
+      border: 1px solid var(--border);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    article th { background: var(--surface-2); color: var(--accent); }
+    article li { margin: 6px 0; }
+    .loading { color: var(--muted); }
+    @media (max-width: 640px) {
+      article { padding: 18px; }
+      .hero { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <a class="back" id="back" href="../index.html">← SchoolHeat</a>
+    <div class="langs" id="langs" aria-label="Manual language"></div>
+  </div>
+  <main>
+    <div class="hero">
+      <div>
+        <p class="eyebrow">SCHOOLHEAT · CAMPUS HEAT &amp; SHADE</p>
+        <h1 id="title">User Manual</h1>
+        <p id="subtitle">Step-by-step guide to the SchoolHeat app.</p>
+      </div>
+      <a class="download" id="download" href="APP_OPERATION_MANUAL-en.md" download="SchoolHeat_App_Operation_Manual-en.md">Download .md</a>
+    </div>
+    <article class="loading" id="content">Loading manual…</article>
+  </main>
+  <script>
+    const LANGS = [
+      { code: 'en', htmlLang: 'en-PH', label: 'English', file: 'APP_OPERATION_MANUAL-en.md', title: 'User Manual', subtitle: 'Step-by-step guide to the SchoolHeat app.', download: 'Download .md', back: 'SchoolHeat', loading: 'Loading manual…', error: 'Could not load the manual. Open the app online once so this file is cached.' },
+      { code: 'tl', htmlLang: 'fil-PH', label: 'Tagalog', file: 'APP_OPERATION_MANUAL-tl.md', title: 'Manwal ng Gumagamit', subtitle: 'Gabay sa paggamit ng SchoolHeat app.', download: 'I-download ang .md', back: 'SchoolHeat', loading: 'Nilo-load ang manwal…', error: 'Hindi ma-load ang manwal. Buksan ang app nang online nang isang beses para ma-cache ang file na ito.' },
+      { code: 'ceb', htmlLang: 'ceb-PH', label: 'Bisaya', file: 'APP_OPERATION_MANUAL-ceb.md', title: 'Manwal sa Gumagamit', subtitle: 'Giya sa paggamit sa app sa SchoolHeat.', download: 'I-download ang .md', back: 'SchoolHeat', loading: 'Nag-load sa manwal…', error: 'Dili ma-load ang manwal. Abliha ang app online kausa aron ma-cache kini nga file.' },
+      { code: 'war', htmlLang: 'war-PH', label: 'Waray', file: 'APP_OPERATION_MANUAL-war.md', title: 'Manwal han Nagamit', subtitle: 'Giya ha paggamit han app han SchoolHeat.', download: 'I-download an .md', back: 'SchoolHeat', loading: 'Nagkakarga han manwal…', error: 'Diri ma-load an manwal. Abliha an app online hin makausa basi ma-cache ini nga file.' }
+    ];
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function inline(text) {
+      return escapeHtml(text)
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    }
+
+    function splitRow(row) {
+      return row.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map(cell => cell.trim());
+    }
+
+    function isTableSeparator(line) {
+      return /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+    }
+
+    function isBlockStart(line) {
+      return /^#{1,6}\s/.test(line) || /^\s*-\s/.test(line) || /^\s*\d+\.\s/.test(line) || line.trim().startsWith('|');
+    }
+
+    function renderMarkdown(markdown) {
+      const lines = markdown.replace(/\r\n/g, '\n').split('\n');
+      let html = '';
+      let i = 0;
+      while (i < lines.length) {
+        const line = lines[i];
+        if (!line.trim()) { i += 1; continue; }
+        const heading = line.match(/^(#{1,6})\s+(.*)$/);
+        if (heading) {
+          const level = heading[1].length;
+          html += `<h${level}>${inline(heading[2])}</h${level}>`;
+          i += 1;
+          continue;
+        }
+        if (line.trim().startsWith('|') && isTableSeparator(lines[i + 1] || '')) {
+          const headers = splitRow(line.trim());
+          i += 2;
+          const rows = [];
+          while (i < lines.length && lines[i].trim().startsWith('|')) {
+            rows.push(splitRow(lines[i].trim()));
+            i += 1;
+          }
+          html += `<table><thead><tr>${headers.map(cell => `<th>${inline(cell)}</th>`).join('')}</tr></thead><tbody>`;
+          rows.forEach(row => {
+            html += `<tr>${row.map(cell => `<td>${inline(cell)}</td>`).join('')}</tr>`;
+          });
+          html += '</tbody></table>';
+          continue;
+        }
+        if (/^\s*-\s/.test(line)) {
+          html += '<ul>';
+          while (i < lines.length && /^\s*-\s/.test(lines[i])) {
+            let item = lines[i].replace(/^\s*-\s/, '');
+            i += 1;
+            while (i < lines.length && /^\s{2,}\S/.test(lines[i])) {
+              item += ' ' + lines[i].trim();
+              i += 1;
+            }
+            html += `<li>${inline(item)}</li>`;
+          }
+          html += '</ul>';
+          continue;
+        }
+        if (/^\s*\d+\.\s/.test(line)) {
+          html += '<ol>';
+          while (i < lines.length && /^\s*\d+\.\s/.test(lines[i])) {
+            let item = lines[i].replace(/^\s*\d+\.\s/, '');
+            i += 1;
+            while (i < lines.length && /^\s{2,}\S/.test(lines[i])) {
+              item += ' ' + lines[i].trim();
+              i += 1;
+            }
+            html += `<li>${inline(item)}</li>`;
+          }
+          html += '</ol>';
+          continue;
+        }
+        let paragraph = line.trim();
+        i += 1;
+        while (i < lines.length && lines[i].trim() && !isBlockStart(lines[i])) {
+          paragraph += ' ' + lines[i].trim();
+          i += 1;
+        }
+        html += `<p>${inline(paragraph)}</p>`;
+      }
+      return html;
+    }
+
+    function currentLanguage() {
+      const requested = location.hash.replace(/^#/, '');
+      return LANGS.find(lang => lang.code === requested) || LANGS[0];
+    }
+
+    function render() {
+      const lang = currentLanguage();
+      document.documentElement.lang = lang.htmlLang;
+      document.title = `SchoolHeat · ${lang.title}`;
+      document.getElementById('title').textContent = lang.title;
+      document.getElementById('subtitle').textContent = lang.subtitle;
+      document.getElementById('back').textContent = `← ${lang.back}`;
+      const download = document.getElementById('download');
+      download.href = lang.file;
+      download.download = `SchoolHeat_App_Operation_Manual-${lang.code}.md`;
+      download.textContent = `${lang.download} · ${lang.file}`;
+      const langs = document.getElementById('langs');
+      langs.replaceChildren();
+      LANGS.forEach(option => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = option.label;
+        button.className = option.code === lang.code ? 'active' : '';
+        button.addEventListener('click', () => {
+          history.replaceState(null, '', `#${option.code}`);
+          render();
+        });
+        langs.appendChild(button);
+      });
+      const content = document.getElementById('content');
+      content.className = 'loading';
+      content.textContent = lang.loading;
+      fetch(lang.file)
+        .then(response => {
+          if (!response.ok) throw new Error('Manual not available');
+          return response.text();
+        })
+        .then(markdown => {
+          content.className = '';
+          content.innerHTML = renderMarkdown(markdown);
+        })
+        .catch(() => {
+          content.className = '';
+          content.textContent = lang.error;
+        });
+    }
+
+    render();
+  </script>
+</body>
+</html>

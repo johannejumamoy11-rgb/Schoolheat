@@ -30,8 +30,8 @@ Hotlines. This visual update does not change heat-index calculations, stored
 readings, sensor communication, or forecast evaluation. See
 `manual/APP_OPERATION_MANUAL-en.md` for a step-by-step end-user guide to the
 app screens and daily workflows. Tagalog, Bisaya, and Waray copies are in the
-same folder, and the app's Settings/About pages download the copy matching the
-selected language.
+same folder, and the app's Settings/About pages open a reader tab for the copy
+matching the selected language, with a download button inside.
 Reading freshness describes the age of saved data; it is not proof that a
 sensor is currently connected. Each navigation item now opens one distinct
 page: device sync is part of Sensor Monitor, analytics stays with Reading
