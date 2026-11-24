@@ -598,3 +598,25 @@ test('demo readings never receive future timestamps', () => {
     else process.env.TZ = previousTZ;
   }
 });
+
+test('offers a downloadable user manual that follows the app language', () => {
+  const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
+  const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
+  const manualDir = path.join(__dirname, '..', 'manual');
+  const manuals = ['en', 'tl', 'ceb', 'war'];
+
+  assert.equal((index.match(/class="btn-secondary manual-download-link"/g) || []).length, 2);
+  assert.match(index, /href="manual\/APP_OPERATION_MANUAL-en\.md"/);
+  assert.match(script, /updateManualLinks\(\)/);
+  for (const language of manuals) {
+    assert.match(script, new RegExp(`APP_OPERATION_MANUAL-${language}\\.md`));
+    const manualPath = path.join(manualDir, `APP_OPERATION_MANUAL-${language}.md`);
+    assert.ok(fs.existsSync(manualPath), `${manualPath} exists`);
+    const manual = fs.readFileSync(manualPath, 'utf8');
+    assert.ok((manual.match(/^## /gm) || []).length >= 10);
+    assert.match(serviceWorker, new RegExp(`APP_OPERATION_MANUAL-${language}\\.md`));
+  }
+  assert.match(locales, /'User Manual': 'Manwal ng Gumagamit'/);
+  assert.match(locales, /'User Manual': 'Manwal sa Gumagamit'/);
+  assert.match(locales, /'User Manual': 'Manwal han Nagamit'/);
+});

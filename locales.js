@@ -340,7 +340,14 @@ window.SCHOOLHEAT_I18N = {
       'Highest Heat Index today': 'Pinakamataas na Heat Index ngayong araw',
       'Humidity change today': 'Pagbabago ng halumigmig ngayong araw',
       'Sensor data quality': 'Kalidad ng datos ng sensor',
-      'Ask a question to see an answer grounded in the data available on this device.': 'Magtanong upang makakita ng sagot batay sa datos sa device na ito.'
+      'Ask a question to see an answer grounded in the data available on this device.': 'Magtanong upang makakita ng sagot batay sa datos sa device na ito.',
+      'User Manual': 'Manwal ng Gumagamit',
+      'Download the App Operation Manual in the selected app language.': 'I-download ang App Operation Manual sa napiling wika ng app.',
+      'Download User Manual': 'I-download ang Manwal ng Gumagamit',
+      '07 / USER MANUAL': '07 / MANWAL NG GUMAGAMIT',
+      'Take the guide with you.': 'Dala ang gabay saan ka man.',
+      "Download the App Operation Manual in the app's current language:": "I-download ang App Operation Manual sa kasalukuyang wika ng app:",
+      'Language:': 'Wika:'
     },
     ceb: {
       'Overview': 'Kinatibuk-ang Tan-aw',
@@ -674,7 +681,14 @@ window.SCHOOLHEAT_I18N = {
       'Highest Heat Index today': 'Pinakataas nga Heat Index karong adlawa',
       'Humidity change today': 'Pag-usab sa kaumog karong adlawa',
       'Sensor data quality': 'Kalidad sa datos sa sensor',
-      'Ask a question to see an answer grounded in the data available on this device.': 'Pangutana aron makakita og tubag nga gibase sa datos niining device.'
+      'Ask a question to see an answer grounded in the data available on this device.': 'Pangutana aron makakita og tubag nga gibase sa datos niining device.',
+      'User Manual': 'Manwal sa Gumagamit',
+      'Download the App Operation Manual in the selected app language.': 'I-download ang App Operation Manual sa piniling pinulongan sa app.',
+      'Download User Manual': 'I-download ang Manwal sa Gumagamit',
+      '07 / USER MANUAL': '07 / MANWAL SA GUMAGAMIT',
+      'Take the guide with you.': 'Dala ang giya bisan asa ka.',
+      "Download the App Operation Manual in the app's current language:": "I-download ang App Operation Manual sa kasamtangang pinulongan sa app:",
+      'Language:': 'Pinulongan:'
     },
     war: {
       'Overview': 'Panguna nga Tan-aw',
@@ -1008,7 +1022,14 @@ window.SCHOOLHEAT_I18N = {
       'Highest Heat Index today': 'Pinakamataas nga Heat Index yana nga adlaw',
       'Humidity change today': 'Pagbag-o han humedad yana nga adlaw',
       'Sensor data quality': 'Kalidad han datos han sensor',
-      'Ask a question to see an answer grounded in the data available on this device.': 'Pakiana basi makita an baton nga iginbase ha datos hini nga device.'
+      'Ask a question to see an answer grounded in the data available on this device.': 'Pakiana basi makita an baton nga iginbase ha datos hini nga device.',
+      'User Manual': 'Manwal han Nagamit',
+      'Download the App Operation Manual in the selected app language.': 'I-download an App Operation Manual ha napili nga yinaknan han app.',
+      'Download User Manual': 'I-download an Manwal han Nagamit',
+      '07 / USER MANUAL': '07 / MANWAL HAN NAGAMIT',
+      'Take the guide with you.': 'Dad-a an giya bisan diin ka.',
+      "Download the App Operation Manual in the app's current language:": "I-download an App Operation Manual ha yana nga yinaknan han app:",
+      'Language:': 'Yinaknan:'
     }
   }
 };

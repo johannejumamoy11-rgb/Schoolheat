@@ -4691,6 +4691,25 @@ class SchoolHeatApp {
     return window.SCHOOLHEAT_I18N?.languages?.[this.language]?.locale || 'en-PH';
   }
 
+  updateManualLinks() {
+    const manualFiles = {
+      en: 'APP_OPERATION_MANUAL-en.md',
+      tl: 'APP_OPERATION_MANUAL-tl.md',
+      ceb: 'APP_OPERATION_MANUAL-ceb.md',
+      war: 'APP_OPERATION_MANUAL-war.md'
+    };
+    const language = manualFiles[this.language] ? this.language : 'en';
+    const fileName = manualFiles[language];
+    const languageLabel = window.SCHOOLHEAT_I18N?.languages?.[language]?.label || 'English';
+    document.querySelectorAll('.manual-download-link').forEach(link => {
+      link.setAttribute('href', `manual/${fileName}`);
+      link.setAttribute('download', `SchoolHeat_App_Operation_Manual-${language}.md`);
+    });
+    document.querySelectorAll('.manual-language-name').forEach(label => {
+      label.textContent = languageLabel;
+    });
+  }
+
   translateText(text) {
     const dictionary = window.SCHOOLHEAT_I18N?.translations?.[this.language];
     return dictionary?.[text] || text;
@@ -4740,6 +4759,7 @@ class SchoolHeatApp {
     const root = document.getElementById('app');
     if (!root) return;
     this.translateNode(root);
+    this.updateManualLinks();
 
     if (!this.languageObserver) {
       this.languageObserver = new MutationObserver(records => {
