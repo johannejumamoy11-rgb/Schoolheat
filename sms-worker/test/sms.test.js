@@ -213,12 +213,13 @@ const exSenderAcceptedResponse = () => new Response(JSON.stringify({
   recipients: [{ id: "msg_test", to: "+639123456789", status: "pending" }]
 }), { status: 201 });
 
-test("prefers IPROG SMS, then PhilSMS, then ExSender, then SMS.to", () => {
-  assert.equal(getSmsProvider({ IPROG_API_TOKEN: " token " }), "iprog");
+test("prefers Semaphore, then IPROG SMS, then PhilSMS, then ExSender, then SMS.to", () => {
+  assert.equal(getSmsProvider({ SEMAPHORE_API_KEY: " key " }), "semaphore");
+  assert.equal(getSmsProvider({ SEMAPHORE_API_KEY: "  ", IPROG_API_TOKEN: " token " }), "iprog");
   assert.equal(getSmsProvider({ IPROG_API_TOKEN: "  ", PHILSMS_API_TOKEN: " token " }), "philsms");
   assert.equal(getSmsProvider({ IPROG_API_TOKEN: "  ", PHILSMS_API_TOKEN: "  ", EXSENDER_API_KEY: " key " }), "exsender");
   assert.equal(getSmsProvider({ IPROG_API_TOKEN: "  ", PHILSMS_API_TOKEN: "  ", EXSENDER_API_KEY: "  ", SMSTO_API_KEY: " key " }), "smsto");
-  assert.equal(getSmsProvider({ IPROG_API_TOKEN: " token ", PHILSMS_API_TOKEN: " token ", EXSENDER_API_KEY: " key ", SMSTO_API_KEY: " key " }), "iprog");
+  assert.equal(getSmsProvider({ SEMAPHORE_API_KEY: " key ", IPROG_API_TOKEN: " token ", PHILSMS_API_TOKEN: " token ", EXSENDER_API_KEY: " key ", SMSTO_API_KEY: " key " }), "semaphore");
   assert.equal(getSmsProvider({}), null);
 });
 
@@ -328,6 +329,127 @@ test("does not report acceptance when ExSender omits message IDs", async () => {
   );
   assert.equal(result.status, 409);
   assert.match(result.body.error, /Check ExSender message logs/);
+});
+
+const semaphoreCredentials = {
+  SEMAPHORE_API_KEY: "semaphore-test-key"
+};
+const semaphoreAcceptedResponse = () => new Response(JSON.stringify([
+  { message_id: 101, recipient: "639123456789", status: "Queued" },
+  { message_id: 102, recipient: "639987654321", status: "Queued" }
+]), { status: 200 });
+
+test("sends one Semaphore campaign with form-encoded recipients and the default sender name", async () => {
+  let captured;
+  const result = await sendSms(
+    semaphoreCredentials,
+    ["639123456789", "639987654321"],
+    "test message",
+    async (url, options) => {
+      captured = { url, options };
+      return semaphoreAcceptedResponse();
+    }
+  );
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body, { sent: 2, failed: 0, queued: true });
+  assert.equal(captured.url, "https://api.semaphore.co/api/v4/messages");
+  assert.equal(captured.options.method, "POST");
+  assert.equal(captured.options.headers["Content-Type"], "application/x-www-form-urlencoded");
+  assert.equal(captured.options.headers.Accept, "application/json");
+  assert.deepEqual(Object.fromEntries(new URLSearchParams(captured.options.body)), {
+    apikey: "semaphore-test-key",
+    number: "639123456789,639987654321",
+    message: "test message",
+    sendername: "SchoolHeat"
+  });
+});
+
+test("trims Semaphore credentials and uses a configured sender name", async () => {
+  let captured;
+  await sendSms(
+    {
+      SEMAPHORE_API_KEY: "  semaphore-test-key  ",
+      SEMAPHORE_SENDERNAME: " SchoolHeat "
+    },
+    ["639123456789"],
+    "test message",
+    async (url, options) => {
+      captured = { url, options };
+      return new Response(JSON.stringify([
+        { message_id: 103, recipient: "639123456789", status: "Pending" }
+      ]), { status: 200 });
+    }
+  );
+  assert.deepEqual(Object.fromEntries(new URLSearchParams(captured.options.body)), {
+    apikey: "semaphore-test-key",
+    number: "639123456789",
+    message: "test message",
+    sendername: "SchoolHeat"
+  });
+});
+
+test("reports Semaphore rate limits and respects the five-minute retry minimum", async () => {
+  const result = await sendSms(
+    semaphoreCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response("too many", {
+      status: 429,
+      headers: { "Retry-After": "42" }
+    })
+  );
+  assert.equal(result.status, 503);
+  assert.deepEqual(result.body, {
+    error: "Semaphore is temporarily rate-limiting requests; the alert can be retried.",
+    providerStatus: 429,
+    retryAfterSeconds: 300
+  });
+});
+
+test("does not automatically retry unclear or rejected Semaphore responses", async () => {
+  const unclear = await sendSms(
+    semaphoreCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response("server error", { status: 500 })
+  );
+  assert.equal(unclear.status, 409);
+  assert.match(unclear.body.error, /Check Semaphore message logs/);
+
+  const rejected = await sendSms(
+    semaphoreCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response(JSON.stringify([
+      { message_id: 104, recipient: "639123456789", status: "Failed" }
+    ]), { status: 200 })
+  );
+  assert.equal(rejected.status, 422);
+  assert.match(rejected.body.error, /Semaphore rejected the request/);
+});
+
+test("does not report acceptance when Semaphore omits message IDs", async () => {
+  const result = await sendSms(
+    semaphoreCredentials,
+    ["639123456789"],
+    "test message",
+    async () => new Response(JSON.stringify([
+      { recipient: "639123456789", status: "Queued" }
+    ]), { status: 200 })
+  );
+  assert.equal(result.status, 409);
+  assert.match(result.body.error, /Check Semaphore message logs/);
+});
+
+test("does not automatically retry when the Semaphore connection fails", async () => {
+  const result = await sendSms(
+    semaphoreCredentials,
+    ["639123456789"],
+    "test message",
+    async () => { throw new Error("network failed"); }
+  );
+  assert.equal(result.status, 409);
+  assert.match(result.body.error, /Check Semaphore message logs/);
 });
 
 const iprogCredentials = {

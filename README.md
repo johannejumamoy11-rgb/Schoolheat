@@ -235,15 +235,20 @@ treated as active heat warnings. A recent saved reading still does not prove
 that a sensor is currently connected. The Worker verifies Firebase
 Anonymous Auth and App Check tokens, keeps the SMS provider API key in
 Cloudflare secrets, and allows one SMS request every five minutes per account,
-including test messages. The Worker uses **IPROG SMS** when `IPROG_API_TOKEN`
-is set, then **PhilSMS** when `PHILSMS_API_TOKEN` is set, then **ExSender**
-when `EXSENDER_API_KEY` is set, and falls back to **SMS.to** when only
-`SMSTO_API_KEY` is set. SMS API PH is no longer used. IPROG SMS is
-Philippine-only, gives 5 free credits after student verification, and supports
-a custom SMS header chosen during that verification; student verification is
-automatic and usually finishes within minutes. Store the token as the
-`IPROG_API_TOKEN` Worker secret. PhilSMS is configured as a backup only: the
-free Standard plan in the new dashboard has **0 SMS units**, a top-up is
+including test messages. The Worker uses **Semaphore** when `SEMAPHORE_API_KEY`
+is set, then **IPROG SMS** when `IPROG_API_TOKEN` is set, then **PhilSMS** when
+`PHILSMS_API_TOKEN` is set, then **ExSender** when `EXSENDER_API_KEY` is set,
+and falls back to **SMS.to** when only `SMSTO_API_KEY` is set. SMS API PH is no
+longer used. Semaphore supports Globe, Smart, Sun, and DITO, and its first
+Sender Name is free once the account has a paid top-up; the dashboard blocks
+the Sender Name form on a zero-credit account. Its approval form may also reject
+accounts or sender names that look like one-off school tests, so submit the real
+SchoolHeat alert use case. The default sender name is `SchoolHeat` and can be
+overridden with the optional `SEMAPHORE_SENDERNAME` Worker value. IPROG
+SMS is the paid fallback: it gives 5 free credits after student verification,
+and reaching Smart/TNT requires an approved custom sender name. Store its token
+as the `IPROG_API_TOKEN` Worker secret. PhilSMS is configured as a backup only:
+the free Standard plan in the new dashboard has **0 SMS units**, a top-up is
 required, and Sender ID registration requires business documents and does not
 accept academic projects. Verify Globe, Smart/TNT, and DITO support and sender
 approval before relying on delivery. No local bridge is needed for SMS (the
@@ -291,8 +296,9 @@ check current pricing and quotas.
 ## Requirements
 
 - A public HTTPS hosting domain for SchoolHeat.
-- An ExSender account and API key (`psk_live_…`), or an SMS.to API key as a
-  fallback. Configure an approved Sender ID if the active provider requires one.
+- A Semaphore account with an approved Sender Name and API key
+  (`SEMAPHORE_API_KEY`), or an IPROG, ExSender, or SMS.to API key as a fallback.
+  Configure an approved Sender ID if the active provider requires one.
 - Confirm the active provider's trial eligibility, Philippines rates, and
   delivery to Globe, Smart/TNT, and DITO before relying on the service.
 - For SMS: a Cloudflare account, Node.js/npm, a Firebase project configured in
@@ -338,20 +344,23 @@ or Firebase Blaze billing.
    npm test
    npx wrangler login
    npm run deploy
+   npx wrangler secret put SEMAPHORE_API_KEY
+   # Optional: only if the approved sender name is not SchoolHeat.
+   npx wrangler secret put SEMAPHORE_SENDERNAME
+   # Fallbacks, only if needed:
+   npx wrangler secret put IPROG_API_TOKEN
+   npx wrangler secret put PHILSMS_API_TOKEN
    npx wrangler secret put EXSENDER_API_KEY
-   # Optional: only if ExSender has approved a sender ID for the account.
-   npx wrangler secret put EXSENDER_SENDER_ID
-   # Fallback only: SMS.to is used when no ExSender key is set.
    npx wrangler secret put SMSTO_API_KEY
    ```
 
-   Enter the ExSender (or fallback SMS.to) API key only at Wrangler's secret
-   prompt. If configured, enter the approved Sender ID at its prompt. After
-   deploy, copy the Worker URL printed by Wrangler into `smsWorkerUrl` in
-   `cloud_config.js`, then publish the updated website. Do not put the API key
-   or sender ID in `cloud_config.js` or browser code. Check the active provider's
-   pricing and Cloudflare's current limits and
-   pricing for Workers and Durable Objects before deployment.
+   Add the Semaphore key only after its sender name is approved; until then the
+   IPROG fallback remains active. Enter provider API keys only at Wrangler's
+   secret prompt. After deploy, copy the Worker URL printed by Wrangler into
+   `smsWorkerUrl` in `cloud_config.js`, then publish the updated website. Do not
+   put an API key or sender name in `cloud_config.js` or browser code. Check the
+   active provider's pricing and Cloudflare's current limits and pricing for
+   Workers and Durable Objects before deployment.
 
 7. Deploy the web app to the configured HTTPS domain. In **Settings**, enter
    recipient numbers and enable **SMS Alerts**. Use **Send Test

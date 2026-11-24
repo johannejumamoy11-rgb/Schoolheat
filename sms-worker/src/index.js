@@ -9,6 +9,8 @@ const FIREBASE_APP_ID = "1:960776018094:web:2d61dc050347340c86f53f";
 const RATE_LIMIT_MS = 5 * 60 * 1000;
 const MAX_BODY_BYTES = 16 * 1024;
 const NUMBER_PATTERN = /^(?:\+?63|0)?9\d{9}$/;
+const SEMAPHORE_API_URL = "https://api.semaphore.co/api/v4/messages";
+const SEMAPHORE_DEFAULT_SENDERNAME = "SchoolHeat";
 const IPROG_API_URL = "https://www.iprogsms.com/api/v1/sms_messages/send_bulk";
 const PHILSMS_API_URL = "https://dashboard.philsms.com/api/v3/sms/send";
 const PHILSMS_DEFAULT_SENDER_ID = "SchoolHeat";
@@ -210,6 +212,7 @@ export function createMessage(payload) {
 }
 
 export function getSmsProvider(env) {
+  if (env.SEMAPHORE_API_KEY?.trim()) return "semaphore";
   if (env.IPROG_API_TOKEN?.trim()) return "iprog";
   if (env.PHILSMS_API_TOKEN?.trim()) return "philsms";
   if (env.EXSENDER_API_KEY?.trim()) return "exsender";
@@ -222,11 +225,116 @@ export async function sendSms(env, numbers, message, fetchImpl = fetch) {
   if (!provider) {
     throw new Error("No SMS provider is configured on the SMS Worker.");
   }
+  if (provider === "semaphore") return sendViaSemaphore(env, numbers, message, fetchImpl);
   if (provider === "iprog") return sendViaIprog(env, numbers, message, fetchImpl);
   if (provider === "philsms") return sendViaPhilSms(env, numbers, message, fetchImpl);
   return provider === "exsender"
     ? sendViaExSender(env, numbers, message, fetchImpl)
     : sendViaSmsTo(env, numbers, message, fetchImpl);
+}
+
+async function sendViaSemaphore(env, numbers, message, fetchImpl) {
+  const apiKey = env.SEMAPHORE_API_KEY.trim();
+  const senderName = env.SEMAPHORE_SENDERNAME?.trim() || SEMAPHORE_DEFAULT_SENDERNAME;
+  const body = new URLSearchParams({
+    apikey: apiKey,
+    number: numbers.join(","),
+    message,
+    sendername: senderName
+  });
+  let response;
+  try {
+    response = await fetchImpl(SEMAPHORE_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json"
+      },
+      body: body.toString()
+    });
+  } catch {
+    return {
+      status: 409,
+      body: { error: "Semaphore's response was unclear. Check Semaphore message logs before sending this alert again." }
+    };
+  }
+
+  if (response.status === 429) {
+    const retryAfterSeconds = Number(response.headers.get("Retry-After"));
+    return {
+      status: 503,
+      body: {
+        error: "Semaphore is temporarily rate-limiting requests; the alert can be retried.",
+        providerStatus: response.status,
+        retryAfterSeconds: Math.max(
+          RATE_LIMIT_MS / 1000,
+          Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+            ? Math.ceil(retryAfterSeconds)
+            : 0
+        )
+      }
+    };
+  }
+  if (response.status >= 500) {
+    console.warn("Semaphore returned a server error.", response.status);
+    return {
+      status: 409,
+      body: { error: "Semaphore returned an unclear result. Check Semaphore message logs before sending this alert again." }
+    };
+  }
+  if (!response.ok) {
+    console.warn("Semaphore rejected the SMS request.", response.status);
+    return {
+      status: 422,
+      body: {
+        error: "Semaphore rejected the request. Check the API key, approved sender name, account balance, and recipient numbers.",
+        providerStatus: response.status
+      }
+    };
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    return {
+      status: 409,
+      body: { error: "Semaphore returned an unreadable result. Check Semaphore message logs before sending this alert again." }
+    };
+  }
+  if (!Array.isArray(data) || data.length < 1) {
+    return {
+      status: 409,
+      body: { error: "Semaphore returned an unclear result. Check Semaphore message logs before sending this alert again." }
+    };
+  }
+
+  const acceptedStatuses = ["queued", "pending", "sent"];
+  const rejectedStatuses = ["failed", "refunded"];
+  const accepted = data.filter(item =>
+    (typeof item?.message_id === "string" || typeof item?.message_id === "number") &&
+    acceptedStatuses.includes(String(item?.status).toLowerCase())
+  );
+  if (accepted.length < 1) {
+    const rejected = data.some(item => rejectedStatuses.includes(String(item?.status).toLowerCase()));
+    return {
+      status: rejected ? 422 : 409,
+      body: {
+        error: rejected
+          ? "Semaphore rejected the request. Check the API key, approved sender name, account balance, and recipient numbers."
+          : "Semaphore returned an unclear result. Check Semaphore message logs before sending this alert again."
+      }
+    };
+  }
+
+  return {
+    status: 200,
+    body: {
+      sent: accepted.length,
+      failed: Math.max(0, numbers.length - accepted.length),
+      queued: true
+    }
+  };
 }
 
 async function sendViaPhilSms(env, numbers, message, fetchImpl) {
