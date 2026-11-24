@@ -4691,12 +4691,34 @@ class SchoolHeatApp {
     return window.SCHOOLHEAT_I18N?.languages?.[this.language]?.locale || 'en-PH';
   }
 
+  getManualThemeParams() {
+    const style = getComputedStyle(document.documentElement);
+    const cssVar = (...names) => {
+      for (const name of names) {
+        const value = style.getPropertyValue(name).trim();
+        if (value) return value;
+      }
+      return '';
+    };
+    return new URLSearchParams({
+      bg: cssVar('--surface-canvas', '--bg-primary'),
+      surface: cssVar('--surface-card', '--bg-card'),
+      raised: cssVar('--surface-raised', '--bg-card-hover'),
+      text: cssVar('--ink-primary', '--text-primary'),
+      muted: cssVar('--ink-secondary', '--text-secondary'),
+      accent: cssVar('--brand-teal', '--accent-blue'),
+      border: cssVar('--border'),
+      accentText: cssVar('--button-primary-text')
+    }).toString();
+  }
+
   updateManualLinks() {
     const supported = ['en', 'tl', 'ceb', 'war'];
     const language = supported.includes(this.language) ? this.language : 'en';
     const languageLabel = window.SCHOOLHEAT_I18N?.languages?.[language]?.label || 'English';
+    const themeParams = this.getManualThemeParams();
     document.querySelectorAll('.manual-download-link').forEach(link => {
-      link.setAttribute('href', `manual/index.html#${language}`);
+      link.setAttribute('href', `manual/index.html#${language}${themeParams ? `&${themeParams}` : ''}`);
       link.setAttribute('target', '_blank');
       link.setAttribute('rel', 'noopener');
       link.removeAttribute('download');
@@ -5234,6 +5256,7 @@ class SchoolHeatApp {
       themeColor?.setAttribute('content', '#f4f1e7');
     }
     this.applyAccentPalette();
+    this.updateManualLinks();
   }
 
   showDistributionSummary() {

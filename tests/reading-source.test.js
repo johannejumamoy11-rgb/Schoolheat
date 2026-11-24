@@ -599,7 +599,7 @@ test('demo readings never receive future timestamps', () => {
   }
 });
 
-test('offers a downloadable user manual that follows the app language', () => {
+test('offers a downloadable user manual that follows the app language and theme', () => {
   const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
   const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
   const manualDir = path.join(__dirname, '..', 'manual');
@@ -611,12 +611,21 @@ test('offers a downloadable user manual that follows the app language', () => {
   assert.doesNotMatch(index, /class="btn-secondary manual-download-link"[^>]*\sdownload=/);
   assert.match(script, /updateManualLinks\(\)/);
   assert.match(script, /manual\/index\.html#\$\{language\}/);
+  assert.match(script, /getManualThemeParams\(\)/);
+  assert.match(script, /getComputedStyle\(document\.documentElement\)/);
+  assert.match(script, /new URLSearchParams\(/);
+  assert.match(script, /this\.applyAccentPalette\(\);\s*this\.updateManualLinks\(\);/);
+  assert.match(script, /themeParams \? `&\$\{themeParams\}` : ''/);
   assert.match(script, /removeAttribute\('download'\)/);
   const readerPath = path.join(manualDir, 'index.html');
   assert.ok(fs.existsSync(readerPath), `${readerPath} exists`);
   const reader = fs.readFileSync(readerPath, 'utf8');
   assert.match(reader, /function renderMarkdown\(markdown\)/);
   assert.match(reader, /id="download"/);
+  assert.match(reader, /name="theme-color"/);
+  assert.match(reader, /function applyThemeParams\(params\)/);
+  assert.match(reader, /function themeSuffix\(\)/);
+  assert.match(reader, /replace\(\/\\\+\/g, ' '\)/);
   assert.match(reader, /location\.hash\.replace\(\/\^#\/, ''\)/);
   assert.match(reader, /App_Operation_Manual-\$\{lang\.code\}\.md/);
   assert.match(serviceWorker, /\.\/manual\/index\.html/);

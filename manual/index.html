@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111b1a">
   <title>SchoolHeat User Manual</title>
   <style>
     :root {
@@ -12,6 +13,7 @@
       --text: #e9f0ea;
       --muted: #a9bdb2;
       --accent: #82c4a8;
+      --accent-text: #10201a;
       --border: #2c403a;
       --warn: #e58e6b;
     }
@@ -33,7 +35,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 12px 20px;
-      background: rgba(17, 27, 26, 0.94);
+      background: var(--bg);
       border-bottom: 1px solid var(--border);
       backdrop-filter: blur(8px);
     }
@@ -57,7 +59,7 @@
     .langs button.active {
       background: var(--accent);
       border-color: var(--accent);
-      color: #10201a;
+      color: var(--accent-text);
       font-weight: 700;
     }
     main { max-width: 920px; margin: 0 auto; padding: 28px 20px 64px; }
@@ -102,12 +104,12 @@
       color: var(--accent);
       font-size: 23px;
     }
-    article h3 { margin-top: 26px; color: #bfe0cd; font-size: 18px; }
+    article h3 { margin-top: 26px; color: var(--accent); font-size: 18px; }
     article h4 { margin-top: 20px; color: var(--text); font-size: 16px; }
-    article p, article li { color: #dce8df; }
+    article p, article li { color: var(--text); }
     article code {
-      background: #0f1917;
-      color: #f0c9a8;
+      background: var(--surface-2);
+      color: var(--text);
       padding: 2px 6px;
       border-radius: 5px;
       font-size: 0.92em;
@@ -248,12 +250,54 @@
       return html;
     }
 
+    function hashParts() {
+      const [code, ...pairs] = location.hash.replace(/^#/, '').split('&');
+      const params = {};
+      pairs.forEach(pair => {
+        const splitAt = pair.indexOf('=');
+        if (splitAt < 0) return;
+        const key = pair.slice(0, splitAt);
+        const value = pair.slice(splitAt + 1).replace(/\+/g, ' ');
+        try {
+          params[key] = decodeURIComponent(value);
+        } catch {
+          params[key] = value;
+        }
+      });
+      return { code, params };
+    }
+
+    function themeSuffix() {
+      return location.hash.replace(/^#/, '').split('&').slice(1).join('&');
+    }
+
     function currentLanguage() {
-      const requested = location.hash.replace(/^#/, '');
-      return LANGS.find(lang => lang.code === requested) || LANGS[0];
+      const { code } = hashParts();
+      return LANGS.find(lang => lang.code === code) || LANGS[0];
+    }
+
+    function applyThemeParams(params) {
+      const themeVars = {
+        bg: '--bg',
+        surface: '--surface',
+        raised: '--surface-2',
+        text: '--text',
+        muted: '--muted',
+        accent: '--accent',
+        border: '--border',
+        accentText: '--accent-text'
+      };
+      Object.entries(themeVars).forEach(([key, cssVar]) => {
+        if (params[key]) document.documentElement.style.setProperty(cssVar, params[key]);
+      });
+      if (params.bg) {
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', params.bg);
+      }
     }
 
     function render() {
+      const { params } = hashParts();
+      applyThemeParams(params);
       const lang = currentLanguage();
       document.documentElement.lang = lang.htmlLang;
       document.title = `SchoolHeat · ${lang.title}`;
@@ -272,7 +316,8 @@
         button.textContent = option.label;
         button.className = option.code === lang.code ? 'active' : '';
         button.addEventListener('click', () => {
-          history.replaceState(null, '', `#${option.code}`);
+          const suffix = themeSuffix();
+          history.replaceState(null, '', `#${option.code}${suffix ? `&${suffix}` : ''}`);
           render();
         });
         langs.appendChild(button);
