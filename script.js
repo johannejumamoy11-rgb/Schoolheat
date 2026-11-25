@@ -67,16 +67,16 @@ const STATUS_LABELS = {
 };
 
 const PAGASA_HEAT_LEVELS = [
-  { min: 27, label: 'Caution', range: '27–32°C' },
-  { min: 33, label: 'Extreme Caution', range: '33–41°C' },
-  { min: 42, label: 'Danger', range: '42–51°C' },
-  { min: 52, label: 'Extreme Danger', range: '52°C and above' }
+  { min: 27, label: 'Caution', displayLabel: 'Caution', range: '27–32°C' },
+  { min: 33, label: 'Extreme Caution', displayLabel: 'Extreme Caution', range: '33–41°C' },
+  { min: 42, label: 'Danger', displayLabel: 'Danger', range: '42–51°C' },
+  { min: 52, label: 'Extreme Danger', displayLabel: 'Extreme Danger', range: '52°C and above' }
 ];
 
 function getPAGASAHeatLevel(heatIndex) {
   const value = Number(heatIndex);
   if (!Number.isFinite(value) || value < 27) {
-    return { label: 'Below 27°C', range: '<27°C' };
+    return { label: 'Below 27°C', displayLabel: 'Safe', range: '<27°C' };
   }
   for (let i = PAGASA_HEAT_LEVELS.length - 1; i >= 0; i--) {
     if (value >= PAGASA_HEAT_LEVELS[i].min) return PAGASA_HEAT_LEVELS[i];
@@ -1321,7 +1321,8 @@ class SchoolHeatApp {
 
   getPAGASALabel(heatIndex) {
     const level = getPAGASAHeatLevel(heatIndex);
-    return `${this.translateText('PAGASA')}: ${this.translateText(level.label)}`;
+    const status = STATUS_LABELS[this.getStatus(heatIndex)] || 'Hayo';
+    return `${status} / ${this.translateText(level.displayLabel)}`;
   }
 
   getPAGASADetail(heatIndex) {

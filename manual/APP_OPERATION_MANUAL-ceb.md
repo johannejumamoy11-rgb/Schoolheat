@@ -79,8 +79,11 @@ Ang mga band sa DepEd 4H nga gigamit sa app mao ang:
 | **Hinto** | 42 °C o pataas |
 
 Gipakita usab sa SchoolHeat ang kategorya sa PAGASA base sa epekto tupad sa label
-ng 4H. Para lamang kini sa pagpakita; wala kini gi-usab sa mga alerto o desisyon
-sa eskwelahan.
+ng 4H isip pares: `Hayo / Luwas`, `Hinay / Pag-amping`, `Hinga / Grabe nga
+Pag-amping`, ug `Hinto / Peligro` (`Hinto / Grabe nga Peligro` sa 52 °C pataas).
+Ang "Luwas" impormal tungod kay walay opisyal nga kategorya ang PAGASA sa ubos
+sa 27 °C. Para lamang kini sa pagpakita; wala kini gi-usab sa mga alerto o
+desisyon sa eskwelahan.
 
 | Kategorya sa PAGASA | Indeks sa Kainit |
 | --- | --- |

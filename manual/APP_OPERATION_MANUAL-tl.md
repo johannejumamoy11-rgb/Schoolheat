@@ -53,7 +53,7 @@ Ang mga DepEd 4H band na ginagamit ng app ay:
 | **Hinga** | 33–41 °C |
 | **Hinto** | 42 °C o mas mataas |
 
-Ipinapakita rin ng SchoolHeat ang kategoryang PAGASA batay sa epekto kasabay ng label na 4H. Display lamang ito; hindi nito binabago ang mga alerto o desisyon ng paaralan.
+Ipinapakita rin ng SchoolHeat ang kategoryang PAGASA batay sa epekto kasabay ng label na 4H bilang pares: `Hayo / Ligtas`, `Hinay / Pag-iingat`, `Hinga / Labis na Pag-iingat`, at `Hinto / Panganib` (`Hinto / Labis na Panganib` sa 52 °C pataas). Ang "Ligtas" ay impormal dahil walang opisyal na kategorya ang PAGASA sa ibaba ng 27 °C. Display lamang ito; hindi nito binabago ang mga alerto o desisyon ng paaralan.
 
 | Kategorya ng PAGASA | Heat index |
 | --- | --- |

@@ -53,7 +53,7 @@ An mga banda han DepEd 4H nga ginagamit han app amo an:
 | **Hinga** | 33–41 °C |
 | **Hinto** | 42 °C o labaw pa |
 
-Ipinapakita liwat han SchoolHeat an kategorya han PAGASA base ha epekto upod han label han 4H. Para la ini ha pagpakita; diri ini nagbabag-o han mga alerto o desisyon han eskwelahan.
+Ipinapakita liwat han SchoolHeat an kategorya han PAGASA base ha epekto upod han label han 4H sugad nga pares: `Hayo / Diri Panganib`, `Hinay / Pagbantay`, `Hinga / Grabe nga Pagbantay`, ngan `Hinto / Peligro` (`Hinto / Grabe nga Peligro` ha 52 °C o labaw pa). An "Diri Panganib" impormal tungod kay waray opisyal nga kategorya an PAGASA ha ubos han 27 °C. Para la ini ha pagpakita; diri ini nagbabag-o han mga alerto o desisyon han eskwelahan.
 
 | Kategorya han PAGASA | Heat index (Indeks han Kapaso) |
 | --- | --- |

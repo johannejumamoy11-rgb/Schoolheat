@@ -5177,6 +5177,8 @@ html[data-theme="dark"] .hotline-nav-btn.active {
   font-size: 0.58rem;
 }
 .status-pagasa span:first-child { color: var(--accent-blue); }
+.status-separator { color: var(--text-muted); font-weight: 600; }
+.status-tier { color: var(--text-secondary); font-weight: 700; }
 .classification-inline .status-pagasa,
 .classification-inline .pagasa-label,
 .classification-inline .monitor-pagasa-status,
