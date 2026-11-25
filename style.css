@@ -1201,6 +1201,10 @@ html[data-theme="dark"] .ambient-orb {
   border-radius: 4px;
   box-shadow: 0 0 0 1px rgba(15,23,42,0.8);
 }
+.dist-legend-label.safe { color: var(--status-safe); }
+.dist-legend-label.caution { color: var(--status-caution); }
+.dist-legend-label.danger { color: var(--status-danger); }
+.dist-legend-label.extreme { color: var(--status-extreme); }
 .dist-legend-item .dist-count {
   margin-left: auto;
   font-weight: 700;
@@ -1801,7 +1805,8 @@ html[data-theme="dark"] .ambient-orb {
 .map-pin-tooltip .tt-hi.caution { color: var(--caution); }
 .map-pin-tooltip .tt-hi.danger { color: var(--danger); }
 .map-pin-tooltip .tt-hi.extreme { color: var(--extreme); }
-.map-pin-tooltip .tt-pagasa { color: var(--text-muted); font-size: 0.62rem; }
+.map-pin-tooltip .tt-status,
+.map-pin-tooltip .tt-pagasa { color: inherit; font-size: inherit; font-weight: 700; }
 
 .map-legend {
   display: flex;
@@ -5253,7 +5258,8 @@ html[data-theme="dark"] .hotline-nav-btn.active {
 .forecast-day-label,
 .heat-guidance-level,
 .chart-legend > span:not(.legend-dot),
-.map-legend .legend-item {
+.map-legend .legend-item,
+.dist-legend-label {
   text-transform: uppercase;
 }
 
@@ -5271,6 +5277,8 @@ html[data-theme="dark"] .hotline-nav-btn.active {
 .dashboard-gauge-caption .pagasa-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; }
 .chart-legend > span:not(.legend-dot) { font-weight: 700; }
 .map-legend .legend-item { font-weight: 700; }
+.dist-legend-label { font-weight: 700; }
+.chart-tooltip .tt-pagasa { font-family: inherit; font-size: inherit; }
 .about-pagasa-note a { color: var(--accent-blue); }
 
 :focus-visible {

@@ -67,6 +67,7 @@ const STATUS_LABELS = {
 };
 
 const PAGASA_LABEL_STATUSES = ['safe', 'caution', 'danger', 'extreme', 'nodata'];
+const STATUS_SAMPLE_HEAT_INDEX = { safe: 26, caution: 30, danger: 36, extreme: 45 };
 
 const PAGASA_HEAT_LEVELS = [
   { min: 27, label: 'Caution', displayLabel: 'Caution', range: '27–32°C' },
@@ -1334,6 +1335,10 @@ class SchoolHeatApp {
     return `${status} / ${this.getPAGASATierLabel(heatIndex)}`;
   }
 
+  getStatusPAGASALabel(status) {
+    return this.getPAGASALabel(STATUS_SAMPLE_HEAT_INDEX[status] ?? 26);
+  }
+
   getPAGASATierLabel(heatIndex) {
     return this.translateText(getPAGASAHeatLevel(heatIndex).displayLabel);
   }
@@ -1431,7 +1436,7 @@ class SchoolHeatApp {
     this.renderHistory();
     this.renderMap();
     this.checkAlerts();
-    this.toast(`Saved: ${loc} — ${hi.toFixed(1)}°C (${STATUS_LABELS[status]})`, 'success');
+    this.toast(`Saved: ${loc} — ${hi.toFixed(1)}°C (${this.getPAGASALabel(hi)})`, 'success');
     if (this.currentTab === 'forecast') this.drawForecastChart();
     document.getElementById('temp-input').value = '';
     document.getElementById('humidity-input').value = '';
@@ -1485,7 +1490,7 @@ class SchoolHeatApp {
     );
 
     if (banner && text && isRecentHazard) {
-      text.textContent = `${this.translateText('Recent high heat reading')}: ${STATUS_LABELS[readingStatus]} at ${latest.location} — ${Number(latest.heatIndex).toFixed(1)}°C · ${this.formatTime(latest.timestamp)}`;
+      text.textContent = `${this.translateText('Recent high heat reading')}: ${this.getPAGASALabel(Number(latest.heatIndex))} at ${latest.location} — ${Number(latest.heatIndex).toFixed(1)}°C · ${this.formatTime(latest.timestamp)}`;
       banner.style.display = 'flex';
     } else if (banner) {
       banner.style.display = 'none';
@@ -1504,9 +1509,10 @@ class SchoolHeatApp {
     const previousStatus = previous ? this.getStatus(Number(previous.heatIndex)) : null;
     const wasHazard = ['danger', 'extreme'].includes(previousStatus);
     if (!wasHazard || previousStatus !== readingStatus) {
-      const message = `HEAT WARNING: ${STATUS_LABELS[readingStatus]} at ${latest.location} — ${Number(latest.heatIndex).toFixed(1)}°C`;
+      const classification = this.getPAGASALabel(Number(latest.heatIndex));
+      const message = `HEAT WARNING: ${classification} at ${latest.location} — ${Number(latest.heatIndex).toFixed(1)}°C`;
       this.toast(message, 'error');
-      this.showBrowserNotification(message, `${STATUS_LABELS[readingStatus]} heat warning`);
+      this.showBrowserNotification(message, `${classification} heat warning`);
       if (this.settings.pushAlerts) this.sendHeatPushAlert(latest);
       if (this.settings.smsAlerts) this.sendHeatSmsAlert(latest);
     }
@@ -3874,7 +3880,7 @@ class SchoolHeatApp {
     });
 
     if (tooltip && activePoint) {
-      tooltip.innerHTML = `<div class="tt-date">${activePoint.label} average</div><div class="tt-val ${activePoint.status}">${activePoint.val.toFixed(1)}°C — ${STATUS_LABELS[activePoint.status]}</div>`;
+      tooltip.innerHTML = `<div class="tt-date">${activePoint.label} average</div><div class="tt-val ${activePoint.status}">${activePoint.val.toFixed(1)}°C — ${STATUS_LABELS[activePoint.status]} <span class="tt-pagasa ${activePoint.status}">${this.escapeHTML(this.getPAGASASuffixLabel(activePoint.val))}</span></div>`;
       tooltip.style.left = `${Math.max(4, Math.min(w - tooltip.offsetWidth - 4, activePoint.x - tooltip.offsetWidth / 2))}px`;
       tooltip.style.top = `${Math.max(4, activePoint.y - 58)}px`;
       tooltip.classList.add('visible');
@@ -4016,7 +4022,7 @@ class SchoolHeatApp {
         return `
           <div class="dist-legend-item">
             <span style="background:${statusColors[s]}"></span>
-            <span>${STATUS_LABELS[s]}</span>
+            <span class="dist-legend-label ${s}">${STATUS_LABELS[s]} <span class="status-separator">/</span> <span class="status-tier">${this.escapeHTML(this.getPAGASATierLabel(STATUS_SAMPLE_HEAT_INDEX[s]))}</span></span>
             <span class="dist-count">${counts[s]} (${pct}%)</span>
           </div>
         `;
@@ -4850,7 +4856,7 @@ class SchoolHeatApp {
         if (closest) {
           const prefix = closest.type === 'fc' ? `${bestModel.label} prediction` : 'Recorded';
           const time = closest.date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-          tooltip.innerHTML = `<div class="tt-date">${prefix}: ${time}</div><div class="tt-val ${closest.status}">${closest.val.toFixed(1)}°C — ${STATUS_LABELS[closest.status]}</div>`;
+          tooltip.innerHTML = `<div class="tt-date">${prefix}: ${time}</div><div class="tt-val ${closest.status}">${closest.val.toFixed(1)}°C — ${STATUS_LABELS[closest.status]} <span class="tt-pagasa ${closest.status}">${this.escapeHTML(this.getPAGASASuffixLabel(closest.val))}</span></div>`;
           tooltip.style.left = closest.x + 'px';
           tooltip.style.top = (closest.y - 55) + 'px';
           tooltip.classList.add('visible');
@@ -4887,16 +4893,16 @@ class SchoolHeatApp {
       const dataStatus = this.getMapDataStatus(reading);
       const safeName = loc.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       const readingTime = reading ? this.escapeHTML(this.formatTime(reading.timestamp)) : 'No stored measurement';
-      const pagasaLabel = hasValidReading ? this.getPAGASATierLabel(heatIndex) : '—';
-      const accessibleLabel = this.escapeHTML(`${loc.name}: ${dataStatus}, ${hi}, ${pagasaLabel}`);
+      const statusLabel = hasValidReading ? STATUS_LABELS[status] : 'No data';
+      const pagasaLabel = hasValidReading ? this.getPAGASASuffixLabel(heatIndex) : '—';
+      const accessibleLabel = this.escapeHTML(`${loc.name}: ${dataStatus}, ${hi}, ${statusLabel} ${pagasaLabel}`);
       return `
         <div class="map-pin ${status}" role="button" tabindex="0" aria-expanded="false" aria-label="${accessibleLabel}" style="left:${loc.x}%;top:${loc.y}%" data-loc="${safeName}">
           <div class="map-pin-tooltip">
             <div class="tt-loc">${safeName}</div>
                 <div class="tt-source map-data-status">${this.translateText(dataStatus)}</div>
             <span class="classification-inline">
-              <div class="tt-hi ${status}">${hi}</div>
-              <div class="tt-pagasa ${status}">${this.escapeHTML(pagasaLabel)}</div>
+              <div class="tt-hi ${status}">${hi} <span class="tt-status">${statusLabel}</span> <span class="tt-pagasa ${status}">${this.escapeHTML(pagasaLabel)}</span></div>
             </span>
             <div class="tt-time">${readingTime}</div>
           </div>
@@ -5286,7 +5292,7 @@ class SchoolHeatApp {
         reading.temperature,
         reading.humidity,
         reading.heatIndex,
-        STATUS_LABELS[reading.status] || reading.status || 'Unknown',
+        this.hasValidMeasurement(reading) ? this.getPAGASALabel(Number(reading.heatIndex)) : (STATUS_LABELS[reading.status] || reading.status || 'Unknown'),
         reading.quality || '-',
         validDate ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Invalid date',
         validDate ? `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}` : 'Invalid time',
@@ -5621,7 +5627,7 @@ class SchoolHeatApp {
     const cautionCnt = this.readings.filter(r => r.status === 'caution').length;
     const dangerCnt = this.readings.filter(r => r.status === 'danger').length;
     const extremeCnt = this.readings.filter(r => r.status === 'extreme').length;
-    this.toast(`Readings: Hayo ${safeCnt} · Hinay ${cautionCnt} · Hinga ${dangerCnt} · Hinto ${extremeCnt}`, dangerCnt + extremeCnt > 0 ? 'error' : 'info');
+    this.toast(`Readings: ${this.getStatusPAGASALabel('safe')} ${safeCnt} · ${this.getStatusPAGASALabel('caution')} ${cautionCnt} · ${this.getStatusPAGASALabel('danger')} ${dangerCnt} · ${this.getStatusPAGASALabel('extreme')} ${extremeCnt}`, dangerCnt + extremeCnt > 0 ? 'error' : 'info');
   }
 
   async showForecastSummary() {
@@ -5640,7 +5646,7 @@ class SchoolHeatApp {
     const prediction = forecast[0];
     const time = prediction.date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     const hazardous = prediction.status === 'danger' || prediction.status === 'extreme';
-    this.toast(`30-minute forecast (${time}): ${prediction.value.toFixed(1)}°C — ${STATUS_LABELS[prediction.status]}`, hazardous ? 'error' : 'info');
+    this.toast(`30-minute forecast (${time}): ${prediction.value.toFixed(1)}°C — ${this.getPAGASALabel(prediction.value)}`, hazardous ? 'error' : 'info');
   }
 
   testBrowserNotification() {

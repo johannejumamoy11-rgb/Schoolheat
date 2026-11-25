@@ -270,7 +270,7 @@ test('shows and sends a warning for a recent, valid, non-demo danger reading', (
     alertApp.checkAlerts();
 
     assert.equal(banner.style.display, 'flex');
-    assert.match(text.textContent, /Recent high heat reading: Hinto at School Clinic — 45\.0°C · 3:00 PM/);
+    assert.match(text.textContent, /Recent high heat reading: Hinto \/ Danger at School Clinic — 45\.0°C · 3:00 PM/);
     assert.deepEqual(calls, ['toast', 'browser', 'push', 'sms']);
   } finally {
     if (previousDocument === undefined) delete context.document;
@@ -661,7 +661,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v115/);
+  assert.match(serviceWorker, /schoolheat-v116/);
 
   for (const language of manuals) {
     const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
@@ -756,7 +756,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v115/);
+  assert.match(serviceWorker, /schoolheat-v116/);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8'), i18nContext);
@@ -843,6 +843,14 @@ test('adds a display-only PAGASA heat label beside each DepEd 4H classification'
   assert.match(script, /class="history-pagasa \$\{r\.status\}"/);
   assert.match(script, /class="forecast-pagasa \$\{forecast\.status\}"/);
   assert.match(script, /class="tt-pagasa \$\{status\}"/);
+  assert.match(script, /class="dist-legend-label \$\{s\}"[\s\S]{0,220}status-tier/);
+  assert.match(script, /this\.getStatusPAGASALabel\('safe'\)/);
+  assert.match(script, /this\.getPAGASALabel\(Number\(latest\.heatIndex\)\)/);
+  assert.match(script, /tt-pagasa \$\{activePoint\.status\}/);
+  assert.match(script, /tt-pagasa \$\{closest\.status\}/);
+  assert.match(script, /const statusLabel = hasValidReading \? STATUS_LABELS\[status\] : 'No data';/);
+  assert.match(script, /const pagasaLabel = hasValidReading \? this\.getPAGASASuffixLabel\(heatIndex\) : '—';/);
+  assert.match(index, /id="alert-text">Hinto \/ Danger heat detected/);
   assert.match(index, /class="status-tier"/);
   assert.match(index, /class="status-separator"/);
   assert.match(index, /Hayo <span class="status-separator">\/<\/span> <span class="status-tier">Safe<\/span>/);
@@ -885,10 +893,13 @@ test('adds a display-only PAGASA heat label beside each DepEd 4H classification'
   assert.match(style, /\.gauge-range-key > span \{/);
   assert.match(style, /\.monitor-range-key \{[\s\S]{0,120}max-width: 320px/);
   assert.match(style, /\.chart-legend > span\.extreme \{ color: var\(--status-extreme\)/);
+  assert.match(style, /\.dist-legend-label\.safe \{ color: var\(--status-safe\)/);
+  assert.match(style, /\.chart-tooltip \.tt-pagasa \{ font-family: inherit; font-size: inherit; \}/);
+  assert.match(style, /\.map-pin-tooltip \.tt-status,[\s\S]{0,120}font-size: inherit/);
   assert.match(style, /\.dashboard-gauge-caption \.classification-inline,[\s\S]{0,120}flex-wrap: nowrap/);
   assert.match(script, /this\.renderDashboardLocationSummary\(\);\s*this\.renderSensorTrust\(\);\s*this\.updateDashboard\(\);\s*this\.updateMonitorGauge\(\);\s*this\.renderMap\(\);/);
   assert.match(script, /this\.currentTab === 'history'\) this\.renderHistory\(false\)/);
-  assert.match(serviceWorker, /schoolheat-v115/);
+  assert.match(serviceWorker, /schoolheat-v116/);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(locales, i18nContext);
@@ -911,6 +922,7 @@ test('adds a display-only PAGASA heat label beside each DepEd 4H classification'
     pagasaApp.language = 'tl';
     assert.equal(pagasaApp.getPAGASALabel(35), 'Hinga / Labis na Pag-iingat');
     assert.equal(pagasaApp.getPAGASALabel(26), 'Hayo / Ligtas');
+    assert.equal(pagasaApp.getStatusPAGASALabel('danger'), 'Hinga / Labis na Pag-iingat');
     assert.equal(pagasaApp.getPAGASATierLabel(35), 'Labis na Pag-iingat');
     assert.equal(pagasaApp.getPAGASATierLabel(26), 'Ligtas');
     assert.equal(pagasaApp.getPAGASASuffixLabel(35), '/ Labis na Pag-iingat');

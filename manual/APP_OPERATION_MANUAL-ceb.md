@@ -83,7 +83,7 @@ ng 4H isip pares: `Hayo / Luwas`, `Hinay / Pag-amping`, `Hinga / Grabe nga
 Pag-amping`, ug `Hinto / Peligro` (`Hinto / Grabe nga Peligro` sa 52 °C pataas).
 Ang "Luwas" impormal tungod kay walay opisyal nga kategorya ang PAGASA sa ubos
 sa 27 °C. Sa mga aktibong status pill, ang suffix lamang (pananglitan, `/ Peligro`) ang makita tupad sa 4H
-ng pulong, mao nga `Hinto / Peligro` gihapon itsura niya sa usa ka kolor. Parehas nga pares ang makita sa gauge range keys, chart legend, map legend, ug history filter. Para lamang kini sa pagpakita; wala kini gi-usab sa mga alerto o
+ng pulong, mao nga `Hinto / Peligro` gihapon itsura niya sa usa ka kolor. Parehas nga pares ang makita sa gauge range keys, chart legend, status distribution legend, map legend, history filter, tooltip, ug teksto sa heat alert. Para lamang kini sa pagpakita; wala kini gi-usab sa mga alerto o
 desisyon sa eskwelahan.
 
 | Kategorya sa PAGASA | Indeks sa Kainit |
