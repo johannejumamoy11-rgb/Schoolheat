@@ -5166,12 +5166,25 @@ html[data-theme="dark"] .hotline-nav-btn.active {
   line-height: 1.3;
 }
 
+.classification-inline {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 .status-pagasa {
   margin-top: 4px;
   font-size: 0.58rem;
 }
 .status-pagasa span:first-child { color: var(--accent-blue); }
-.dashboard-gauge-caption .pagasa-label { display: block; width: 100%; }
+.classification-inline .status-pagasa,
+.classification-inline .pagasa-label,
+.classification-inline .monitor-pagasa-status,
+.classification-inline .preview-pagasa,
+.classification-inline .history-pagasa,
+.classification-inline .forecast-pagasa,
+.classification-inline .heat-guidance-pagasa,
+.classification-inline .tt-pagasa { margin-top: 0; }
 .monitor-pagasa-status { margin-top: 4px; }
 .preview-pagasa { margin-top: 4px; }
 .history-pagasa { margin-top: 2px; font-size: 0.6rem; }

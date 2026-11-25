@@ -3431,8 +3431,10 @@ class SchoolHeatApp {
           </div>
           <div class="history-result">
             <div class="history-hi ${r.status}">${r.heatIndex.toFixed(1)}°C</div>
-            <div class="history-status ${r.status}">${STATUS_LABELS[r.status] || 'Unknown'}</div>
-            <div class="history-pagasa">${this.escapeHTML(this.getPAGASALabel(r.heatIndex))}</div>
+            <div class="classification-inline">
+              <div class="history-status ${r.status}">${STATUS_LABELS[r.status] || 'Unknown'}</div>
+              <div class="history-pagasa">${this.escapeHTML(this.getPAGASALabel(r.heatIndex))}</div>
+            </div>
           </div>
           <button class="history-delete-button" type="button" data-delete-reading-index="${index}" aria-label="Delete reading from ${this.escapeHTML(r.location)} on ${this.formatTime(r.timestamp)}" title="Delete this reading">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
@@ -4759,8 +4761,10 @@ class SchoolHeatApp {
           <div class="forecast-day-name">${bestModel.label}${isMeasuredBest ? ' · Best so far' : ' · Provisional'}</div>
           <div class="forecast-day-date">+30 min · ${modelResult.date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
           <div class="forecast-day-temp ${forecast.status}">${forecast.value.toFixed(1)}°C</div>
-          <div class="forecast-day-label ${forecast.status}">${STATUS_LABELS[forecast.status]}</div>
-          <div class="forecast-pagasa">${this.escapeHTML(this.getPAGASALabel(forecast.value))}</div>
+          <span class="classification-inline">
+            <span class="forecast-day-label ${forecast.status}">${STATUS_LABELS[forecast.status]}</span>
+            <span class="forecast-pagasa">${this.escapeHTML(this.getPAGASALabel(forecast.value))}</span>
+          </span>
         </div>
       `;
     }
@@ -4863,8 +4867,10 @@ class SchoolHeatApp {
           <div class="map-pin-tooltip">
             <div class="tt-loc">${safeName}</div>
                 <div class="tt-source map-data-status">${this.translateText(dataStatus)}</div>
-            <div class="tt-hi ${status}">${hi}</div>
-            <div class="tt-pagasa">${this.escapeHTML(pagasaLabel)}</div>
+            <span class="classification-inline">
+              <div class="tt-hi ${status}">${hi}</div>
+              <div class="tt-pagasa">${this.escapeHTML(pagasaLabel)}</div>
+            </span>
             <div class="tt-time">${readingTime}</div>
           </div>
         </div>

@@ -661,7 +661,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v110/);
+  assert.match(serviceWorker, /schoolheat-v111/);
 
   for (const language of manuals) {
     const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
@@ -756,7 +756,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v110/);
+  assert.match(serviceWorker, /schoolheat-v111/);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8'), i18nContext);
@@ -845,9 +845,17 @@ test('adds a display-only PAGASA heat label beside each DepEd 4H classification'
   }
   assert.match(style, /\.status-pagasa/);
   assert.match(style, /\.map-pin-tooltip \.tt-pagasa/);
+  assert.match(style, /\.classification-inline \{[^}]*inline-flex/);
+  assert.ok((index.match(/class="classification-inline"/g) || []).length >= 7);
+  assert.match(index, /class="classification-inline">[\s\S]{0,300}id="latest-status"[\s\S]{0,300}id="latest-pagasa"/);
+  assert.match(index, /class="classification-inline">[\s\S]{0,300}id="dashboard-forecast-status"[\s\S]{0,300}id="dashboard-forecast-pagasa"/);
+  assert.match(index, /class="classification-inline">[\s\S]{0,300}id="monitor-gauge-status"[\s\S]{0,300}id="monitor-pagasa-status"/);
+  assert.match(index, /class="classification-inline">[\s\S]{0,300}id="preview-status"[\s\S]{0,300}id="preview-pagasa"/);
+  assert.match(script, /class="classification-inline">[\s\S]{0,200}class="history-status/);
+  assert.match(script, /class="classification-inline">[\s\S]{0,200}class="forecast-day-label/);
   assert.match(script, /this\.renderDashboardLocationSummary\(\);\s*this\.renderSensorTrust\(\);\s*this\.updateDashboard\(\);\s*this\.updateMonitorGauge\(\);\s*this\.renderMap\(\);/);
   assert.match(script, /this\.currentTab === 'history'\) this\.renderHistory\(false\)/);
-  assert.match(serviceWorker, /schoolheat-v110/);
+  assert.match(serviceWorker, /schoolheat-v111/);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(locales, i18nContext);
