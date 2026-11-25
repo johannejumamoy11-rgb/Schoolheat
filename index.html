@@ -1195,13 +1195,15 @@
       <div class="settings-group">
         <div class="glass-card">
           <h4 class="settings-section-title" id="setting-text-size-label">Text size</h4>
-          <p class="setting-hint" id="setting-text-size-hint">Choose a larger text size if small labels are hard to read.</p>
-          <select id="setting-text-size" class="input-field" style="margin-top: 8px;" aria-labelledby="setting-text-size-label" aria-describedby="setting-text-size-hint">
-            <option value="normal">Normal (100%)</option>
-            <option value="large">Large (115%)</option>
-            <option value="xlarge">Extra large (130%)</option>
-            <option value="xxlarge">Maximum (145%)</option>
-          </select>
+          <p class="setting-hint" id="setting-text-size-hint">Drag the slider or enter 50–250% for the text size you want.</p>
+          <div class="text-size-control">
+            <output id="setting-text-size-output" for="setting-text-size-range setting-text-size-value">100%</output>
+            <input id="setting-text-size-range" type="range" min="50" max="250" step="1" value="100" aria-labelledby="setting-text-size-label" aria-describedby="setting-text-size-hint">
+            <div class="text-size-number-row">
+              <input id="setting-text-size-value" class="input-field" type="number" min="50" max="250" step="1" value="100" inputmode="numeric" aria-label="Text size percent">
+              <span aria-hidden="true">%</span>
+            </div>
+          </div>
         </div>
       </div>
 

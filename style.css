@@ -47,9 +47,16 @@ html {
   transition: background-color var(--transition-base), color var(--transition-base);
 }
 
-html[data-text-size="large"] { --text-size-scale: 1.15; }
-html[data-text-size="xlarge"] { --text-size-scale: 1.3; }
-html[data-text-size="xxlarge"] { --text-size-scale: 1.45; }
+.text-size-control { margin-top: 12px; display: grid; gap: 10px; }
+#setting-text-size-output {
+  color: var(--accent-blue);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+#setting-text-size-range { width: 100%; accent-color: var(--accent-blue); }
+.text-size-number-row { display: flex; align-items: center; gap: 8px; }
+.text-size-number-row .input-field { width: 96px; }
+.text-size-number-row span { color: var(--text-secondary); font-weight: 700; }
 
 /* Dark Mode Theme */
 html[data-theme="dark"] {

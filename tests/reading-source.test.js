@@ -14,7 +14,7 @@ assert.match(script, appBootstrap);
 const isolatedScript = script.replace(appBootstrap, '');
 const context = { window: {} };
 vm.runInNewContext(
-  `${isolatedScript}\nglobalThis.SchoolHeatAppForTest = SchoolHeatApp;\nglobalThis.SchoolHeatLocationsForTest = LOCATIONS;\nglobalThis.SchoolHeatStatusColorForTest = getStatusColor;\nglobalThis.SchoolHeatAccessibleAccentForTest = getAccessibleAccent;\nglobalThis.SchoolHeatAccessibleColorForTest = getAccessibleColor;\nglobalThis.SchoolHeatContrastRatioForTest = getContrastRatio;\nglobalThis.SchoolHeatReadableTextColorForTest = getReadableTextColor;\nglobalThis.SchoolHeatCustomPaletteDefaultsForTest = CUSTOM_THEME_COLOR_DEFAULTS;\nglobalThis.SchoolHeatPaletteValidationForTest = getCustomPaletteValidationError;\nglobalThis.SchoolHeatPaletteNormalizationForTest = normalizeCustomPaletteColors;\nglobalThis.SchoolHeatColorPalettesForTest = APP_COLOR_PALETTES;\nglobalThis.SchoolHeatCustomAccentChoicesForTest = CUSTOM_ACCENT_CHOICES;\nglobalThis.SchoolHeatCustomPaletteGeneratorForTest = createCustomPaletteColors;`,
+  `${isolatedScript}\nglobalThis.SchoolHeatAppForTest = SchoolHeatApp;\nglobalThis.SchoolHeatLocationsForTest = LOCATIONS;\nglobalThis.SchoolHeatStatusColorForTest = getStatusColor;\nglobalThis.SchoolHeatAccessibleAccentForTest = getAccessibleAccent;\nglobalThis.SchoolHeatAccessibleColorForTest = getAccessibleColor;\nglobalThis.SchoolHeatContrastRatioForTest = getContrastRatio;\nglobalThis.SchoolHeatReadableTextColorForTest = getReadableTextColor;\nglobalThis.SchoolHeatCustomPaletteDefaultsForTest = CUSTOM_THEME_COLOR_DEFAULTS;\nglobalThis.SchoolHeatPaletteValidationForTest = getCustomPaletteValidationError;\nglobalThis.SchoolHeatPaletteNormalizationForTest = normalizeCustomPaletteColors;\nglobalThis.SchoolHeatColorPalettesForTest = APP_COLOR_PALETTES;\nglobalThis.SchoolHeatCustomAccentChoicesForTest = CUSTOM_ACCENT_CHOICES;\nglobalThis.SchoolHeatCustomPaletteGeneratorForTest = createCustomPaletteColors;\nglobalThis.SchoolHeatNormalizeTextSizeForTest = normalizeTextSize;`,
   context
 );
 
@@ -661,7 +661,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v108/);
+  assert.match(serviceWorker, /schoolheat-v109/);
 
   for (const language of manuals) {
     const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
@@ -723,58 +723,65 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   }
 });
 
-test('offers a persistent text size control that follows the manual reader', () => {
+test('lets users choose any text size and carries it into the manual', () => {
   const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
   const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
   const reader = fs.readFileSync(path.join(__dirname, '..', 'manual', 'index.html'), 'utf8');
 
   assert.match(index, /id="setting-text-size-label"[^>]*>Text size</);
-  assert.match(index, /id="setting-text-size-hint"/);
-  assert.match(index, /id="setting-text-size"[^>]*aria-labelledby="setting-text-size-label"/);
-  for (const option of [
-    '<option value="normal">Normal (100%)</option>',
-    '<option value="large">Large (115%)</option>',
-    '<option value="xlarge">Extra large (130%)</option>',
-    '<option value="xxlarge">Maximum (145%)</option>'
-  ]) {
-    assert.ok(index.includes(option), `${option} exists`);
-  }
-  assert.match(script, /TEXT_SIZE_SCALES = \{ normal: '1', large: '1\.15', xlarge: '1\.3', xxlarge: '1\.45' \}/);
-  assert.match(script, /textSize: 'normal'/);
-  assert.match(script, /document\.getElementById\('setting-text-size'\)\?\.value/);
-  assert.match(script, /document\.documentElement\.dataset\.textSize = this\.settings\.textSize/);
-  assert.match(script, /setProperty\('--text-size-scale', TEXT_SIZE_SCALES\[this\.settings\.textSize\]\)/);
-  assert.match(script, /fs: TEXT_SIZE_SCALES\[this\.settings\.textSize\] \|\| '1'/);
+  assert.match(index, /id="setting-text-size-hint"[^>]*>Drag the slider or enter 50–250% for the text size you want\.</);
+  assert.match(index, /id="setting-text-size-output"[^>]*>100%</);
+  assert.match(index, /id="setting-text-size-range"[^>]*type="range"[^>]*min="50"[^>]*max="250"[^>]*step="1"[^>]*value="100"/);
+  assert.match(index, /id="setting-text-size-value"[^>]*type="number"[^>]*min="50"[^>]*max="250"[^>]*step="1"[^>]*value="100"/);
+  assert.match(index, /aria-label="Text size percent"/);
+  assert.match(script, /TEXT_SIZE_MIN_PERCENT = 50/);
+  assert.match(script, /TEXT_SIZE_MAX_PERCENT = 250/);
+  assert.match(script, /TEXT_SIZE_PRESETS = \{ normal: 100, large: 115, xlarge: 130, xxlarge: 145 \}/);
+  assert.match(script, /function normalizeTextSize\(value\)/);
+  assert.doesNotMatch(script, /TEXT_SIZE_SCALES/);
+  assert.match(script, /textSize: 100/);
+  assert.match(script, /textSizeRange\.addEventListener\('input'/);
+  assert.match(script, /textSizeNumber\.addEventListener\('change'/);
+  assert.match(script, /document\.documentElement\.dataset\.textSize = String\(percent\)/);
+  assert.match(script, /setProperty\('--text-size-scale', String\(percent \/ 100\)\)/);
+  assert.match(script, /fs: String\(normalizeTextSize\(this\.settings\.textSize\) \/ 100\)/);
   assert.match(style, /--text-size-scale: 1/);
   assert.match(style, /html \{[\s\S]*?font-size: calc\(16px \* var\(--text-size-scale\)\)/);
-  assert.match(style, /html\[data-text-size="large"\] \{ --text-size-scale: 1\.15; \}/);
-  assert.match(style, /html\[data-text-size="xlarge"\] \{ --text-size-scale: 1\.3; \}/);
-  assert.match(style, /html\[data-text-size="xxlarge"\] \{ --text-size-scale: 1\.45; \}/);
+  assert.match(style, /\.text-size-control/);
+  assert.doesNotMatch(style, /html\[data-text-size=/);
   assert.match(reader, /--text-scale: 1/);
   assert.match(reader, /font-size: calc\(16px \* var\(--text-scale, 1\)\)/);
   assert.match(reader, /font-size: 0\.875rem/);
   assert.match(reader, /Number\.parseFloat\(params\.fs\)/);
+  assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v108/);
+  assert.match(serviceWorker, /schoolheat-v109/);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8'), i18nContext);
   const dictionaries = i18nContext.window.SCHOOLHEAT_I18N.translations;
   const textSizeKeys = [
-    'Text size', 'Choose a larger text size if small labels are hard to read.',
-    'Normal (100%)', 'Large (115%)', 'Extra large (130%)', 'Maximum (145%)'
+    'Text size', 'Text size percent',
+    'Drag the slider or enter 50–250% for the text size you want.'
   ];
   for (const language of ['tl', 'ceb', 'war']) {
     for (const key of textSizeKeys) {
       assert.ok(dictionaries[language][key], `${language} is missing ${key}`);
     }
   }
-  const manuals = ['en', 'tl', 'ceb', 'war'];
-  for (const language of manuals) {
+  for (const language of ['en', 'tl', 'ceb', 'war']) {
     const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
     assert.match(manual, /Text size|Laki ng teksto|Gidak-on sa teksto|Gidak-on han teksto/);
+    assert.match(manual, /50%[\s\S]{0,30}250%/);
   }
+
+  const normalizeTextSize = context.SchoolHeatNormalizeTextSizeForTest;
+  assert.equal(normalizeTextSize('normal'), 100);
+  assert.equal(normalizeTextSize('137'), 137);
+  assert.equal(normalizeTextSize(49), 50);
+  assert.equal(normalizeTextSize(251), 250);
+  assert.equal(normalizeTextSize('abc'), 100);
 
   const previousDocument = context.document;
   const appliedProperties = {};
@@ -786,16 +793,17 @@ test('offers a persistent text size control that follows the manual reader', () 
   };
   try {
     const sizeApp = Object.create(context.SchoolHeatAppForTest.prototype);
-    sizeApp.settings = { textSize: 'xlarge' };
+    sizeApp.settings = { textSize: 137 };
     sizeApp.updateManualLinks = () => {};
     sizeApp.applyTextSize();
-    assert.equal(context.document.documentElement.dataset.textSize, 'xlarge');
-    assert.equal(appliedProperties['--text-size-scale'], '1.3');
+    assert.equal(sizeApp.settings.textSize, 137);
+    assert.equal(context.document.documentElement.dataset.textSize, '137');
+    assert.equal(appliedProperties['--text-size-scale'], '1.37');
 
     sizeApp.settings = { textSize: 'unknown' };
     sizeApp.applyTextSize();
-    assert.equal(sizeApp.settings.textSize, 'normal');
-    assert.equal(context.document.documentElement.dataset.textSize, 'normal');
+    assert.equal(sizeApp.settings.textSize, 100);
+    assert.equal(context.document.documentElement.dataset.textSize, '100');
     assert.equal(appliedProperties['--text-size-scale'], '1');
   } finally {
     if (previousDocument === undefined) delete context.document;

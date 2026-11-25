@@ -406,12 +406,23 @@ const SMS_QUEUE_MAX_ITEMS = 20;
 const SMS_RETRY_DELAY_MS = 5 * 60 * 1000;
 const LOCAL_CONTACTS_STORAGE_KEY = 'sh_local_contacts';
 const LOCAL_CONTACTS_MAX_ITEMS = 50;
-const TEXT_SIZE_SCALES = { normal: '1', large: '1.15', xlarge: '1.3', xxlarge: '1.45' };
+const TEXT_SIZE_MIN_PERCENT = 50;
+const TEXT_SIZE_MAX_PERCENT = 250;
+const TEXT_SIZE_DEFAULT_PERCENT = 100;
+const TEXT_SIZE_PRESETS = { normal: 100, large: 115, xlarge: 130, xxlarge: 145 };
+
+function normalizeTextSize(value) {
+  if (Object.prototype.hasOwnProperty.call(TEXT_SIZE_PRESETS, value)) return TEXT_SIZE_PRESETS[value];
+  const percent = Number(value);
+  if (!Number.isFinite(percent)) return TEXT_SIZE_DEFAULT_PERCENT;
+  return Math.min(TEXT_SIZE_MAX_PERCENT, Math.max(TEXT_SIZE_MIN_PERCENT, Math.round(percent)));
+}
+
 const HISTORY_PAGE_SIZE = 50;
 
 class SchoolHeatApp {
   constructor() {
-    const defaultSettings = { firebase: true, browserNotifications: false, pushAlerts: false, smsAlerts: false, smsNumbers: '', outlier: true, spike: true, demoMode: false, tempOffset: 0, humidityOffset: 0, darkMode: true, colorMode: 'automatic', accentPalette: 'schoolheat', customAccentColor: '#287985', customPaletteStyle: 'balanced', customPaletteColors: null, language: 'en', textSize: 'normal' };
+    const defaultSettings = { firebase: true, browserNotifications: false, pushAlerts: false, smsAlerts: false, smsNumbers: '', outlier: true, spike: true, demoMode: false, tempOffset: 0, humidityOffset: 0, darkMode: true, colorMode: 'automatic', accentPalette: 'schoolheat', customAccentColor: '#287985', customPaletteStyle: 'balanced', customPaletteColors: null, language: 'en', textSize: 100 };
     try {
       const storedReadings = JSON.parse(localStorage.getItem('sh_readings') || '[]');
       this.readings = Array.isArray(storedReadings) ? storedReadings : [];
@@ -430,9 +441,7 @@ class SchoolHeatApp {
     if (!['automatic', 'unified'].includes(this.settings.colorMode)) {
       this.settings.colorMode = 'automatic';
     }
-    if (!Object.prototype.hasOwnProperty.call(TEXT_SIZE_SCALES, this.settings.textSize)) {
-      this.settings.textSize = 'normal';
-    }
+    this.settings.textSize = normalizeTextSize(this.settings.textSize);
     if (!['balanced', 'warm', 'cool', 'analogous', 'complementary', 'monochrome'].includes(this.settings.customPaletteStyle)) {
       this.settings.customPaletteStyle = 'balanced';
     }
@@ -1179,12 +1188,20 @@ class SchoolHeatApp {
       this.applyLanguage(languageSelect.value);
       this.saveSettings();
     });
-    const textSizeSelect = document.getElementById('setting-text-size');
-    if (textSizeSelect) textSizeSelect.addEventListener('change', () => {
-      this.settings.textSize = textSizeSelect.value;
+    const textSizeRange = document.getElementById('setting-text-size-range');
+    const textSizeNumber = document.getElementById('setting-text-size-value');
+    const applyTextSizeInput = value => {
+      const percent = normalizeTextSize(value);
+      if (textSizeRange) textSizeRange.value = percent;
+      if (textSizeNumber) textSizeNumber.value = percent;
+      const output = document.getElementById('setting-text-size-output');
+      if (output) output.textContent = `${percent}%`;
+      this.settings.textSize = percent;
       this.applyTextSize();
-      this.saveSettings();
-    });
+      this.saveSettings(false);
+    };
+    if (textSizeRange) textSizeRange.addEventListener('input', () => applyTextSizeInput(textSizeRange.value));
+    if (textSizeNumber) textSizeNumber.addEventListener('change', () => applyTextSizeInput(textSizeNumber.value));
     if (colorModeSelect) colorModeSelect.addEventListener('change', () => {
       this.settings.colorMode = colorModeSelect.value;
       this.applyTheme();
@@ -4895,7 +4912,9 @@ class SchoolHeatApp {
     const darkmode = document.getElementById('setting-darkmode');
     const colorMode = document.getElementById('setting-color-mode');
     const language = document.getElementById('setting-language');
-    const textSize = document.getElementById('setting-text-size');
+    const textSizeRange = document.getElementById('setting-text-size-range');
+    const textSizeNumber = document.getElementById('setting-text-size-value');
+    const textSizeOutput = document.getElementById('setting-text-size-output');
     const cTemp = document.getElementById('cal-temp');
     const cHum = document.getElementById('cal-humidity');
     if (fb) fb.checked = this.settings.firebase;
@@ -4909,7 +4928,9 @@ class SchoolHeatApp {
     if (darkmode) darkmode.checked = this.settings.darkMode;
     if (colorMode) colorMode.value = this.settings.colorMode;
     if (language) language.value = this.settings.language;
-    if (textSize) textSize.value = this.settings.textSize;
+    if (textSizeRange) textSizeRange.value = this.settings.textSize;
+    if (textSizeNumber) textSizeNumber.value = this.settings.textSize;
+    if (textSizeOutput) textSizeOutput.textContent = `${this.settings.textSize}%`;
     if (cTemp) cTemp.value = this.settings.tempOffset;
     if (cHum) cHum.value = this.settings.humidityOffset;
     this.applyTextSize();
@@ -4939,7 +4960,7 @@ class SchoolHeatApp {
       accent: cssVar('--brand-teal', '--accent-blue'),
       border: cssVar('--border'),
       accentText: cssVar('--button-primary-text'),
-      fs: TEXT_SIZE_SCALES[this.settings.textSize] || '1'
+      fs: String(normalizeTextSize(this.settings.textSize) / 100)
     }).toString();
   }
 
@@ -5047,7 +5068,7 @@ class SchoolHeatApp {
       tempOffset: parseFloat(document.getElementById('cal-temp')?.value) || 0,
       humidityOffset: parseFloat(document.getElementById('cal-humidity')?.value) || 0,
       language: document.getElementById('setting-language')?.value || this.language || 'en',
-      textSize: document.getElementById('setting-text-size')?.value || this.settings.textSize || 'normal'
+      textSize: normalizeTextSize(document.getElementById('setting-text-size-value')?.value ?? this.settings.textSize)
     };
     localStorage.setItem('sh_settings', JSON.stringify(this.settings));
     if (showToast) this.toast('Settings saved', 'success');
@@ -5480,11 +5501,10 @@ class SchoolHeatApp {
   }
 
   applyTextSize() {
-    if (!Object.prototype.hasOwnProperty.call(TEXT_SIZE_SCALES, this.settings.textSize)) {
-      this.settings.textSize = 'normal';
-    }
-    document.documentElement.dataset.textSize = this.settings.textSize;
-    document.documentElement.style.setProperty('--text-size-scale', TEXT_SIZE_SCALES[this.settings.textSize]);
+    const percent = normalizeTextSize(this.settings.textSize);
+    this.settings.textSize = percent;
+    document.documentElement.dataset.textSize = String(percent);
+    document.documentElement.style.setProperty('--text-size-scale', String(percent / 100));
     this.updateManualLinks();
   }
 

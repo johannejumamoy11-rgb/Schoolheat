@@ -43,7 +43,7 @@ The Language setting offers English, Tagalog, Bisaya (Cebuano), and Waray. It
 translates the navigation, common Monitor, History, Map, and Hotlines labels,
 selected safety guidance, and the About page. Sensor/location names and some
 detailed technical messages remain in English. Settings also includes a Text
-size control with Normal, Large, Extra large, and Maximum options. The choice is
+size slider and exact number field for any value from 50% to 250%. The choice is
 saved in that browser and is also passed to the manual reader so the guide uses
 the same text size.
 

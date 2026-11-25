@@ -129,7 +129,7 @@ Ipinapakita ng mapa ang 29 na nakapirming pin ng kampus na may mga kontrol sa zo
 
 - **Install & Offline Use (Pag-install at Paggamit nang Offline)**: ipinapakita ang install status at ang button na **Install SchoolHeat (I-install ang SchoolHeat)**.
 - **Color System (Sistema ng Kulay)**: pumili ng palette, swatch, harmony style, o buong color picker. Ibinabalik ng **Reset to SchoolHeat (Ibalik sa SchoolHeat)** ang mga default. Hindi nagbabago ang mga kulay para sa panganib ng init.
-- **Text size (Laki ng teksto)**: pumili ng Normal, Malaki, Ekstra malaki, o Pinakamalaki. Naitatagong kagustuhan ito sa browser na ito at ginagamit din kapag binuksan ang manwal.
+- **Text size (Laki ng teksto)**: i-drag ang slider o ilagay ang anumang halaga mula 50% hanggang 250%. Naitatagong kagustuhan ito sa browser na ito at ginagamit din kapag binuksan ang manwal.
 - **App language (Wika ng App)**: English, Tagalog, Bisaya, o Waray. Naisasalin ang navigation, mga karaniwang label, ilang gabay sa kaligtasan, at Tungkol. Nananatiling nasa English ang mga pangalan ng sensor/lokasyon at ilang technical message. Nananatiling Hayo/Hinay/Hinga/Hinto ang mga risk label.
 - **Sensor Calibration (Calibration ng Sensor)**: inaayos ng **Temperature Offset (Offset ng Temperatura)** at **Humidity Offset (Offset ng Halumigmig)** ang mga susunod na kalkulasyon.
 - **Demo Mode / Generate Demo Data (Demo Mode / Bumuo ng Demo Data)**: gumagawa ng mga sample reading para sa preview. Hindi kasama sa forecast ang mga demo reading.

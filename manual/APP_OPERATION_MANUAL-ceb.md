@@ -225,8 +225,9 @@ oras.
   harmony, o bug-os nga color picker. Ang **Reset to SchoolHeat (Ibalik sa
   SchoolHeat)** magpasig-uli sa mga default. Ang mga kolor sa risgo sa kainit
   dili gayod mausab.
-- **Text size (Gidak-on sa teksto)**: pagpili og Normal, Dako, Ekstra dako, o
-  Pinakadako. Gitipigan kini sa browser ug gigamit usab kung ablihan ang manwal.
+- **Text size (Gidak-on sa teksto)**: i-drag ang slider o isulod ang bisan unsang
+  kantidad gikan 50% hangtod 250%. Gitipigan kini sa browser ug gigamit usab kung
+  ablihan ang manwal.
 - **App language (Pinulongan sa App)**: English, Tagalog, Bisaya, o Waray. Ang
   navigation, kasagarang mga label, pipila ka giya sa kaluwasan, ug ang
   Mahitungod gihubad. Ang mga ngalan sa sensor/lokasyon ug pipila ka teknikal nga
