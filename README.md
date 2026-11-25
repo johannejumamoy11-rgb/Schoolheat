@@ -260,10 +260,12 @@ approval before relying on delivery. No local bridge is needed for SMS (the
 bridge remains optional for ESP32 Wi-Fi sync).
 
 The **Hotlines** tab provides a one-tap link to the Philippine emergency
-hotline (911) and basic heat-distress guidance. Mahaplag-specific school and
-responder contacts are intentionally not listed until the school verifies
-them. SchoolHeat is not an emergency dispatch or medical service; SMS alerts
-do not contact emergency responders.
+hotline (911), basic heat-distress guidance, and a local contact list. Add a
+role and phone number there to save a contact in this browser's `localStorage`;
+contacts can be edited or deleted, and **Call** opens the device dialer with a
+`tel:` link. Local contacts are not verified, synced, hardcoded, or used for
+SMS alerts. SchoolHeat is not an emergency dispatch or medical service; SMS
+alerts do not contact emergency responders.
 
 The app's cached offline shell does not make SMS available offline:
 delivery needs internet. If internet is unavailable, up to 20 pending SMS are

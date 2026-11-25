@@ -640,3 +640,85 @@ test('offers a downloadable user manual that follows the app language and theme'
   assert.match(locales, /'Open User Manual': 'Abliha ang Manwal sa Gumagamit'/);
   assert.match(locales, /'Open User Manual': 'Abliha an Manwal han Nagamit'/);
 });
+
+test('stores role-and-number contacts locally with tel links and no SMS sending', () => {
+  const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
+  const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
+  const manuals = ['en', 'tl', 'ceb', 'war'];
+
+  assert.match(index, /id="local-contact-form"/);
+  assert.match(index, /id="local-contact-role"/);
+  assert.match(index, /id="local-contact-number"/);
+  assert.match(index, /id="local-contacts-list"[^>]*data-no-translate/);
+  assert.match(index, /id="local-contact-submit"[^>]*data-no-translate/);
+  assert.doesNotMatch(index, /Awaiting school verification/);
+  assert.doesNotMatch(index, /local-contact-sms|local-contact.*testSmsAlert/);
+  assert.match(script, /LOCAL_CONTACTS_STORAGE_KEY = 'sh_local_contacts'/);
+  assert.match(script, /LOCAL_CONTACTS_MAX_ITEMS = 50/);
+  assert.match(script, /getLocalContactTelHref\(/);
+  assert.match(script, /localStorage\.setItem\(LOCAL_CONTACTS_STORAGE_KEY/);
+  assert.match(script, /data-edit-contact/);
+  assert.match(script, /data-delete-contact/);
+  assert.match(script, /call\.href = tel/);
+  assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
+  assert.match(serviceWorker, /schoolheat-v107/);
+
+  for (const language of manuals) {
+    const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
+    assert.doesNotMatch(manual, /Awaiting school verification/);
+    assert.match(manual, /Call|Tumawag|Tawag/);
+  }
+  assert.match(locales, /'Role': 'Tungkulin'/);
+  assert.match(locales, /'Role': 'Papel'/);
+  assert.match(locales, /'Add contact': 'Magdagdag ng kontakt'/);
+  assert.match(locales, /'Add contact': 'Pagdugang og kontak'/);
+  assert.match(locales, /'Add contact': 'Magdugang hin kontak'/);
+
+  const i18nContext = { window: {} };
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8'), i18nContext);
+  const dictionaries = i18nContext.window.SCHOOLHEAT_I18N.translations;
+  const contactKeys = [
+    'LOCAL SCHOOL CONTACTS', 'Saved local contacts', 'Save a role and number on this device for quick dialing.',
+    'Role', 'Phone number', 'e.g., School clinic', '09XX XXX XXXX', 'Add contact', 'Save changes',
+    'Cancel edit', 'No contacts saved', 'Add a role and number to make calls quickly.',
+    'Saved on this device only. SchoolHeat does not verify these contacts or send them alerts.',
+    'Call', 'Edit', 'Delete', 'Enter a role and a valid phone number.',
+    'Local contacts could not be saved on this device.', 'This device can store up to 50 local contacts.',
+    'Local contact added.', 'Local contact updated.', 'Local contact removed.'
+  ];
+  for (const language of ['tl', 'ceb', 'war']) {
+    for (const key of contactKeys) {
+      assert.ok(dictionaries[language][key], `${language} is missing ${key}`);
+    }
+  }
+
+  const previousLocalStorage = context.localStorage;
+  const store = new Map();
+  context.localStorage = {
+    getItem: key => (store.has(key) ? store.get(key) : null),
+    setItem: (key, value) => store.set(key, String(value)),
+    removeItem: key => store.delete(key)
+  };
+  try {
+    const contactApp = Object.create(context.SchoolHeatAppForTest.prototype);
+    contactApp.toast = () => {};
+    contactApp.renderLocalContacts = () => {};
+
+    assert.equal(contactApp.getLocalContactTelHref('0919 123 4567'), 'tel:09191234567');
+    assert.equal(contactApp.getLocalContactTelHref('+63 919 123 4567'), 'tel:+639191234567');
+    assert.equal(contactApp.getLocalContactTelHref('javascript:alert(1)'), '');
+    assert.equal(contactApp.getLocalContactTelHref('123'), '');
+
+    const saved = contactApp.saveLocalContacts([
+      { id: 'lc_1', role: 'School clinic', number: '0919 123 4567' },
+      { id: 'lc_2', role: '', number: '0919 000 0000' }
+    ]);
+    assert.equal(saved.length, 1);
+    assert.equal(saved[0].role, 'School clinic');
+    assert.equal(JSON.stringify(contactApp.readLocalContacts()), JSON.stringify(saved));
+    assert.equal(store.get('sh_local_contacts'), JSON.stringify(saved));
+  } finally {
+    if (previousLocalStorage === undefined) delete context.localStorage;
+    else context.localStorage = previousLocalStorage;
+  }
+});

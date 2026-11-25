@@ -210,9 +210,13 @@ not a live sensor-coverage measure.
 ## 8. Hotlines and About
 
 **Emergency Hotlines** shows **911 / TAP TO CALL** and call-prep prompts:
-**Where are you?**, **What happened?**, **Stay available.** Mahaplag numbers
-are marked *Awaiting school verification*. This page is not an emergency
-dispatch or medical service, and SMS alerts do not contact responders.
+**Where are you?**, **What happened?**, **Stay available.** You can also add
+local contacts by saving only a role and phone number. Contacts stay in this
+browser, can be edited or deleted, and the **Call** button opens the device
+dialer. SchoolHeat does not verify these contacts, sync them, or send them
+alerts, and no Mahaplag-specific numbers are hardcoded. This page is not an
+emergency dispatch or medical service, and SMS alerts do not contact
+responders.
 
 **About** explains the purpose, DepEd 4H bands, workflow, and data limits.
 **Ask SchoolHeat** answers a fixed set of questions locally from saved non-demo

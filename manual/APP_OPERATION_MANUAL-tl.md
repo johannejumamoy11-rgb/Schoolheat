@@ -137,7 +137,15 @@ Ipinapakita ng mapa ang 29 na nakapirming pin ng kampus na may mga kontrol sa zo
 
 ## 8. Mga Hotline at Tungkol
 
-Ang **Mga Emergency Hotline** ay nagpapakita ng **911 / TAP TO CALL** at mga paalala bago tumawag: **Where are you?**, **What happened?**, **Stay available.** Ang mga numero sa Mahaplag ay minamarkahang *Awaiting school verification*. Hindi ito serbisyo para sa emergency dispatch o medikal, at hindi kinokontak ng mga alerto sa SMS ang mga responder.
+Ang **Mga Emergency Hotline** ay nagpapakita ng **911 / TAP TO CALL** at mga
+paalala bago tumawag: **Nasaan ka?**, **Ano ang nangyari?**, **Manatiling
+handa.** Maaari ka ring magdagdag ng lokal na kontakt sa pamamagitan ng
+pag-save ng tungkulin at numero lamang. Nananatili ang mga ito sa browser na
+ito, maaaring i-edit o burahin, at binubuksan ng pindutang **Tumawag** ang
+dialer ng device. Hindi pinapatunayan ng SchoolHeat ang mga kontakt na ito,
+hindi nito sine-sync, at hindi nito pinapadalhan ng alerto; walang
+naka-hardcode na numero sa Mahaplag. Hindi ito serbisyo para sa emergency
+dispatch o medikal, at hindi kinokontak ng mga alerto sa SMS ang mga responder.
 
 Ang **Tungkol** ay nagpapaliwanag ng layunin, mga DepEd 4H band, daloy ng trabaho, at mga limitasyon ng data. Sumasagot ang **Ask SchoolHeat** sa isang nakapirming hanay ng mga tanong nang lokal mula sa mga naka-save na hindi-demo na tala at sa dokumentadong pag-uugali. Hindi nito ipinapadala ang mga tanong o pagbasa sa isang AI service.
 

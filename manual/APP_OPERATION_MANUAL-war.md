@@ -137,7 +137,15 @@ An mapa nagpapakita hin 29 nga nakapirmi nga campus pin upod an mga kontrol ha z
 
 ## 8. Mga Hotline ngan Mahitungod
 
-An **Mga Hotline han Emerhensya** nagpapakita hin **911 / TAP TO CALL** ngan mga panahap para ha pagtawag: **Hain ka?**, **Ano an nangyari?**, **Magpabilin nga maabot.** An mga numero ha Mahaplag gimarkahan hin *Naghihulat hin pagkumpirma han eskwelahan*. Ini nga pahina diri emergency dispatch o serbisyong medikal, ngan an mga SMS alert diri nakakontak han mga responder.
+An **Mga Hotline han Emerhensya** nagpapakita hin **911 / PINDUTA PARA
+TUMAWAG** ngan mga panahap para ha pagtawag: **Hain ka?**, **Ano an nangyari?**,
+**Magpabilin nga maabot.** Makadugang ka liwat hin lokal nga kontak pinaagi han
+pagtipig hin papel ngan numero la. Ini natitipig hini nga browser, pwede usbon
+o tanggalon, ngan an butones nga **Tawag** nagbubukas han dialer han device.
+Diri ginpapatud-an han SchoolHeat ini nga mga kontak, diri ini ginsine-sync,
+ngan diri ini ginpapadalan hin alerto; waray naka-hardcode nga numero ha
+Mahaplag. Ini nga pahina diri emergency dispatch o serbisyong medikal, ngan an
+mga SMS alert diri nakakontak han mga responder.
 
 An **Mahitungod** nagpapahayag han katuyoan, mga banda han DepEd 4H, dalagan han trabaho, ngan mga limitasyon han datos. An **Pangutana ha SchoolHeat** nagsasabat hin naka-fix nga grupo hin mga pangutana ha lokal tikang ha natipig nga diri-demo nga rekord ngan dokumentado nga pamatasan. Diri ini nagpapadala hin mga pangutana o pagbasa ha serbisyo han AI.
 

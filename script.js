@@ -404,6 +404,8 @@ const ESP32_BRIDGE_BASE = 'http://localhost:8765';
 const SMS_QUEUE_STORAGE_KEY = 'sh_pending_sms';
 const SMS_QUEUE_MAX_ITEMS = 20;
 const SMS_RETRY_DELAY_MS = 5 * 60 * 1000;
+const LOCAL_CONTACTS_STORAGE_KEY = 'sh_local_contacts';
+const LOCAL_CONTACTS_MAX_ITEMS = 50;
 const HISTORY_PAGE_SIZE = 50;
 
 class SchoolHeatApp {
@@ -448,6 +450,7 @@ class SchoolHeatApp {
     this.localizedAttributes = new WeakMap();
     this.languageObserver = null;
     this.currentTab = 'dashboard';
+    this.editingLocalContactId = null;
     this.historyPage = 0;
     this.historyFilterTimer = null;
     this.forecastChartLoaded = false;
@@ -488,6 +491,7 @@ class SchoolHeatApp {
     this.populateLocations();
     this.applySettings();
     this.bindEvents();
+    this.renderLocalContacts();
     this.setupNavigation();
     this.bindSettingsEvents();
     this.updateAutoReadButton();
@@ -891,6 +895,7 @@ class SchoolHeatApp {
         this.askKnowledgeAssistant();
       });
     });
+    this.bindLocalContactEvents();
     document.addEventListener('keydown', (e) => {
       if (e.target instanceof HTMLElement &&
           (e.target.matches('input, select, textarea') || e.target.isContentEditable)) return;
@@ -916,6 +921,218 @@ class SchoolHeatApp {
       '"': '&quot;',
       "'": '&#39;'
     })[character]);
+  }
+
+  getLocalContactTelHref(value) {
+    const number = String(value ?? '').trim();
+    const digits = number.replace(/\D/g, '');
+    if (digits.length < 5 || digits.length > 15) return '';
+    return `tel:${number.startsWith('+') ? '+' : ''}${digits}`;
+  }
+
+  createLocalContactId() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return `lc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+  }
+
+  normalizeLocalContact(value) {
+    if (!value || typeof value !== 'object') return null;
+    const role = String(value.role ?? '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    const number = String(value.number ?? '').trim().slice(0, 40);
+    if (!role || !this.getLocalContactTelHref(number)) return null;
+    const rawId = typeof value.id === 'string' ? value.id : '';
+    const id = /^[A-Za-z0-9_-]{1,80}$/.test(rawId) ? rawId : this.createLocalContactId();
+    return { id, role, number };
+  }
+
+  readLocalContacts() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(LOCAL_CONTACTS_STORAGE_KEY) || '[]');
+      if (!Array.isArray(stored)) return [];
+      return stored
+        .map(item => this.normalizeLocalContact(item))
+        .filter(Boolean)
+        .slice(0, LOCAL_CONTACTS_MAX_ITEMS);
+    } catch (error) {
+      console.error('Could not read local contacts:', error);
+      try {
+        localStorage.removeItem(LOCAL_CONTACTS_STORAGE_KEY);
+      } catch (removeError) {
+        console.error('Could not clear invalid local contacts:', removeError);
+      }
+      return [];
+    }
+  }
+
+  saveLocalContacts(contacts) {
+    const normalized = (Array.isArray(contacts) ? contacts : [])
+      .map(item => this.normalizeLocalContact(item))
+      .filter(Boolean)
+      .slice(0, LOCAL_CONTACTS_MAX_ITEMS);
+    localStorage.setItem(LOCAL_CONTACTS_STORAGE_KEY, JSON.stringify(normalized));
+    return normalized;
+  }
+
+  bindLocalContactEvents() {
+    document.getElementById('local-contact-form')?.addEventListener('submit', event => {
+      event.preventDefault();
+      this.submitLocalContactForm();
+    });
+    document.getElementById('local-contact-cancel')?.addEventListener('click', () => {
+      this.resetLocalContactForm();
+      this.renderLocalContacts();
+    });
+    document.getElementById('local-contacts-list')?.addEventListener('click', event => {
+      const editButton = event.target.closest('[data-edit-contact]');
+      if (editButton) {
+        this.startLocalContactEdit(editButton.dataset.editContact);
+        return;
+      }
+      const deleteButton = event.target.closest('[data-delete-contact]');
+      if (deleteButton) this.deleteLocalContact(deleteButton.dataset.deleteContact);
+    });
+  }
+
+  updateLocalContactFormMode() {
+    const submit = document.getElementById('local-contact-submit');
+    const cancel = document.getElementById('local-contact-cancel');
+    if (submit) submit.textContent = this.translateText(this.editingLocalContactId ? 'Save changes' : 'Add contact');
+    if (cancel) cancel.hidden = !this.editingLocalContactId;
+  }
+
+  resetLocalContactForm() {
+    const roleInput = document.getElementById('local-contact-role');
+    const numberInput = document.getElementById('local-contact-number');
+    if (roleInput) roleInput.value = '';
+    if (numberInput) numberInput.value = '';
+    this.editingLocalContactId = null;
+    this.updateLocalContactFormMode();
+  }
+
+  submitLocalContactForm() {
+    const roleInput = document.getElementById('local-contact-role');
+    const numberInput = document.getElementById('local-contact-number');
+    if (!roleInput || !numberInput) return;
+    const role = roleInput.value.trim().replace(/\s+/g, ' ').slice(0, 80);
+    const number = numberInput.value.trim().slice(0, 40);
+    if (!role || !this.getLocalContactTelHref(number)) {
+      this.toast('Enter a role and a valid phone number.', 'error');
+      return;
+    }
+
+    const contacts = this.readLocalContacts();
+    const wasEditing = Boolean(this.editingLocalContactId);
+    if (wasEditing) {
+      const index = contacts.findIndex(contact => contact.id === this.editingLocalContactId);
+      if (index === -1) {
+        this.toast('Local contacts could not be saved on this device.', 'error');
+        this.resetLocalContactForm();
+        this.renderLocalContacts();
+        return;
+      }
+      contacts[index] = { ...contacts[index], role, number };
+    } else {
+      if (contacts.length >= LOCAL_CONTACTS_MAX_ITEMS) {
+        this.toast('This device can store up to 50 local contacts.', 'warning');
+        return;
+      }
+      contacts.unshift({ id: this.createLocalContactId(), role, number });
+    }
+
+    try {
+      this.saveLocalContacts(contacts);
+    } catch (error) {
+      console.error('Could not save local contacts:', error);
+      this.toast('Local contacts could not be saved on this device.', 'error');
+      return;
+    }
+    this.resetLocalContactForm();
+    this.renderLocalContacts();
+    this.toast(wasEditing ? 'Local contact updated.' : 'Local contact added.', 'success');
+  }
+
+  startLocalContactEdit(id) {
+    const contact = this.readLocalContacts().find(item => item.id === id);
+    if (!contact) return;
+    const roleInput = document.getElementById('local-contact-role');
+    const numberInput = document.getElementById('local-contact-number');
+    if (roleInput) roleInput.value = contact.role;
+    if (numberInput) numberInput.value = contact.number;
+    this.editingLocalContactId = contact.id;
+    this.updateLocalContactFormMode();
+    this.renderLocalContacts();
+    roleInput?.focus();
+  }
+
+  deleteLocalContact(id) {
+    const contacts = this.readLocalContacts();
+    if (!contacts.some(contact => contact.id === id)) return;
+    try {
+      this.saveLocalContacts(contacts.filter(contact => contact.id !== id));
+    } catch (error) {
+      console.error('Could not delete local contact:', error);
+      this.toast('Local contacts could not be saved on this device.', 'error');
+      return;
+    }
+    if (this.editingLocalContactId === id) this.resetLocalContactForm();
+    this.renderLocalContacts();
+    this.toast('Local contact removed.', 'success');
+  }
+
+  renderLocalContacts() {
+    const list = document.getElementById('local-contacts-list');
+    const empty = document.getElementById('local-contacts-empty');
+    if (!list || !empty) return;
+    const contacts = this.readLocalContacts();
+    empty.hidden = contacts.length > 0;
+    list.hidden = contacts.length === 0;
+    list.replaceChildren();
+
+    contacts.forEach(contact => {
+      const tel = this.getLocalContactTelHref(contact.number);
+      if (!tel) return;
+      const item = document.createElement('li');
+      item.className = 'local-contact-item';
+      if (contact.id === this.editingLocalContactId) item.classList.add('editing');
+      item.dataset.contactId = contact.id;
+
+      const main = document.createElement('div');
+      main.className = 'local-contact-main';
+      const role = document.createElement('span');
+      role.className = 'local-contact-role';
+      role.textContent = contact.role;
+      const number = document.createElement('a');
+      number.className = 'local-contact-number';
+      number.href = tel;
+      number.textContent = contact.number;
+      main.append(role, number);
+
+      const controls = document.createElement('div');
+      controls.className = 'local-contact-controls';
+      const call = document.createElement('a');
+      call.className = 'local-contact-call';
+      call.href = tel;
+      call.textContent = this.translateText('Call');
+      call.setAttribute('aria-label', `${this.translateText('Call')} ${contact.role}`);
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.className = 'local-contact-edit';
+      edit.dataset.editContact = contact.id;
+      edit.textContent = this.translateText('Edit');
+      edit.setAttribute('aria-label', `${this.translateText('Edit')} ${contact.role}`);
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'local-contact-delete';
+      remove.dataset.deleteContact = contact.id;
+      remove.textContent = this.translateText('Delete');
+      remove.setAttribute('aria-label', `${this.translateText('Delete')} ${contact.role}`);
+      controls.append(call, edit, remove);
+
+      item.append(main, controls);
+      list.appendChild(item);
+    });
   }
 
   bindSettingsEvents() {
@@ -4734,6 +4951,10 @@ class SchoolHeatApp {
   }
 
   translateNode(node) {
+    if (typeof Node !== 'undefined') {
+      if (node.nodeType === Node.ELEMENT_NODE && node.closest?.('[data-no-translate]')) return;
+      if (node.nodeType === Node.TEXT_NODE && node.parentElement?.closest('[data-no-translate]')) return;
+    }
     if (node.nodeType === Node.TEXT_NODE) {
       if (!this.localizedTextNodes.has(node)) this.localizedTextNodes.set(node, node.nodeValue);
       const original = this.localizedTextNodes.get(node) || '';
@@ -4778,6 +4999,8 @@ class SchoolHeatApp {
     if (!root) return;
     this.translateNode(root);
     this.updateManualLinks();
+    this.updateLocalContactFormMode();
+    this.renderLocalContacts();
 
     if (!this.languageObserver) {
       this.languageObserver = new MutationObserver(records => {

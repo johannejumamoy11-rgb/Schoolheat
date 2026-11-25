@@ -244,11 +244,15 @@ oras.
 
 ## 8. Mga hotline ug Mahitungod
 
-**Mga Hotline sa Emerhensya** nagpakita sa **911 / TAP TO CALL** ug mga prompt sa
-pag-andam sa tawag: **Asa ka?**, **Unsa ang nahitabo?**, **Magpabilin ka nga
-maabot.** Ang mga numero sa Mahaplag gimarkahan og *Naghulat og pagpamatuod sa
-eskwelahan*. Kini nga panid dili serbisyo sa pag-dispatch sa emerhensya o
-medikal, ug ang mga alerto sa SMS dili makontak sa mga responder.
+**Mga Hotline sa Emerhensya** nagpakita sa **911 / I-TAP ARON MOTAWAG** ug mga
+prompt sa pag-andam sa tawag: **Asa ka?**, **Unsa ang nahitabo?**, **Magpabilin
+ka nga maabot.** Makadugang ka usab og lokal nga kontak pinaagi sa pagtipig og
+papel ug numero lamang. Magpabilin kini niining browser, ma-usba o matanggal,
+ug ang butones nga **Tawag** magbukas sa dialer sa device. Dili gipamatud-an sa
+SchoolHeat kini nga mga kontak, dili kini gi-sync, ug dili kini padalhan og
+alerto; walay naka-hardcode nga numero sa Mahaplag. Kini nga panid dili
+serbisyo sa pag-dispatch sa emerhensya o medikal, ug ang mga alerto sa SMS dili
+makontak sa mga responder.
 
 **Mahitungod** nagpasabot sa katuyoan, mga band sa DepEd 4H, daloy sa trabaho, ug
 mga limitasyon sa datos. Ang **Ask SchoolHeat** mitubag og fixed set sa mga
