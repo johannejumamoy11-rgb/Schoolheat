@@ -77,22 +77,10 @@ readings without the demo marker cannot be identified automatically; clear
 pre-existing demo history before using its validation metrics.
 
 The dashboard uses the DepEd 4H labels: Hayo (<27°C), Hinay (27–32°C), Hinga
-(33–41°C), and Hinto (42°C or higher). A display-only PAGASA label is paired
-with each classification using a slash: Hayo / Safe, Hinay / Caution,
-Hinga / Extreme Caution, Hinto / Danger, and Hinto / Extreme Danger (≥52°C).
-"Safe" is an informal descriptor because PAGASA has no official tier below
-27°C. On compact active pills, where the 4H word is already shown, only the
-suffix (for example, `/ Danger`) appears beside it so the row still reads
-`Hinto / Danger` without repeating the 4H word. The entire paired label uses
-the same color as the 4H label. The same pairs also appear in the gauge range
-keys, chart legend, status distribution legend, map legend, history filter,
-tooltips, and heat alert text so every visible 4H label carries its PAGASA
-counterpart. It follows the selected app language and does
-not change alert rules or school decisions; the source is the
-[DOST-PAGASA Heat Index page](https://pagasa.dost.gov.ph/weather/heat-index).
-The 29 existing campus sites remain mapped; Einstein, Newton, and Locke
-classrooms are additional Monitor location choices and are not shown as map
-pins because verified coordinates were not provided.
+(33–41°C), and Hinto (42°C or higher). The 29 existing campus sites remain
+mapped; Einstein, Newton, and Locke classrooms are additional Monitor location
+choices and are not shown as map pins because verified coordinates were not
+provided.
 
 The dashboard marks the latest saved reading **RECENT** for up to 15 minutes,
 then **STALE**; it also flags missing or invalid timestamps. Freshness is based

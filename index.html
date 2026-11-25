@@ -128,7 +128,7 @@
   <div class="alert-banner" id="alert-banner" role="alert" style="display:none;">
     <div class="alert-content">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      <span id="alert-text">Hinto / Danger heat detected at Basketball Court — 44.2°C</span>
+      <span id="alert-text">Hinto heat detected at Basketball Court — 44.2°C</span>
     </div>
     <button class="alert-close" type="button" aria-label="Dismiss heat alert" onclick="document.getElementById('alert-banner').style.display='none'">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -243,9 +243,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           </div>
           <div class="status-count" data-target="0" id="count-safe">0</div>
-          <div class="classification-inline">
-            <div class="status-label">Hayo <span class="status-separator">/</span> <span class="status-tier">Safe</span></div>
-          </div>
+          <div class="status-label">Hayo</div>
           <div class="status-range">&lt; 27°C</div>
         </div>
         <div class="status-card caution" data-status="caution">
@@ -253,9 +251,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           </div>
           <div class="status-count" data-target="0" id="count-caution">0</div>
-          <div class="classification-inline">
-            <div class="status-label">Hinay <span class="status-separator">/</span> <span class="status-tier">Caution</span></div>
-          </div>
+          <div class="status-label">Hinay</div>
           <div class="status-range">27–32°C</div>
         </div>
         <div class="status-card danger" data-status="danger">
@@ -263,9 +259,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           </div>
           <div class="status-count" data-target="0" id="count-danger">0</div>
-          <div class="classification-inline">
-            <div class="status-label">Hinga <span class="status-separator">/</span> <span class="status-tier">Extreme Caution</span></div>
-          </div>
+          <div class="status-label">Hinga</div>
           <div class="status-range">33–41°C</div>
         </div>
         <div class="status-card extreme" data-status="extreme">
@@ -273,9 +267,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           </div>
           <div class="status-count" data-target="0" id="count-extreme">0</div>
-          <div class="classification-inline">
-            <div class="status-label">Hinto <span class="status-separator">/</span> <span class="status-tier">Danger</span></div>
-          </div>
+          <div class="status-label">Hinto</div>
           <div class="status-range">42°C and above</div>
         </div>
       </div>
@@ -319,10 +311,7 @@
       <section class="glass-card heat-guidance-card nodata" id="heat-guidance-card" aria-live="polite">
         <div class="heat-guidance-header">
           <span class="heat-guidance-kicker">SCHOOL RESPONSE GUIDE</span>
-          <span class="classification-inline">
-            <span class="heat-guidance-level" id="heat-guidance-level">NO DATA</span>
-            <span class="heat-guidance-pagasa" id="heat-guidance-pagasa">—</span>
-          </span>
+          <span class="heat-guidance-level" id="heat-guidance-level">NO DATA</span>
         </div>
         <h3 id="heat-guidance-title">Get a reading to see the suggested response</h3>
         <p id="heat-guidance-detail">Sync a sensor or enter a reading. Without current data, this app cannot indicate classroom heat conditions.</p>
@@ -351,13 +340,10 @@
             </div>
             <div class="dashboard-gauge-caption">
               <span>DepEd 4H classification</span>
-              <span class="classification-inline">
-                <span class="status-pill nodata" id="latest-status">No Data</span>
-                <span class="pagasa-label" id="latest-pagasa">—</span>
-              </span>
+              <span class="status-pill nodata" id="latest-status">No Data</span>
             </div>
             <div class="gauge-range-key" aria-label="DepEd 4H heat-index range">
-              <span class="safe">Hayo <span class="status-separator">/</span> <span class="status-tier">Safe</span></span><span class="caution">Hinay <span class="status-separator">/</span> <span class="status-tier">Caution</span></span><span class="danger">Hinga <span class="status-separator">/</span> <span class="status-tier">Extreme Caution</span></span><span class="extreme">Hinto <span class="status-separator">/</span> <span class="status-tier">Danger</span></span>
+              <span class="safe">Hayo</span><span class="caution">Hinay</span><span class="danger">Hinga</span><span class="extreme">Hinto</span>
             </div>
             <span class="sr-only" id="latest-hi">—</span>
           </div>
@@ -439,10 +425,7 @@
                 <span>Predicted Heat Index</span>
                 <strong id="dashboard-forecast-value">—</strong>
               </div>
-              <span class="classification-inline">
-                <span class="status-pill nodata" id="dashboard-forecast-status">—</span>
-                <span class="forecast-pagasa" id="dashboard-forecast-pagasa">—</span>
-              </span>
+              <span class="status-pill nodata" id="dashboard-forecast-status">—</span>
             </div>
             <div class="dashboard-forecast-meta">
               <span id="dashboard-forecast-model">Model unavailable</span>
@@ -552,14 +535,11 @@
           <div class="monitor-gauge-overlay">
             <div class="monitor-gauge-value" id="monitor-gauge-val">--</div>
             <div class="monitor-gauge-unit">°C Heat Index</div>
-            <div class="classification-inline">
-              <div class="monitor-gauge-status" id="monitor-gauge-status">No Data</div>
-              <div class="monitor-pagasa-status" id="monitor-pagasa-status">—</div>
-            </div>
+            <div class="monitor-gauge-status" id="monitor-gauge-status">No Data</div>
           </div>
         </div>
         <div class="gauge-range-key monitor-range-key" aria-label="DepEd 4H heat-index range">
-          <span class="safe">Hayo <span class="status-separator">/</span> <span class="status-tier">Safe</span></span><span class="caution">Hinay <span class="status-separator">/</span> <span class="status-tier">Caution</span></span><span class="danger">Hinga <span class="status-separator">/</span> <span class="status-tier">Extreme Caution</span></span><span class="extreme">Hinto <span class="status-separator">/</span> <span class="status-tier">Danger</span></span>
+          <span class="safe">Hayo</span><span class="caution">Hinay</span><span class="danger">Hinga</span><span class="extreme">Hinto</span>
         </div>
         <div class="monitor-scales">
           <div class="monitor-scale">
@@ -611,10 +591,7 @@
         <div class="preview-card" id="preview-card" style="display:none;">
           <div class="preview-header">
             <span class="preview-label">Live Preview</span>
-            <span class="classification-inline">
-              <span class="preview-status" id="preview-status">Hayo</span>
-              <span class="preview-pagasa" id="preview-pagasa">—</span>
-            </span>
+            <span class="preview-status" id="preview-status">Hayo</span>
           </div>
           <div class="preview-bar-wrap">
             <div class="preview-bar" id="preview-bar"></div>
@@ -694,10 +671,10 @@
         </div>
         <select id="history-filter" class="filter-select" onchange="app.filterHistory()">
           <option value="all">All Status</option>
-          <option value="safe">Hayo / Safe</option>
-          <option value="caution">Hinay / Caution</option>
-          <option value="danger">Hinga / Extreme Caution</option>
-          <option value="extreme">Hinto / Danger</option>
+          <option value="safe">Hayo</option>
+          <option value="caution">Hinay</option>
+          <option value="danger">Hinga</option>
+          <option value="extreme">Hinto</option>
         </select>
       </div>
 
@@ -705,10 +682,10 @@
         <div class="card-header">
           <h3>Heat Index Trend</h3>
           <div class="chart-legend">
-            <span class="legend-dot safe"></span><span>Hayo <span class="status-separator">/</span> <span class="status-tier">Safe</span></span>
-            <span class="legend-dot caution"></span><span>Hinay <span class="status-separator">/</span> <span class="status-tier">Caution</span></span>
-            <span class="legend-dot danger"></span><span>Hinga <span class="status-separator">/</span> <span class="status-tier">Extreme Caution</span></span>
-            <span class="legend-dot extreme"></span><span>Hinto <span class="status-separator">/</span> <span class="status-tier">Danger</span></span>
+            <span class="legend-dot safe"></span><span>Hayo</span>
+            <span class="legend-dot caution"></span><span>Hinay</span>
+            <span class="legend-dot danger"></span><span>Hinga</span>
+            <span class="legend-dot extreme"></span><span>Hinto</span>
           </div>
         </div>
         <div class="chart-wrap">
@@ -863,10 +840,10 @@
           </div>
         </div>
         <div class="map-legend">
-          <div class="legend-item"><span class="legend-pin safe"></span><span>Hayo <span class="status-separator">/</span> <span class="status-tier">Safe</span> (&lt;27°C)</span></div>
-          <div class="legend-item"><span class="legend-pin caution"></span><span>Hinay <span class="status-separator">/</span> <span class="status-tier">Caution</span> (27–32°C)</span></div>
-          <div class="legend-item"><span class="legend-pin danger"></span><span>Hinga <span class="status-separator">/</span> <span class="status-tier">Extreme Caution</span> (33–41°C)</span></div>
-          <div class="legend-item"><span class="legend-pin extreme"></span><span>Hinto <span class="status-separator">/</span> <span class="status-tier">Danger</span> (42°C and above)</span></div>
+          <div class="legend-item"><span class="legend-pin safe"></span><span>Hayo (&lt;27°C)</span></div>
+          <div class="legend-item"><span class="legend-pin caution"></span><span>Hinay (27–32°C)</span></div>
+          <div class="legend-item"><span class="legend-pin danger"></span><span>Hinga (33–41°C)</span></div>
+          <div class="legend-item"><span class="legend-pin extreme"></span><span>Hinto (42°C and above)</span></div>
           <div class="legend-item"><span class="legend-pin nodata"></span><span>No Data</span></div>
         </div>
         <p class="map-data-note">Each pin reflects only the latest saved record for that mapped location. Demo and historical readings are labeled in the pin details; no value is copied to sites without a reading. A recent timestamp is not proof of a current device connection.</p>
@@ -1060,7 +1037,6 @@
           </article>
         </div>
         <p class="about-scale-note">These are screening categories, not a medical assessment or a substitute for current school and local guidance.</p>
-        <p class="about-scale-note about-pagasa-note">PAGASA effect-based categories: <span>Caution</span> 27–32°C · <span>Extreme Caution</span> 33–41°C · <span>Danger</span> 42–51°C · <span>Extreme Danger</span> 52°C and above. <a href="https://pagasa.dost.gov.ph/weather/heat-index" target="_blank" rel="noopener noreferrer">DOST-PAGASA Heat Index</a></p>
       </section>
 
       <section class="about-section" aria-labelledby="about-workflow-title">

@@ -53,18 +53,6 @@ An mga banda han DepEd 4H nga ginagamit han app amo an:
 | **Hinga** | 33–41 °C |
 | **Hinto** | 42 °C o labaw pa |
 
-Ipinapakita liwat han SchoolHeat an kategorya han PAGASA base ha epekto upod han label han 4H sugad nga pares: `Hayo / Diri Panganib`, `Hinay / Pagbantay`, `Hinga / Grabe nga Pagbantay`, ngan `Hinto / Peligro` (`Hinto / Grabe nga Peligro` ha 52 °C o labaw pa). An "Diri Panganib" impormal tungod kay waray opisyal nga kategorya an PAGASA ha ubos han 27 °C. Ha mga aktibo nga status pill, an suffix la (halimbawa, `/ Peligro`) an makikita tapod han 4H nga pulong, ngan `Hinto / Peligro` gihapon an itsura ha usa nga kolor. Pareho nga pares an makikita ha gauge range keys, chart legend, status distribution legend, map legend, history filter, tooltip, ngan teksto han heat alert. Para la ini ha pagpakita; diri ini nagbabag-o han mga alerto o desisyon han eskwelahan.
-
-| Kategorya han PAGASA | Heat index (Indeks han Kapaso) |
-| --- | --- |
-| **Pagbantay (Caution)** | 27–32 °C |
-| **Grabe nga Pagbantay (Extreme Caution)** | 33–41 °C |
-| **Peligro (Danger)** | 42–51 °C |
-| **Grabe nga Peligro (Extreme Danger)** | 52 °C o labaw pa |
-
-An mga pagbasa nga ubos han 27 °C nasa ubos han PAGASA caution range.
-Tinubdan: [DOST-PAGASA Heat Index](https://pagasa.dost.gov.ph/weather/heat-index).
-
 ### 3.3 Pagsabot han kabag-o
 
 An katapusan nga natipig nga pagbasa gimarkahan hin **RECENT** ha sulod hin 15 minutos, tapos **STALE**. An kabag-o basado ha timestamp han pagbasa. Diri ini **nga** nagpapatunay nga konektado o naka-calibrate an sensor. An marka nga **DEMO DATA** nangangahulogan nga an pagbasa gin-generate han app para hin preview ngan gin-i-exclude ha mga tagna.

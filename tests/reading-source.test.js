@@ -14,7 +14,7 @@ assert.match(script, appBootstrap);
 const isolatedScript = script.replace(appBootstrap, '');
 const context = { window: {} };
 vm.runInNewContext(
-  `${isolatedScript}\nglobalThis.SchoolHeatAppForTest = SchoolHeatApp;\nglobalThis.SchoolHeatLocationsForTest = LOCATIONS;\nglobalThis.SchoolHeatStatusColorForTest = getStatusColor;\nglobalThis.SchoolHeatAccessibleAccentForTest = getAccessibleAccent;\nglobalThis.SchoolHeatAccessibleColorForTest = getAccessibleColor;\nglobalThis.SchoolHeatContrastRatioForTest = getContrastRatio;\nglobalThis.SchoolHeatReadableTextColorForTest = getReadableTextColor;\nglobalThis.SchoolHeatCustomPaletteDefaultsForTest = CUSTOM_THEME_COLOR_DEFAULTS;\nglobalThis.SchoolHeatPaletteValidationForTest = getCustomPaletteValidationError;\nglobalThis.SchoolHeatPaletteNormalizationForTest = normalizeCustomPaletteColors;\nglobalThis.SchoolHeatColorPalettesForTest = APP_COLOR_PALETTES;\nglobalThis.SchoolHeatCustomAccentChoicesForTest = CUSTOM_ACCENT_CHOICES;\nglobalThis.SchoolHeatCustomPaletteGeneratorForTest = createCustomPaletteColors;\nglobalThis.SchoolHeatNormalizeTextSizeForTest = normalizeTextSize;\nglobalThis.SchoolHeatPAGASALevelForTest = getPAGASAHeatLevel;`,
+  `${isolatedScript}\nglobalThis.SchoolHeatAppForTest = SchoolHeatApp;\nglobalThis.SchoolHeatLocationsForTest = LOCATIONS;\nglobalThis.SchoolHeatStatusColorForTest = getStatusColor;\nglobalThis.SchoolHeatAccessibleAccentForTest = getAccessibleAccent;\nglobalThis.SchoolHeatAccessibleColorForTest = getAccessibleColor;\nglobalThis.SchoolHeatContrastRatioForTest = getContrastRatio;\nglobalThis.SchoolHeatReadableTextColorForTest = getReadableTextColor;\nglobalThis.SchoolHeatCustomPaletteDefaultsForTest = CUSTOM_THEME_COLOR_DEFAULTS;\nglobalThis.SchoolHeatPaletteValidationForTest = getCustomPaletteValidationError;\nglobalThis.SchoolHeatPaletteNormalizationForTest = normalizeCustomPaletteColors;\nglobalThis.SchoolHeatColorPalettesForTest = APP_COLOR_PALETTES;\nglobalThis.SchoolHeatCustomAccentChoicesForTest = CUSTOM_ACCENT_CHOICES;\nglobalThis.SchoolHeatCustomPaletteGeneratorForTest = createCustomPaletteColors;\nglobalThis.SchoolHeatNormalizeTextSizeForTest = normalizeTextSize;`,
   context
 );
 
@@ -59,7 +59,7 @@ test('shows the same labeled 4H gauge range on dashboard and monitor', () => {
   assert.equal((index.match(/class="gauge-range-key/g) || []).length, 2);
   assert.match(index, /aria-label="DepEd 4H heat-index range"/);
   for (const label of ['Hayo', 'Hinay', 'Hinga', 'Hinto']) {
-    assert.ok(index.includes(`>${label} <span class="status-separator">`));
+    assert.ok(index.includes(`>${label}</span>`));
   }
 });
 
@@ -270,7 +270,7 @@ test('shows and sends a warning for a recent, valid, non-demo danger reading', (
     alertApp.checkAlerts();
 
     assert.equal(banner.style.display, 'flex');
-    assert.match(text.textContent, /Recent high heat reading: Hinto \/ Danger at School Clinic — 45\.0°C · 3:00 PM/);
+    assert.match(text.textContent, /Recent high heat reading: Hinto at School Clinic — 45\.0°C · 3:00 PM/);
     assert.deepEqual(calls, ['toast', 'browser', 'push', 'sms']);
   } finally {
     if (previousDocument === undefined) delete context.document;
@@ -661,7 +661,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v116/);
+  assert.match(serviceWorker, /schoolheat-v117/);
 
   for (const language of manuals) {
     const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
@@ -756,7 +756,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v116/);
+  assert.match(serviceWorker, /schoolheat-v117/);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8'), i18nContext);
@@ -808,138 +808,5 @@ test('lets users choose any text size and carries it into the manual', () => {
   } finally {
     if (previousDocument === undefined) delete context.document;
     else context.document = previousDocument;
-  }
-});
-
-test('adds a display-only PAGASA heat label beside each DepEd 4H classification', () => {
-  const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
-  const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
-  const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
-  const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
-  const level = context.SchoolHeatPAGASALevelForTest;
-
-  assert.equal(level(26.9).label, 'Below 27°C');
-  assert.equal(level(26.9).displayLabel, 'Safe');
-  assert.equal(level(NaN).label, 'Below 27°C');
-  assert.equal(level(NaN).displayLabel, 'Safe');
-  assert.equal(level(27).label, 'Caution');
-  assert.equal(level(27).displayLabel, 'Caution');
-  assert.equal(level(32.9).label, 'Caution');
-  assert.equal(level(33).label, 'Extreme Caution');
-  assert.equal(level(41.9).label, 'Extreme Caution');
-  assert.equal(level(42).label, 'Danger');
-  assert.equal(level(51.9).label, 'Danger');
-  assert.equal(level(52).label, 'Extreme Danger');
-  assert.equal(level(52).displayLabel, 'Extreme Danger');
-  assert.equal(level(60).label, 'Extreme Danger');
-  assert.equal(level(35).range, '33–41°C');
-
-  assert.match(script, /getStatus\(hi\) \{\s*if \(hi < 27\) return 'safe';\s*if \(hi < 33\) return 'caution';\s*if \(hi < 42\) return 'danger';\s*return 'extreme';/);
-  assert.match(script, /function getPAGASAHeatLevel\(heatIndex\)/);
-  assert.match(script, /this\.setPAGASALabel\('preview-pagasa', hi\)/);
-  assert.match(script, /this\.setPAGASALabel\('latest-pagasa', latest\.heatIndex\)/);
-  assert.match(script, /this\.setPAGASALabel\('dashboard-forecast-pagasa', best\.result\.value\)/);
-  assert.match(script, /pagasaEl\.textContent = this\.getPAGASASuffixLabel\(hi\)/);
-  assert.match(script, /class="history-pagasa \$\{r\.status\}"/);
-  assert.match(script, /class="forecast-pagasa \$\{forecast\.status\}"/);
-  assert.match(script, /class="tt-pagasa \$\{status\}"/);
-  assert.match(script, /class="dist-legend-label \$\{s\}"[\s\S]{0,220}status-tier/);
-  assert.match(script, /this\.getStatusPAGASALabel\('safe'\)/);
-  assert.match(script, /this\.getPAGASALabel\(Number\(latest\.heatIndex\)\)/);
-  assert.match(script, /tt-pagasa \$\{activePoint\.status\}/);
-  assert.match(script, /tt-pagasa \$\{closest\.status\}/);
-  assert.match(script, /const statusLabel = hasValidReading \? STATUS_LABELS\[status\] : 'No data';/);
-  assert.match(script, /const pagasaLabel = hasValidReading \? this\.getPAGASASuffixLabel\(heatIndex\) : '—';/);
-  assert.match(index, /id="alert-text">Hinto \/ Danger heat detected/);
-  assert.match(index, /class="status-tier"/);
-  assert.match(index, /class="status-separator"/);
-  assert.match(index, /Hayo <span class="status-separator">\/<\/span> <span class="status-tier">Safe<\/span>/);
-  assert.match(index, /Hinay <span class="status-separator">\/<\/span> <span class="status-tier">Caution<\/span>/);
-  assert.match(index, /Hinga <span class="status-separator">\/<\/span> <span class="status-tier">Extreme Caution<\/span>/);
-  assert.match(index, /Hinto <span class="status-separator">\/<\/span> <span class="status-tier">Danger<\/span>/);
-  assert.equal((index.match(/class="gauge-range-key/g) || []).length, 2);
-  assert.ok((index.match(/Hayo <span class="status-separator">\/<\/span> <span class="status-tier">Safe<\/span>/g) || []).length >= 5);
-  assert.match(index, /<option value="safe">Hayo \/ Safe<\/option>/);
-  assert.match(index, /<option value="caution">Hinay \/ Caution<\/option>/);
-  assert.match(index, /<option value="danger">Hinga \/ Extreme Caution<\/option>/);
-  assert.match(index, /<option value="extreme">Hinto \/ Danger<\/option>/);
-  assert.match(index, /Hayo <span class="status-separator">\/<\/span> <span class="status-tier">Safe<\/span> \(&lt;27°C\)/);
-  assert.match(index, /Hinto <span class="status-separator">\/<\/span> <span class="status-tier">Danger<\/span> \(42°C and above\)/);
-  for (const id of ['preview-pagasa', 'latest-pagasa', 'heat-guidance-pagasa', 'dashboard-forecast-pagasa', 'monitor-pagasa-status']) {
-    assert.match(index, new RegExp(`id="${id}"`));
-  }
-  assert.match(style, /\.status-tier/);
-  assert.match(style, /\.status-separator/);
-  assert.match(style, /\.map-pin-tooltip \.tt-pagasa/);
-  assert.match(style, /\.classification-inline \{[^}]*inline-flex/);
-  assert.ok((index.match(/class="classification-inline"/g) || []).length >= 7);
-  assert.match(index, /class="classification-inline">[\s\S]{0,300}id="latest-status"[\s\S]{0,300}id="latest-pagasa"/);
-  assert.match(index, /class="classification-inline">[\s\S]{0,300}id="dashboard-forecast-status"[\s\S]{0,300}id="dashboard-forecast-pagasa"/);
-  assert.match(index, /class="classification-inline">[\s\S]{0,300}id="monitor-gauge-status"[\s\S]{0,300}id="monitor-pagasa-status"/);
-  assert.match(index, /class="classification-inline">[\s\S]{0,300}id="preview-status"[\s\S]{0,300}id="preview-pagasa"/);
-  assert.match(script, /class="classification-inline">[\s\S]{0,200}class="history-status/);
-  assert.match(script, /class="classification-inline">[\s\S]{0,200}class="forecast-day-label/);
-  assert.match(script, /getPAGASATierLabel\(heatIndex\)/);
-  assert.match(script, /element\.textContent = hasValue \? this\.getPAGASASuffixLabel\(heatIndex\) : '—'/);
-  assert.match(script, /element\.classList\.add\(hasValue \? this\.getStatus\(heatIndex\) : 'nodata'\)/);
-  assert.match(script, /pagasaEl\.classList\.add\(status\)/);
-  assert.match(style, /\.pagasa-label\.safe[\s\S]{0,400}color: var\(--status-safe\)/);
-  assert.match(style, /\.pagasa-label\.extreme[\s\S]{0,400}color: var\(--status-extreme\)/);
-  assert.match(style, /\.status-tier \{ color: inherit/);
-  assert.match(style, /\.status-tier,[\s\S]{0,500}text-transform: uppercase/);
-  assert.match(style, /\.heat-guidance-level,\s*\.heat-guidance-pagasa \{ font-size: 0\.68rem; font-weight: 800; \}/);
-  assert.match(style, /\.dashboard-gauge-caption \.status-pill,\s*\.dashboard-gauge-caption \.pagasa-label \{ font-size: 0\.65rem; font-weight: 700;/);
-  assert.match(style, /\.gauge-range-key \{[\s\S]{0,240}grid-template-columns: repeat\(2/);
-  assert.match(style, /\.gauge-range-key > span \{/);
-  assert.match(style, /\.monitor-range-key \{[\s\S]{0,120}max-width: 320px/);
-  assert.match(style, /\.chart-legend > span\.extreme \{ color: var\(--status-extreme\)/);
-  assert.match(style, /\.dist-legend-label\.safe \{ color: var\(--status-safe\)/);
-  assert.match(style, /\.chart-tooltip \.tt-pagasa \{ font-family: inherit; font-size: inherit; \}/);
-  assert.match(style, /\.map-pin-tooltip \.tt-status,[\s\S]{0,120}font-size: inherit/);
-  assert.match(style, /\.dashboard-gauge-caption \.classification-inline,[\s\S]{0,120}flex-wrap: nowrap/);
-  assert.match(script, /this\.renderDashboardLocationSummary\(\);\s*this\.renderSensorTrust\(\);\s*this\.updateDashboard\(\);\s*this\.updateMonitorGauge\(\);\s*this\.renderMap\(\);/);
-  assert.match(script, /this\.currentTab === 'history'\) this\.renderHistory\(false\)/);
-  assert.match(serviceWorker, /schoolheat-v116/);
-
-  const i18nContext = { window: {} };
-  vm.runInNewContext(locales, i18nContext);
-  const dictionaries = i18nContext.window.SCHOOLHEAT_I18N.translations;
-  const pagasaKeys = [
-    'PAGASA', 'PAGASA:', 'PAGASA heat index', 'PAGASA effect-based categories:',
-    'Caution', 'Extreme Caution', 'Danger', 'Extreme Danger', 'Below 27°C', 'Safe',
-    'Hayo / Safe', 'Hinay / Caution', 'Hinga / Extreme Caution', 'Hinto / Danger'
-  ];
-  for (const language of ['tl', 'ceb', 'war']) {
-    for (const key of pagasaKeys) {
-      assert.ok(dictionaries[language][key], `${language} is missing ${key}`);
-    }
-  }
-
-  const previousI18n = context.window.SCHOOLHEAT_I18N;
-  vm.runInNewContext(locales, context);
-  try {
-    const pagasaApp = Object.create(context.SchoolHeatAppForTest.prototype);
-    pagasaApp.language = 'tl';
-    assert.equal(pagasaApp.getPAGASALabel(35), 'Hinga / Labis na Pag-iingat');
-    assert.equal(pagasaApp.getPAGASALabel(26), 'Hayo / Ligtas');
-    assert.equal(pagasaApp.getStatusPAGASALabel('danger'), 'Hinga / Labis na Pag-iingat');
-    assert.equal(pagasaApp.getPAGASATierLabel(35), 'Labis na Pag-iingat');
-    assert.equal(pagasaApp.getPAGASATierLabel(26), 'Ligtas');
-    assert.equal(pagasaApp.getPAGASASuffixLabel(35), '/ Labis na Pag-iingat');
-    assert.equal(pagasaApp.getPAGASASuffixLabel(26), '/ Ligtas');
-    assert.equal(pagasaApp.getPAGASADetail(26), 'PAGASA Indeks ng Init: Sa ibaba ng 27°C (<27°C)');
-  } finally {
-    if (previousI18n === undefined) delete context.window.SCHOOLHEAT_I18N;
-    else context.window.SCHOOLHEAT_I18N = previousI18n;
-  }
-
-  assert.match(readme, /display-only PAGASA label/);
-  assert.match(readme, /Extreme Danger \(≥52°C\)/);
-  assert.match(readme, /https:\/\/pagasa\.dost\.gov\.ph\/weather\/heat-index/);
-  for (const language of ['en', 'tl', 'ceb', 'war']) {
-    const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
-    assert.match(manual, /PAGASA/);
-    assert.match(manual, /27–32 °C[\s\S]{0,300}33–41 °C[\s\S]{0,300}42–51 °C[\s\S]{0,300}52 °C/);
-    assert.match(manual, /https:\/\/pagasa\.dost\.gov\.ph\/weather\/heat-index/);
   }
 });
