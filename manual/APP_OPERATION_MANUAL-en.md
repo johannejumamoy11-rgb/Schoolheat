@@ -77,8 +77,9 @@ as a paired display: `Hayo / Safe`, `Hinay / Caution`, `Hinga / Extreme Caution`
 and `Hinto / Danger` (`Hinto / Extreme Danger` at 52 °C or higher). "Safe" is an
 informal descriptor because PAGASA has no official tier below 27 °C. On compact
 active pills, only the suffix (such as `/ Danger`) appears beside the 4H word,
-keeping the same `Hinto / Danger` format in one color. This is display only;
-it does not change alert rules or school decisions.
+keeping the same `Hinto / Danger` format in one color. The same pairs also
+appear in the gauge range keys, chart legend, map legend, and history filter.
+This is display only; it does not change alert rules or school decisions.
 
 | PAGASA category | Heat index |
 | --- | --- |

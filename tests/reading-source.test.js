@@ -59,7 +59,7 @@ test('shows the same labeled 4H gauge range on dashboard and monitor', () => {
   assert.equal((index.match(/class="gauge-range-key/g) || []).length, 2);
   assert.match(index, /aria-label="DepEd 4H heat-index range"/);
   for (const label of ['Hayo', 'Hinay', 'Hinga', 'Hinto']) {
-    assert.ok(index.includes(`>${label}</span>`));
+    assert.ok(index.includes(`>${label} <span class="status-separator">`));
   }
 });
 
@@ -661,7 +661,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v113/);
+  assert.match(serviceWorker, /schoolheat-v114/);
 
   for (const language of manuals) {
     const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
@@ -756,7 +756,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v113/);
+  assert.match(serviceWorker, /schoolheat-v114/);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8'), i18nContext);
@@ -849,6 +849,14 @@ test('adds a display-only PAGASA heat label beside each DepEd 4H classification'
   assert.match(index, /Hinay <span class="status-separator">\/<\/span> <span class="status-tier">Caution<\/span>/);
   assert.match(index, /Hinga <span class="status-separator">\/<\/span> <span class="status-tier">Extreme Caution<\/span>/);
   assert.match(index, /Hinto <span class="status-separator">\/<\/span> <span class="status-tier">Danger<\/span>/);
+  assert.equal((index.match(/class="gauge-range-key/g) || []).length, 2);
+  assert.ok((index.match(/Hayo <span class="status-separator">\/<\/span> <span class="status-tier">Safe<\/span>/g) || []).length >= 5);
+  assert.match(index, /<option value="safe">Hayo \/ Safe<\/option>/);
+  assert.match(index, /<option value="caution">Hinay \/ Caution<\/option>/);
+  assert.match(index, /<option value="danger">Hinga \/ Extreme Caution<\/option>/);
+  assert.match(index, /<option value="extreme">Hinto \/ Danger<\/option>/);
+  assert.match(index, /Hayo <span class="status-separator">\/<\/span> <span class="status-tier">Safe<\/span> \(&lt;27°C\)/);
+  assert.match(index, /Hinto <span class="status-separator">\/<\/span> <span class="status-tier">Danger<\/span> \(42°C and above\)/);
   for (const id of ['preview-pagasa', 'latest-pagasa', 'heat-guidance-pagasa', 'dashboard-forecast-pagasa', 'monitor-pagasa-status']) {
     assert.match(index, new RegExp(`id="${id}"`));
   }
@@ -870,17 +878,22 @@ test('adds a display-only PAGASA heat label beside each DepEd 4H classification'
   assert.match(style, /\.pagasa-label\.safe[\s\S]{0,400}color: var\(--status-safe\)/);
   assert.match(style, /\.pagasa-label\.extreme[\s\S]{0,400}color: var\(--status-extreme\)/);
   assert.match(style, /\.status-tier \{ color: inherit/);
+  assert.match(style, /\.gauge-range-key \{[\s\S]{0,240}grid-template-columns: repeat\(2/);
+  assert.match(style, /\.gauge-range-key > span \{/);
+  assert.match(style, /\.monitor-range-key \{[\s\S]{0,120}max-width: 320px/);
+  assert.match(style, /\.chart-legend > span\.extreme \{ color: var\(--status-extreme\)/);
   assert.match(style, /\.dashboard-gauge-caption \.classification-inline,[\s\S]{0,120}flex-wrap: nowrap/);
   assert.match(script, /this\.renderDashboardLocationSummary\(\);\s*this\.renderSensorTrust\(\);\s*this\.updateDashboard\(\);\s*this\.updateMonitorGauge\(\);\s*this\.renderMap\(\);/);
   assert.match(script, /this\.currentTab === 'history'\) this\.renderHistory\(false\)/);
-  assert.match(serviceWorker, /schoolheat-v113/);
+  assert.match(serviceWorker, /schoolheat-v114/);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(locales, i18nContext);
   const dictionaries = i18nContext.window.SCHOOLHEAT_I18N.translations;
   const pagasaKeys = [
     'PAGASA', 'PAGASA:', 'PAGASA heat index', 'PAGASA effect-based categories:',
-    'Caution', 'Extreme Caution', 'Danger', 'Extreme Danger', 'Below 27°C', 'Safe'
+    'Caution', 'Extreme Caution', 'Danger', 'Extreme Danger', 'Below 27°C', 'Safe',
+    'Hayo / Safe', 'Hinay / Caution', 'Hinga / Extreme Caution', 'Hinto / Danger'
   ];
   for (const language of ['tl', 'ceb', 'war']) {
     for (const key of pagasaKeys) {

@@ -1148,10 +1148,14 @@ html[data-theme="dark"] .ambient-orb {
   align-items: center;
   flex-wrap: wrap;
 }
-.chart-legend span:not(.legend-dot) {
+.chart-legend > span:not(.legend-dot) {
   font-size: 0.68rem;
   color: var(--text-muted);
 }
+.chart-legend > span.safe { color: var(--status-safe); }
+.chart-legend > span.caution { color: var(--status-caution); }
+.chart-legend > span.danger { color: var(--status-danger); }
+.chart-legend > span.extreme { color: var(--status-extreme); }
 .legend-dot {
   width: 7px;
   height: 7px;
@@ -4421,25 +4425,26 @@ html[data-color-mode="automatic"][data-active-tab="hotlines"] {
 
 .gauge-range-key {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   width: 100%;
-  max-width: 220px;
+  max-width: 320px;
   margin: 10px auto 0;
-  gap: 3px;
-  font-size: 0.58rem;
+  gap: 4px;
+  font-size: 0.5rem;
   font-weight: 800;
   text-align: center;
   text-transform: uppercase;
-  letter-spacing: 0.045em;
+  letter-spacing: 0.025em;
 }
 
-.gauge-range-key span {
+.gauge-range-key > span {
   min-width: 0;
-  padding: 4px 2px;
+  padding: 4px 6px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--bg-card);
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .gauge-range-key .safe { color: var(--safe); }
@@ -4468,8 +4473,8 @@ html[data-color-mode="automatic"][data-active-tab="hotlines"] {
 }
 
 .monitor-range-key {
-  max-width: 260px;
-  margin: -2px auto 4px;
+  max-width: 320px;
+  margin: 4px auto 4px;
   position: relative;
   z-index: 1;
 }

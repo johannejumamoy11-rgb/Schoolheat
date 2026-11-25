@@ -357,7 +357,7 @@
               </span>
             </div>
             <div class="gauge-range-key" aria-label="DepEd 4H heat-index range">
-              <span class="safe">Hayo</span><span class="caution">Hinay</span><span class="danger">Hinga</span><span class="extreme">Hinto</span>
+              <span class="safe">Hayo <span class="status-separator">/</span> <span class="status-tier">Safe</span></span><span class="caution">Hinay <span class="status-separator">/</span> <span class="status-tier">Caution</span></span><span class="danger">Hinga <span class="status-separator">/</span> <span class="status-tier">Extreme Caution</span></span><span class="extreme">Hinto <span class="status-separator">/</span> <span class="status-tier">Danger</span></span>
             </div>
             <span class="sr-only" id="latest-hi">—</span>
           </div>
@@ -559,7 +559,7 @@
           </div>
         </div>
         <div class="gauge-range-key monitor-range-key" aria-label="DepEd 4H heat-index range">
-          <span class="safe">Hayo</span><span class="caution">Hinay</span><span class="danger">Hinga</span><span class="extreme">Hinto</span>
+          <span class="safe">Hayo <span class="status-separator">/</span> <span class="status-tier">Safe</span></span><span class="caution">Hinay <span class="status-separator">/</span> <span class="status-tier">Caution</span></span><span class="danger">Hinga <span class="status-separator">/</span> <span class="status-tier">Extreme Caution</span></span><span class="extreme">Hinto <span class="status-separator">/</span> <span class="status-tier">Danger</span></span>
         </div>
         <div class="monitor-scales">
           <div class="monitor-scale">
@@ -694,10 +694,10 @@
         </div>
         <select id="history-filter" class="filter-select" onchange="app.filterHistory()">
           <option value="all">All Status</option>
-          <option value="safe">Hayo</option>
-          <option value="caution">Hinay</option>
-          <option value="danger">Hinga</option>
-          <option value="extreme">Hinto</option>
+          <option value="safe">Hayo / Safe</option>
+          <option value="caution">Hinay / Caution</option>
+          <option value="danger">Hinga / Extreme Caution</option>
+          <option value="extreme">Hinto / Danger</option>
         </select>
       </div>
 
@@ -705,10 +705,10 @@
         <div class="card-header">
           <h3>Heat Index Trend</h3>
           <div class="chart-legend">
-            <span class="legend-dot safe"></span><span>Hayo</span>
-            <span class="legend-dot caution"></span><span>Hinay</span>
-            <span class="legend-dot danger"></span><span>Hinga</span>
-            <span class="legend-dot extreme"></span><span>Hinto</span>
+            <span class="legend-dot safe"></span><span>Hayo <span class="status-separator">/</span> <span class="status-tier">Safe</span></span>
+            <span class="legend-dot caution"></span><span>Hinay <span class="status-separator">/</span> <span class="status-tier">Caution</span></span>
+            <span class="legend-dot danger"></span><span>Hinga <span class="status-separator">/</span> <span class="status-tier">Extreme Caution</span></span>
+            <span class="legend-dot extreme"></span><span>Hinto <span class="status-separator">/</span> <span class="status-tier">Danger</span></span>
           </div>
         </div>
         <div class="chart-wrap">
@@ -863,10 +863,10 @@
           </div>
         </div>
         <div class="map-legend">
-          <div class="legend-item"><span class="legend-pin safe"></span><span>Hayo (&lt;27°C)</span></div>
-          <div class="legend-item"><span class="legend-pin caution"></span><span>Hinay (27–32°C)</span></div>
-          <div class="legend-item"><span class="legend-pin danger"></span><span>Hinga (33–41°C)</span></div>
-          <div class="legend-item"><span class="legend-pin extreme"></span><span>Hinto (42°C and above)</span></div>
+          <div class="legend-item"><span class="legend-pin safe"></span><span>Hayo <span class="status-separator">/</span> <span class="status-tier">Safe</span> (&lt;27°C)</span></div>
+          <div class="legend-item"><span class="legend-pin caution"></span><span>Hinay <span class="status-separator">/</span> <span class="status-tier">Caution</span> (27–32°C)</span></div>
+          <div class="legend-item"><span class="legend-pin danger"></span><span>Hinga <span class="status-separator">/</span> <span class="status-tier">Extreme Caution</span> (33–41°C)</span></div>
+          <div class="legend-item"><span class="legend-pin extreme"></span><span>Hinto <span class="status-separator">/</span> <span class="status-tier">Danger</span> (42°C and above)</span></div>
           <div class="legend-item"><span class="legend-pin nodata"></span><span>No Data</span></div>
         </div>
         <p class="map-data-note">Each pin reflects only the latest saved record for that mapped location. Demo and historical readings are labeled in the pin details; no value is copied to sites without a reading. A recent timestamp is not proof of a current device connection.</p>

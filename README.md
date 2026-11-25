@@ -84,7 +84,9 @@ Hinga / Extreme Caution, Hinto / Danger, and Hinto / Extreme Danger (≥52°C).
 27°C. On compact active pills, where the 4H word is already shown, only the
 suffix (for example, `/ Danger`) appears beside it so the row still reads
 `Hinto / Danger` without repeating the 4H word. The entire paired label uses
-the same color as the 4H label. It follows the selected app language and does
+the same color as the 4H label. The same pairs also appear in the gauge range
+keys, chart legend, map legend, and history filter so every visible 4H label
+carries its PAGASA counterpart. It follows the selected app language and does
 not change alert rules or school decisions; the source is the
 [DOST-PAGASA Heat Index page](https://pagasa.dost.gov.ph/weather/heat-index).
 The 29 existing campus sites remain mapped; Einstein, Newton, and Locke
