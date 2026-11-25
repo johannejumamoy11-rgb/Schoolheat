@@ -661,7 +661,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v112/);
+  assert.match(serviceWorker, /schoolheat-v113/);
 
   for (const language of manuals) {
     const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
@@ -756,7 +756,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v112/);
+  assert.match(serviceWorker, /schoolheat-v113/);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8'), i18nContext);
@@ -839,10 +839,10 @@ test('adds a display-only PAGASA heat label beside each DepEd 4H classification'
   assert.match(script, /this\.setPAGASALabel\('preview-pagasa', hi\)/);
   assert.match(script, /this\.setPAGASALabel\('latest-pagasa', latest\.heatIndex\)/);
   assert.match(script, /this\.setPAGASALabel\('dashboard-forecast-pagasa', best\.result\.value\)/);
-  assert.match(script, /pagasaEl\.textContent = this\.getPAGASALabel\(hi\)/);
-  assert.match(script, /class="history-pagasa"/);
-  assert.match(script, /class="forecast-pagasa"/);
-  assert.match(script, /class="tt-pagasa"/);
+  assert.match(script, /pagasaEl\.textContent = this\.getPAGASASuffixLabel\(hi\)/);
+  assert.match(script, /class="history-pagasa \$\{r\.status\}"/);
+  assert.match(script, /class="forecast-pagasa \$\{forecast\.status\}"/);
+  assert.match(script, /class="tt-pagasa \$\{status\}"/);
   assert.match(index, /class="status-tier"/);
   assert.match(index, /class="status-separator"/);
   assert.match(index, /Hayo <span class="status-separator">\/<\/span> <span class="status-tier">Safe<\/span>/);
@@ -863,9 +863,17 @@ test('adds a display-only PAGASA heat label beside each DepEd 4H classification'
   assert.match(index, /class="classification-inline">[\s\S]{0,300}id="preview-status"[\s\S]{0,300}id="preview-pagasa"/);
   assert.match(script, /class="classification-inline">[\s\S]{0,200}class="history-status/);
   assert.match(script, /class="classification-inline">[\s\S]{0,200}class="forecast-day-label/);
+  assert.match(script, /getPAGASATierLabel\(heatIndex\)/);
+  assert.match(script, /element\.textContent = hasValue \? this\.getPAGASASuffixLabel\(heatIndex\) : '—'/);
+  assert.match(script, /element\.classList\.add\(hasValue \? this\.getStatus\(heatIndex\) : 'nodata'\)/);
+  assert.match(script, /pagasaEl\.classList\.add\(status\)/);
+  assert.match(style, /\.pagasa-label\.safe[\s\S]{0,400}color: var\(--status-safe\)/);
+  assert.match(style, /\.pagasa-label\.extreme[\s\S]{0,400}color: var\(--status-extreme\)/);
+  assert.match(style, /\.status-tier \{ color: inherit/);
+  assert.match(style, /\.dashboard-gauge-caption \.classification-inline,[\s\S]{0,120}flex-wrap: nowrap/);
   assert.match(script, /this\.renderDashboardLocationSummary\(\);\s*this\.renderSensorTrust\(\);\s*this\.updateDashboard\(\);\s*this\.updateMonitorGauge\(\);\s*this\.renderMap\(\);/);
   assert.match(script, /this\.currentTab === 'history'\) this\.renderHistory\(false\)/);
-  assert.match(serviceWorker, /schoolheat-v112/);
+  assert.match(serviceWorker, /schoolheat-v113/);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(locales, i18nContext);
@@ -887,6 +895,10 @@ test('adds a display-only PAGASA heat label beside each DepEd 4H classification'
     pagasaApp.language = 'tl';
     assert.equal(pagasaApp.getPAGASALabel(35), 'Hinga / Labis na Pag-iingat');
     assert.equal(pagasaApp.getPAGASALabel(26), 'Hayo / Ligtas');
+    assert.equal(pagasaApp.getPAGASATierLabel(35), 'Labis na Pag-iingat');
+    assert.equal(pagasaApp.getPAGASATierLabel(26), 'Ligtas');
+    assert.equal(pagasaApp.getPAGASASuffixLabel(35), '/ Labis na Pag-iingat');
+    assert.equal(pagasaApp.getPAGASASuffixLabel(26), '/ Ligtas');
     assert.equal(pagasaApp.getPAGASADetail(26), 'PAGASA Indeks ng Init: Sa ibaba ng 27°C (<27°C)');
   } finally {
     if (previousI18n === undefined) delete context.window.SCHOOLHEAT_I18N;
