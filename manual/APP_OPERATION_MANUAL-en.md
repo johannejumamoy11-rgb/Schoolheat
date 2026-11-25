@@ -194,6 +194,8 @@ not a live sensor-coverage measure.
 - **Color System**: choose a palette, swatch, harmony style, or full color
   picker. **Reset to SchoolHeat** restores defaults. Heat-risk colors never
   change.
+- **Text size**: choose Normal, Large, Extra large, or Maximum. The choice is
+  saved in this browser and also applies when you open the manual reader.
 - **App language**: English, Tagalog, Bisaya, or Waray. Navigation, common
   labels, some safety guidance, and About are translated. Sensor/location names
   and some technical messages stay in English. Risk labels remain

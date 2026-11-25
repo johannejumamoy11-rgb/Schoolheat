@@ -129,6 +129,7 @@ An mapa nagpapakita hin 29 nga nakapirmi nga campus pin upod an mga kontrol ha z
 
 - **Install & Offline Use (Pag-install ngan Paggamit kon Offline)**: nagpapakita han install status ngan han buton nga **Install SchoolHeat (I-install an SchoolHeat)**.
 - **Color System (Sistema han Kolor)**: pumili hin palette, swatch, harmony style, o full color picker. An **Reset to SchoolHeat (Ibalik ha SchoolHeat)** nagbabalik han mga default. An mga kolor han peligro han kainit diri nagbabag-o.
+- **Text size (Gidak-on han teksto)**: pumili hin Normal, Dako, Ekstra dako, o Pinakadako. Natitipig ini ha browser ngan ginagamit liwat kon ablihan an manwal.
 - **App language (Pinulongan han app)**: English, Tagalog, Bisaya, o Waray. An navigation, mga komon nga label, pipira nga giya han kaluwasan, ngan an Mahitungod ginhubad na. An mga ngaran han sensor/lokasyon ngan pipira nga teknikal nga mensahe nagpapabilin ha English. An mga label han peligro nagpapabilin nga Hayo/Hinay/Hinga/Hinto.
 - **Sensor Calibration (Calibration han Sensor)**: An **Temperature Offset (Offset han Temperatura)** ngan **Humidity Offset (Offset han Kahumidad)** nag-aadjust han mga sunod nga kalkulasyon.
 - **Demo Mode / Generate Demo Data (Demo Mode / Paghimo hin Datos Demo)**: naghimo hin mga sample nga pagbasa para ha preview. An mga demo reading gin-i-exclude ha mga tagna.

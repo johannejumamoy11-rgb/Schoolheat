@@ -16,13 +16,16 @@
       --accent-text: #10201a;
       --border: #2c403a;
       --warn: #e58e6b;
+      --text-scale: 1;
     }
     * { box-sizing: border-box; }
+    html { font-size: calc(16px * var(--text-scale, 1)); }
     body {
       margin: 0;
       background: var(--bg);
       color: var(--text);
       font-family: "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+      font-size: 0.875rem;
       line-height: 1.65;
     }
     .bar {
@@ -54,7 +57,7 @@
       border-radius: 999px;
       cursor: pointer;
       font: inherit;
-      font-size: 14px;
+      font-size: 0.875rem;
     }
     .langs button.active {
       background: var(--accent);
@@ -78,11 +81,11 @@
     .eyebrow {
       margin: 0 0 6px;
       color: var(--accent);
-      font-size: 12px;
+      font-size: 0.75rem;
       letter-spacing: 0.12em;
       font-weight: 800;
     }
-    h1 { margin: 0; font-size: clamp(28px, 5vw, 42px); line-height: 1.15; }
+    h1 { margin: 0; font-size: clamp(1.75rem, 5vw, 2.625rem); line-height: 1.15; }
     .hero p:last-child { margin: 8px 0 0; color: var(--muted); }
     .download {
       display: inline-block;
@@ -102,10 +105,10 @@
       padding-bottom: 8px;
       border-bottom: 1px solid var(--border);
       color: var(--accent);
-      font-size: 23px;
+      font-size: 1.4375rem;
     }
-    article h3 { margin-top: 26px; color: var(--accent); font-size: 18px; }
-    article h4 { margin-top: 20px; color: var(--text); font-size: 16px; }
+    article h3 { margin-top: 26px; color: var(--accent); font-size: 1.125rem; }
+    article h4 { margin-top: 20px; color: var(--text); font-size: 1rem; }
     article p, article li { color: var(--text); }
     article code {
       background: var(--surface-2);
@@ -118,7 +121,7 @@
       width: 100%;
       border-collapse: collapse;
       margin: 18px 0;
-      font-size: 15px;
+      font-size: 0.9375rem;
     }
     article th, article td {
       border: 1px solid var(--border);
@@ -292,6 +295,10 @@
       });
       if (params.bg) {
         document.querySelector('meta[name="theme-color"]')?.setAttribute('content', params.bg);
+      }
+      const scale = Number.parseFloat(params.fs);
+      if (Number.isFinite(scale) && scale >= 1 && scale <= 1.5) {
+        document.documentElement.style.setProperty('--text-scale', String(scale));
       }
     }
 

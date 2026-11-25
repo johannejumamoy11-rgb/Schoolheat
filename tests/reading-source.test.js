@@ -661,7 +661,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v107/);
+  assert.match(serviceWorker, /schoolheat-v108/);
 
   for (const language of manuals) {
     const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
@@ -720,5 +720,85 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   } finally {
     if (previousLocalStorage === undefined) delete context.localStorage;
     else context.localStorage = previousLocalStorage;
+  }
+});
+
+test('offers a persistent text size control that follows the manual reader', () => {
+  const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
+  const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
+  const reader = fs.readFileSync(path.join(__dirname, '..', 'manual', 'index.html'), 'utf8');
+
+  assert.match(index, /id="setting-text-size-label"[^>]*>Text size</);
+  assert.match(index, /id="setting-text-size-hint"/);
+  assert.match(index, /id="setting-text-size"[^>]*aria-labelledby="setting-text-size-label"/);
+  for (const option of [
+    '<option value="normal">Normal (100%)</option>',
+    '<option value="large">Large (115%)</option>',
+    '<option value="xlarge">Extra large (130%)</option>',
+    '<option value="xxlarge">Maximum (145%)</option>'
+  ]) {
+    assert.ok(index.includes(option), `${option} exists`);
+  }
+  assert.match(script, /TEXT_SIZE_SCALES = \{ normal: '1', large: '1\.15', xlarge: '1\.3', xxlarge: '1\.45' \}/);
+  assert.match(script, /textSize: 'normal'/);
+  assert.match(script, /document\.getElementById\('setting-text-size'\)\?\.value/);
+  assert.match(script, /document\.documentElement\.dataset\.textSize = this\.settings\.textSize/);
+  assert.match(script, /setProperty\('--text-size-scale', TEXT_SIZE_SCALES\[this\.settings\.textSize\]\)/);
+  assert.match(script, /fs: TEXT_SIZE_SCALES\[this\.settings\.textSize\] \|\| '1'/);
+  assert.match(style, /--text-size-scale: 1/);
+  assert.match(style, /html \{[\s\S]*?font-size: calc\(16px \* var\(--text-size-scale\)\)/);
+  assert.match(style, /html\[data-text-size="large"\] \{ --text-size-scale: 1\.15; \}/);
+  assert.match(style, /html\[data-text-size="xlarge"\] \{ --text-size-scale: 1\.3; \}/);
+  assert.match(style, /html\[data-text-size="xxlarge"\] \{ --text-size-scale: 1\.45; \}/);
+  assert.match(reader, /--text-scale: 1/);
+  assert.match(reader, /font-size: calc\(16px \* var\(--text-scale, 1\)\)/);
+  assert.match(reader, /font-size: 0\.875rem/);
+  assert.match(reader, /Number\.parseFloat\(params\.fs\)/);
+  assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
+  assert.doesNotMatch(reader, /font-size:\s*\d+px/);
+  assert.match(serviceWorker, /schoolheat-v108/);
+
+  const i18nContext = { window: {} };
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8'), i18nContext);
+  const dictionaries = i18nContext.window.SCHOOLHEAT_I18N.translations;
+  const textSizeKeys = [
+    'Text size', 'Choose a larger text size if small labels are hard to read.',
+    'Normal (100%)', 'Large (115%)', 'Extra large (130%)', 'Maximum (145%)'
+  ];
+  for (const language of ['tl', 'ceb', 'war']) {
+    for (const key of textSizeKeys) {
+      assert.ok(dictionaries[language][key], `${language} is missing ${key}`);
+    }
+  }
+  const manuals = ['en', 'tl', 'ceb', 'war'];
+  for (const language of manuals) {
+    const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
+    assert.match(manual, /Text size|Laki ng teksto|Gidak-on sa teksto|Gidak-on han teksto/);
+  }
+
+  const previousDocument = context.document;
+  const appliedProperties = {};
+  context.document = {
+    documentElement: {
+      dataset: {},
+      style: { setProperty: (key, value) => { appliedProperties[key] = value; } }
+    }
+  };
+  try {
+    const sizeApp = Object.create(context.SchoolHeatAppForTest.prototype);
+    sizeApp.settings = { textSize: 'xlarge' };
+    sizeApp.updateManualLinks = () => {};
+    sizeApp.applyTextSize();
+    assert.equal(context.document.documentElement.dataset.textSize, 'xlarge');
+    assert.equal(appliedProperties['--text-size-scale'], '1.3');
+
+    sizeApp.settings = { textSize: 'unknown' };
+    sizeApp.applyTextSize();
+    assert.equal(sizeApp.settings.textSize, 'normal');
+    assert.equal(context.document.documentElement.dataset.textSize, 'normal');
+    assert.equal(appliedProperties['--text-size-scale'], '1');
+  } finally {
+    if (previousDocument === undefined) delete context.document;
+    else context.document = previousDocument;
   }
 });

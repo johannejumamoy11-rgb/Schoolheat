@@ -406,11 +406,12 @@ const SMS_QUEUE_MAX_ITEMS = 20;
 const SMS_RETRY_DELAY_MS = 5 * 60 * 1000;
 const LOCAL_CONTACTS_STORAGE_KEY = 'sh_local_contacts';
 const LOCAL_CONTACTS_MAX_ITEMS = 50;
+const TEXT_SIZE_SCALES = { normal: '1', large: '1.15', xlarge: '1.3', xxlarge: '1.45' };
 const HISTORY_PAGE_SIZE = 50;
 
 class SchoolHeatApp {
   constructor() {
-    const defaultSettings = { firebase: true, browserNotifications: false, pushAlerts: false, smsAlerts: false, smsNumbers: '', outlier: true, spike: true, demoMode: false, tempOffset: 0, humidityOffset: 0, darkMode: true, colorMode: 'automatic', accentPalette: 'schoolheat', customAccentColor: '#287985', customPaletteStyle: 'balanced', customPaletteColors: null, language: 'en' };
+    const defaultSettings = { firebase: true, browserNotifications: false, pushAlerts: false, smsAlerts: false, smsNumbers: '', outlier: true, spike: true, demoMode: false, tempOffset: 0, humidityOffset: 0, darkMode: true, colorMode: 'automatic', accentPalette: 'schoolheat', customAccentColor: '#287985', customPaletteStyle: 'balanced', customPaletteColors: null, language: 'en', textSize: 'normal' };
     try {
       const storedReadings = JSON.parse(localStorage.getItem('sh_readings') || '[]');
       this.readings = Array.isArray(storedReadings) ? storedReadings : [];
@@ -428,6 +429,9 @@ class SchoolHeatApp {
     }
     if (!['automatic', 'unified'].includes(this.settings.colorMode)) {
       this.settings.colorMode = 'automatic';
+    }
+    if (!Object.prototype.hasOwnProperty.call(TEXT_SIZE_SCALES, this.settings.textSize)) {
+      this.settings.textSize = 'normal';
     }
     if (!['balanced', 'warm', 'cool', 'analogous', 'complementary', 'monochrome'].includes(this.settings.customPaletteStyle)) {
       this.settings.customPaletteStyle = 'balanced';
@@ -1173,6 +1177,12 @@ class SchoolHeatApp {
     if (languageSelect) languageSelect.addEventListener('change', () => {
       this.settings.language = languageSelect.value;
       this.applyLanguage(languageSelect.value);
+      this.saveSettings();
+    });
+    const textSizeSelect = document.getElementById('setting-text-size');
+    if (textSizeSelect) textSizeSelect.addEventListener('change', () => {
+      this.settings.textSize = textSizeSelect.value;
+      this.applyTextSize();
       this.saveSettings();
     });
     if (colorModeSelect) colorModeSelect.addEventListener('change', () => {
@@ -4885,6 +4895,7 @@ class SchoolHeatApp {
     const darkmode = document.getElementById('setting-darkmode');
     const colorMode = document.getElementById('setting-color-mode');
     const language = document.getElementById('setting-language');
+    const textSize = document.getElementById('setting-text-size');
     const cTemp = document.getElementById('cal-temp');
     const cHum = document.getElementById('cal-humidity');
     if (fb) fb.checked = this.settings.firebase;
@@ -4898,8 +4909,10 @@ class SchoolHeatApp {
     if (darkmode) darkmode.checked = this.settings.darkMode;
     if (colorMode) colorMode.value = this.settings.colorMode;
     if (language) language.value = this.settings.language;
+    if (textSize) textSize.value = this.settings.textSize;
     if (cTemp) cTemp.value = this.settings.tempOffset;
     if (cHum) cHum.value = this.settings.humidityOffset;
+    this.applyTextSize();
     this.applyTheme();
     this.applyLanguage(this.settings.language);
   }
@@ -4925,7 +4938,8 @@ class SchoolHeatApp {
       muted: cssVar('--ink-secondary', '--text-secondary'),
       accent: cssVar('--brand-teal', '--accent-blue'),
       border: cssVar('--border'),
-      accentText: cssVar('--button-primary-text')
+      accentText: cssVar('--button-primary-text'),
+      fs: TEXT_SIZE_SCALES[this.settings.textSize] || '1'
     }).toString();
   }
 
@@ -5032,7 +5046,8 @@ class SchoolHeatApp {
       customPaletteColors: this.settings.customPaletteColors,
       tempOffset: parseFloat(document.getElementById('cal-temp')?.value) || 0,
       humidityOffset: parseFloat(document.getElementById('cal-humidity')?.value) || 0,
-      language: document.getElementById('setting-language')?.value || this.language || 'en'
+      language: document.getElementById('setting-language')?.value || this.language || 'en',
+      textSize: document.getElementById('setting-text-size')?.value || this.settings.textSize || 'normal'
     };
     localStorage.setItem('sh_settings', JSON.stringify(this.settings));
     if (showToast) this.toast('Settings saved', 'success');
@@ -5462,6 +5477,15 @@ class SchoolHeatApp {
       rootStyle.setProperty('--border-hover', `rgba(${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}, 0.55)`);
     }
 
+  }
+
+  applyTextSize() {
+    if (!Object.prototype.hasOwnProperty.call(TEXT_SIZE_SCALES, this.settings.textSize)) {
+      this.settings.textSize = 'normal';
+    }
+    document.documentElement.dataset.textSize = this.settings.textSize;
+    document.documentElement.style.setProperty('--text-size-scale', TEXT_SIZE_SCALES[this.settings.textSize]);
+    this.updateManualLinks();
   }
 
   applyTheme() {

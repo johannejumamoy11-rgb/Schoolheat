@@ -42,7 +42,10 @@ list shows recorded risk readings, not notification-delivery receipts.
 The Language setting offers English, Tagalog, Bisaya (Cebuano), and Waray. It
 translates the navigation, common Monitor, History, Map, and Hotlines labels,
 selected safety guidance, and the About page. Sensor/location names and some
-detailed technical messages remain in English.
+detailed technical messages remain in English. Settings also includes a Text
+size control with Normal, Large, Extra large, and Maximum options. The choice is
+saved in that browser and is also passed to the manual reader so the guide uses
+the same text size.
 
 The Monitor includes a Sensor Trust summary of saved ESP32 records, reported
 device health, and observed logging gaps. It does not claim that a device is
