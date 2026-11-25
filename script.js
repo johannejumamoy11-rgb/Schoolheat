@@ -66,6 +66,24 @@ const STATUS_LABELS = {
   nodata: 'No Data'
 };
 
+const PAGASA_HEAT_LEVELS = [
+  { min: 27, label: 'Caution', range: '27–32°C' },
+  { min: 33, label: 'Extreme Caution', range: '33–41°C' },
+  { min: 42, label: 'Danger', range: '42–51°C' },
+  { min: 52, label: 'Extreme Danger', range: '52°C and above' }
+];
+
+function getPAGASAHeatLevel(heatIndex) {
+  const value = Number(heatIndex);
+  if (!Number.isFinite(value) || value < 27) {
+    return { label: 'Below 27°C', range: '<27°C' };
+  }
+  for (let i = PAGASA_HEAT_LEVELS.length - 1; i >= 0; i--) {
+    if (value >= PAGASA_HEAT_LEVELS[i].min) return PAGASA_HEAT_LEVELS[i];
+  }
+  return PAGASA_HEAT_LEVELS[0];
+}
+
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 
 function hexToRgb(hex) {
@@ -718,7 +736,9 @@ class SchoolHeatApp {
     const level = document.getElementById('heat-guidance-level');
     const title = document.getElementById('heat-guidance-title');
     const detail = document.getElementById('heat-guidance-detail');
+    const pagasa = document.getElementById('heat-guidance-pagasa');
     if (!card || !level || !title || !detail) return;
+    if (pagasa) pagasa.textContent = '—';
 
     if (!reading || !this.hasValidMeasurement(reading)) {
       card.className = 'glass-card heat-guidance-card nodata';
@@ -731,11 +751,13 @@ class SchoolHeatApp {
     }
 
     const status = this.getStatus(reading.heatIndex);
+    const pagasaDetail = this.getPAGASADetail(reading.heatIndex);
+    if (pagasa) pagasa.textContent = this.getPAGASALabel(reading.heatIndex);
     if (freshness.state === 'stale' || freshness.state === 'invalid') {
       card.className = `glass-card heat-guidance-card ${freshness.state}`;
       level.textContent = this.translateText(freshness.label);
       title.textContent = 'Confirm current conditions before acting';
-      detail.textContent = `${reading.location}: the last saved reading was ${STATUS_LABELS[status]} at ${reading.heatIndex.toFixed(1)}°C. ${freshness.detail}`;
+      detail.textContent = `${reading.location}: the last saved reading was ${STATUS_LABELS[status]} at ${reading.heatIndex.toFixed(1)}°C. ${pagasaDetail}. ${freshness.detail}`;
       return;
     }
 
@@ -748,7 +770,7 @@ class SchoolHeatApp {
     card.className = `glass-card heat-guidance-card ${status}`;
     level.textContent = STATUS_LABELS[status].toUpperCase();
     title.textContent = actions[status][0];
-    detail.textContent = `${reading.location}: ${reading.heatIndex.toFixed(1)}°C heat index. ${actions[status][1]}`;
+    detail.textContent = `${reading.location}: ${reading.heatIndex.toFixed(1)}°C heat index. ${pagasaDetail}. ${actions[status][1]}`;
   }
 
   setupPullToRefresh() {
@@ -1297,6 +1319,24 @@ class SchoolHeatApp {
     return 'extreme';
   }
 
+  getPAGASALabel(heatIndex) {
+    const level = getPAGASAHeatLevel(heatIndex);
+    return `${this.translateText('PAGASA')}: ${this.translateText(level.label)}`;
+  }
+
+  getPAGASADetail(heatIndex) {
+    const level = getPAGASAHeatLevel(heatIndex);
+    return `${this.translateText('PAGASA heat index')}: ${this.translateText(level.label)} (${level.range})`;
+  }
+
+  setPAGASALabel(elementId, heatIndex) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    element.textContent = heatIndex === null || heatIndex === undefined || heatIndex === ''
+      ? '—'
+      : this.getPAGASALabel(heatIndex);
+  }
+
   getQualityScore(temp, humidity) {
     let score = 100;
     if (temp < 15 || temp > 55) score -= 30;
@@ -1334,6 +1374,7 @@ class SchoolHeatApp {
       stat.textContent = STATUS_LABELS[status];
       stat.className = 'preview-status ' + status;
     }
+    this.setPAGASALabel('preview-pagasa', hi);
   }
 
   calculate() {
@@ -2541,6 +2582,7 @@ class SchoolHeatApp {
     const canvas = document.getElementById('monitor-gauge');
     const valEl = document.getElementById('monitor-gauge-val');
     const statusEl = document.getElementById('monitor-gauge-status');
+    const pagasaEl = document.getElementById('monitor-pagasa-status');
     const tempBar = document.getElementById('scale-temp-bar');
     const tempVal = document.getElementById('scale-temp-val');
     const humBar = document.getElementById('scale-hum-bar');
@@ -2550,6 +2592,7 @@ class SchoolHeatApp {
     if (!latest) {
       if (valEl) valEl.textContent = '--';
       if (statusEl) { statusEl.textContent = 'No Data'; statusEl.className = 'monitor-gauge-status nodata'; }
+      if (pagasaEl) pagasaEl.textContent = '—';
       if (tempVal) tempVal.textContent = '-- °C';
       if (humVal) humVal.textContent = '-- %';
       if (tempBar) tempBar.style.width = '0%';
@@ -2568,6 +2611,7 @@ class SchoolHeatApp {
       statusEl.textContent = STATUS_LABELS[status];
       statusEl.className = 'monitor-gauge-status ' + status;
     }
+    if (pagasaEl) pagasaEl.textContent = this.getPAGASALabel(hi);
     if (tempVal) tempVal.textContent = temp.toFixed(1) + ' °C';
     if (humVal) humVal.textContent = hum.toFixed(1) + ' %';
     if (tempBar) tempBar.style.width = Math.min(100, Math.max(0, (temp / 55) * 100)) + '%';
@@ -2914,6 +2958,7 @@ class SchoolHeatApp {
       const status = this.getStatus(latest.heatIndex);
       stEl.textContent = STATUS_LABELS[status];
       stEl.className = 'status-pill ' + status;
+      this.setPAGASALabel('latest-pagasa', latest.heatIndex);
       this.drawGauge(latest.heatIndex);
     } else {
       const demoLabel = document.getElementById('latest-demo-label');
@@ -2930,6 +2975,7 @@ class SchoolHeatApp {
       const stEl = document.getElementById('latest-status');
       stEl.textContent = 'No Data';
       stEl.className = 'status-pill nodata';
+      this.setPAGASALabel('latest-pagasa', null);
       this.drawGauge(0);
     }
 
@@ -3023,6 +3069,7 @@ class SchoolHeatApp {
     const action = document.getElementById('dashboard-forecast-action');
     const actionLabel = document.getElementById('dashboard-forecast-action-label');
     if (!empty || !content || !canvas) return;
+    this.setPAGASALabel('dashboard-forecast-pagasa', null);
     const setAction = (label, tab) => {
       if (actionLabel) actionLabel.textContent = this.translateText(label);
       if (action) action.onclick = () => this.switchTab(tab);
@@ -3077,6 +3124,7 @@ class SchoolHeatApp {
       statusElement.textContent = STATUS_LABELS[status] || this.translateText('Unknown');
       statusElement.className = `status-pill ${status || 'nodata'}`;
     }
+    this.setPAGASALabel('dashboard-forecast-pagasa', best.result.value);
     if (model) {
       model.textContent = best.metric
         ? `${best.label} · MAE ${best.metric.mae.toFixed(1)}°C`
@@ -3384,6 +3432,7 @@ class SchoolHeatApp {
           <div class="history-result">
             <div class="history-hi ${r.status}">${r.heatIndex.toFixed(1)}°C</div>
             <div class="history-status ${r.status}">${STATUS_LABELS[r.status] || 'Unknown'}</div>
+            <div class="history-pagasa">${this.escapeHTML(this.getPAGASALabel(r.heatIndex))}</div>
           </div>
           <button class="history-delete-button" type="button" data-delete-reading-index="${index}" aria-label="Delete reading from ${this.escapeHTML(r.location)} on ${this.formatTime(r.timestamp)}" title="Delete this reading">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
@@ -3564,7 +3613,8 @@ class SchoolHeatApp {
       if (!latest) return 'No eligible non-demo reading is available to determine a heat classification.';
       const freshness = this.getReadingFreshness(latest);
       const status = this.getStatus(Number(latest.heatIndex));
-      return `The latest saved non-demo Heat Index for ${latest.location} was ${Number(latest.heatIndex).toFixed(1)}°C (${STATUS_LABELS[status]}) at ${this.formatTime(latest.timestamp)}. ${freshness.state === 'recent' ? 'Its timestamp is recent, but that alone does not confirm the sensor is connected now.' : `It is ${freshness.label.toLowerCase()}, so treat it as historical rather than current.`}`;
+      const pagasaDetail = this.getPAGASADetail(Number(latest.heatIndex));
+      return `The latest saved non-demo Heat Index for ${latest.location} was ${Number(latest.heatIndex).toFixed(1)}°C (${STATUS_LABELS[status]}) at ${this.formatTime(latest.timestamp)}. ${pagasaDetail}. ${freshness.state === 'recent' ? 'Its timestamp is recent, but that alone does not confirm the sensor is connected now.' : `It is ${freshness.label.toLowerCase()}, so treat it as historical rather than current.`}`;
     }
 
     return 'I can answer about the highest reading today, humidity changes, valid-reading counts, today/yesterday comparisons, forecasts, sensor data quality, missing campus locations, and the difference between temperature and Heat Index. Try one of those questions.';
@@ -4710,6 +4760,7 @@ class SchoolHeatApp {
           <div class="forecast-day-date">+30 min · ${modelResult.date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
           <div class="forecast-day-temp ${forecast.status}">${forecast.value.toFixed(1)}°C</div>
           <div class="forecast-day-label ${forecast.status}">${STATUS_LABELS[forecast.status]}</div>
+          <div class="forecast-pagasa">${this.escapeHTML(this.getPAGASALabel(forecast.value))}</div>
         </div>
       `;
     }
@@ -4805,13 +4856,15 @@ class SchoolHeatApp {
       const dataStatus = this.getMapDataStatus(reading);
       const safeName = loc.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       const readingTime = reading ? this.escapeHTML(this.formatTime(reading.timestamp)) : 'No stored measurement';
-      const accessibleLabel = this.escapeHTML(`${loc.name}: ${dataStatus}, ${hi}`);
+      const pagasaLabel = hasValidReading ? this.getPAGASALabel(heatIndex) : '—';
+      const accessibleLabel = this.escapeHTML(`${loc.name}: ${dataStatus}, ${hi}, ${pagasaLabel}`);
       return `
         <div class="map-pin ${status}" role="button" tabindex="0" aria-expanded="false" aria-label="${accessibleLabel}" style="left:${loc.x}%;top:${loc.y}%" data-loc="${safeName}">
           <div class="map-pin-tooltip">
             <div class="tt-loc">${safeName}</div>
                 <div class="tt-source map-data-status">${this.translateText(dataStatus)}</div>
             <div class="tt-hi ${status}">${hi}</div>
+            <div class="tt-pagasa">${this.escapeHTML(pagasaLabel)}</div>
             <div class="tt-time">${readingTime}</div>
           </div>
         </div>
@@ -5047,6 +5100,10 @@ class SchoolHeatApp {
     }
     this.renderDashboardLocationSummary();
     this.renderSensorTrust();
+    this.updateDashboard();
+    this.updateMonitorGauge();
+    this.renderMap();
+    if (this.currentTab === 'history') this.renderHistory(false);
     this.scheduleDashboardForecastRender();
   }
 

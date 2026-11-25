@@ -72,6 +72,19 @@ The DepEd 4H bands used by the app are:
 | **Hinga** | 33–41 °C |
 | **Hinto** | 42 °C or higher |
 
+SchoolHeat also shows the DOST-PAGASA effect-based category beside the 4H label.
+This is display only; it does not change alert rules or school decisions.
+
+| PAGASA category | Heat index |
+| --- | --- |
+| **Caution** | 27–32 °C |
+| **Extreme Caution** | 33–41 °C |
+| **Danger** | 42–51 °C |
+| **Extreme Danger** | 52 °C or higher |
+
+Readings below 27 °C are below the PAGASA caution range. Source:
+[DOST-PAGASA Heat Index](https://pagasa.dost.gov.ph/weather/heat-index).
+
 ### 3.3 Understand freshness
 
 The latest saved reading is marked **RECENT** for up to 15 minutes, then

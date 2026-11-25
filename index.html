@@ -245,6 +245,7 @@
           <div class="status-count" data-target="0" id="count-safe">0</div>
           <div class="status-label">Hayo</div>
           <div class="status-range">&lt; 27°C</div>
+          <div class="status-pagasa"><span>PAGASA:</span> <span>Below 27°C</span></div>
         </div>
         <div class="status-card caution" data-status="caution">
           <div class="status-icon">
@@ -253,6 +254,7 @@
           <div class="status-count" data-target="0" id="count-caution">0</div>
           <div class="status-label">Hinay</div>
           <div class="status-range">27–32°C</div>
+          <div class="status-pagasa"><span>PAGASA:</span> <span>Caution</span></div>
         </div>
         <div class="status-card danger" data-status="danger">
           <div class="status-icon">
@@ -261,6 +263,7 @@
           <div class="status-count" data-target="0" id="count-danger">0</div>
           <div class="status-label">Hinga</div>
           <div class="status-range">33–41°C</div>
+          <div class="status-pagasa"><span>PAGASA:</span> <span>Extreme Caution</span></div>
         </div>
         <div class="status-card extreme" data-status="extreme">
           <div class="status-icon">
@@ -269,6 +272,7 @@
           <div class="status-count" data-target="0" id="count-extreme">0</div>
           <div class="status-label">Hinto</div>
           <div class="status-range">42°C and above</div>
+          <div class="status-pagasa"><span>PAGASA:</span> <span>Danger</span> / <span>Extreme Danger</span></div>
         </div>
       </div>
       <section class="campus-coverage-card" aria-labelledby="campus-coverage-title">
@@ -311,6 +315,7 @@
       <section class="glass-card heat-guidance-card nodata" id="heat-guidance-card" aria-live="polite">
         <div class="heat-guidance-header">
           <span class="heat-guidance-kicker">SCHOOL RESPONSE GUIDE</span>
+          <span class="heat-guidance-pagasa" id="heat-guidance-pagasa">—</span>
           <span class="heat-guidance-level" id="heat-guidance-level">NO DATA</span>
         </div>
         <h3 id="heat-guidance-title">Get a reading to see the suggested response</h3>
@@ -341,6 +346,7 @@
             <div class="dashboard-gauge-caption">
               <span>DepEd 4H classification</span>
               <span class="status-pill nodata" id="latest-status">No Data</span>
+              <span class="pagasa-label" id="latest-pagasa">—</span>
             </div>
             <div class="gauge-range-key" aria-label="DepEd 4H heat-index range">
               <span class="safe">Hayo</span><span class="caution">Hinay</span><span class="danger">Hinga</span><span class="extreme">Hinto</span>
@@ -430,6 +436,7 @@
             <div class="dashboard-forecast-meta">
               <span id="dashboard-forecast-model">Model unavailable</span>
               <span id="dashboard-forecast-time">Forecast time unavailable</span>
+              <span class="forecast-pagasa" id="dashboard-forecast-pagasa">—</span>
             </div>
             <canvas id="dashboard-forecast-chart" width="600" height="180" role="img" aria-label="Forecast chart unavailable"></canvas>
             <div class="dashboard-chart-legend">
@@ -536,6 +543,7 @@
             <div class="monitor-gauge-value" id="monitor-gauge-val">--</div>
             <div class="monitor-gauge-unit">°C Heat Index</div>
             <div class="monitor-gauge-status" id="monitor-gauge-status">No Data</div>
+            <div class="monitor-pagasa-status" id="monitor-pagasa-status">—</div>
           </div>
         </div>
         <div class="gauge-range-key monitor-range-key" aria-label="DepEd 4H heat-index range">
@@ -597,6 +605,7 @@
             <div class="preview-bar" id="preview-bar"></div>
           </div>
           <div class="preview-value" id="preview-value">— °C</div>
+          <div class="preview-pagasa" id="preview-pagasa">—</div>
           <div class="preview-formula">Steadman-Rothfusz Formula</div>
         </div>
 
@@ -1037,6 +1046,7 @@
           </article>
         </div>
         <p class="about-scale-note">These are screening categories, not a medical assessment or a substitute for current school and local guidance.</p>
+        <p class="about-scale-note about-pagasa-note">PAGASA effect-based categories: <span>Caution</span> 27–32°C · <span>Extreme Caution</span> 33–41°C · <span>Danger</span> 42–51°C · <span>Extreme Danger</span> 52°C and above. <a href="https://pagasa.dost.gov.ph/weather/heat-index" target="_blank" rel="noopener noreferrer">DOST-PAGASA Heat Index</a></p>
       </section>
 
       <section class="about-section" aria-labelledby="about-workflow-title">

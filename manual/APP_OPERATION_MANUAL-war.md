@@ -53,6 +53,18 @@ An mga banda han DepEd 4H nga ginagamit han app amo an:
 | **Hinga** | 33–41 °C |
 | **Hinto** | 42 °C o labaw pa |
 
+Ipinapakita liwat han SchoolHeat an kategorya han PAGASA base ha epekto upod han label han 4H. Para la ini ha pagpakita; diri ini nagbabag-o han mga alerto o desisyon han eskwelahan.
+
+| Kategorya han PAGASA | Heat index (Indeks han Kapaso) |
+| --- | --- |
+| **Pagbantay (Caution)** | 27–32 °C |
+| **Grabe nga Pagbantay (Extreme Caution)** | 33–41 °C |
+| **Peligro (Danger)** | 42–51 °C |
+| **Grabe nga Peligro (Extreme Danger)** | 52 °C o labaw pa |
+
+An mga pagbasa nga ubos han 27 °C nasa ubos han PAGASA caution range.
+Tinubdan: [DOST-PAGASA Heat Index](https://pagasa.dost.gov.ph/weather/heat-index).
+
 ### 3.3 Pagsabot han kabag-o
 
 An katapusan nga natipig nga pagbasa gimarkahan hin **RECENT** ha sulod hin 15 minutos, tapos **STALE**. An kabag-o basado ha timestamp han pagbasa. Diri ini **nga** nagpapatunay nga konektado o naka-calibrate an sensor. An marka nga **DEMO DATA** nangangahulogan nga an pagbasa gin-generate han app para hin preview ngan gin-i-exclude ha mga tagna.

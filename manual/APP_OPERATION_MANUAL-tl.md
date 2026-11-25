@@ -53,6 +53,17 @@ Ang mga DepEd 4H band na ginagamit ng app ay:
 | **Hinga** | 33–41 °C |
 | **Hinto** | 42 °C o mas mataas |
 
+Ipinapakita rin ng SchoolHeat ang kategoryang PAGASA batay sa epekto kasabay ng label na 4H. Display lamang ito; hindi nito binabago ang mga alerto o desisyon ng paaralan.
+
+| Kategorya ng PAGASA | Heat index |
+| --- | --- |
+| **Pag-iingat (Caution)** | 27–32 °C |
+| **Labis na Pag-iingat (Extreme Caution)** | 33–41 °C |
+| **Panganib (Danger)** | 42–51 °C |
+| **Labis na Panganib (Extreme Danger)** | 52 °C o mas mataas |
+
+Ang mga pagbasang mas mababa sa 27 °C ay nasa ibaba ng saklaw ng PAGASA caution. Pinagmulan: [DOST-PAGASA Heat Index](https://pagasa.dost.gov.ph/weather/heat-index).
+
 ### 3.3 Unawain ang freshness
 
 Ang pinakabagong naka-save na pagbasa ay minamarkahang **RECENT** sa loob ng hanggang 15 minuto, pagkatapos ay **STALE**. Batay sa timestamp ng pagbasa ang freshness. Hindi nito **pinatutunayan** na nakakonekta o na-calibrate ang isang sensor. Ang marker na **DEMO DATA** ay nangangahulugang ang pagbasa ay ginenerate ng app para sa preview at hindi kasama sa mga forecast.
