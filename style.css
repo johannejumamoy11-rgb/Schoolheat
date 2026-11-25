@@ -5222,7 +5222,7 @@ html[data-theme="dark"] .hotline-nav-btn.active {
   font-size: 0.58rem;
 }
 .status-pagasa span:first-child { color: var(--accent-blue); }
-.status-separator { color: inherit; font-weight: 600; }
+.status-separator { color: inherit; font-weight: 700; }
 .status-tier { color: inherit; font-weight: 700; }
 .classification-inline .status-pagasa,
 .classification-inline .pagasa-label,
@@ -5234,9 +5234,43 @@ html[data-theme="dark"] .hotline-nav-btn.active {
 .classification-inline .tt-pagasa { margin-top: 0; }
 .monitor-pagasa-status { margin-top: 4px; }
 .preview-pagasa { margin-top: 4px; }
-.history-pagasa { margin-top: 2px; font-size: 0.6rem; }
-.forecast-pagasa { margin-top: 3px; font-size: 0.58rem; }
-.heat-guidance-pagasa { font-size: 0.62rem; }
+.history-pagasa { margin-top: 2px; }
+.forecast-pagasa { margin-top: 3px; }
+
+.status-tier,
+.status-separator,
+.pagasa-label,
+.monitor-pagasa-status,
+.preview-pagasa,
+.history-pagasa,
+.forecast-pagasa,
+.heat-guidance-pagasa,
+.tt-pagasa,
+.status-pill,
+.monitor-gauge-status,
+.preview-status,
+.history-status,
+.forecast-day-label,
+.heat-guidance-level,
+.chart-legend > span:not(.legend-dot),
+.map-legend .legend-item {
+  text-transform: uppercase;
+}
+
+.monitor-gauge-status,
+.monitor-pagasa-status { font-size: 0.72rem; font-weight: 700; }
+.preview-status,
+.preview-pagasa { font-size: 0.72rem; font-weight: 700; }
+.history-status,
+.history-pagasa { font-size: 0.6rem; font-weight: 700; }
+.forecast-day-label,
+.forecast-pagasa { font-size: 0.55rem; font-weight: 700; }
+.heat-guidance-level,
+.heat-guidance-pagasa { font-size: 0.68rem; font-weight: 800; }
+.dashboard-gauge-caption .status-pill,
+.dashboard-gauge-caption .pagasa-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.04em; }
+.chart-legend > span:not(.legend-dot) { font-weight: 700; }
+.map-legend .legend-item { font-weight: 700; }
 .about-pagasa-note a { color: var(--accent-blue); }
 
 :focus-visible {

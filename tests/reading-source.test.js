@@ -661,7 +661,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v114/);
+  assert.match(serviceWorker, /schoolheat-v115/);
 
   for (const language of manuals) {
     const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
@@ -756,7 +756,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v114/);
+  assert.match(serviceWorker, /schoolheat-v115/);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8'), i18nContext);
@@ -878,6 +878,9 @@ test('adds a display-only PAGASA heat label beside each DepEd 4H classification'
   assert.match(style, /\.pagasa-label\.safe[\s\S]{0,400}color: var\(--status-safe\)/);
   assert.match(style, /\.pagasa-label\.extreme[\s\S]{0,400}color: var\(--status-extreme\)/);
   assert.match(style, /\.status-tier \{ color: inherit/);
+  assert.match(style, /\.status-tier,[\s\S]{0,500}text-transform: uppercase/);
+  assert.match(style, /\.heat-guidance-level,\s*\.heat-guidance-pagasa \{ font-size: 0\.68rem; font-weight: 800; \}/);
+  assert.match(style, /\.dashboard-gauge-caption \.status-pill,\s*\.dashboard-gauge-caption \.pagasa-label \{ font-size: 0\.65rem; font-weight: 700;/);
   assert.match(style, /\.gauge-range-key \{[\s\S]{0,240}grid-template-columns: repeat\(2/);
   assert.match(style, /\.gauge-range-key > span \{/);
   assert.match(style, /\.monitor-range-key \{[\s\S]{0,120}max-width: 320px/);
@@ -885,7 +888,7 @@ test('adds a display-only PAGASA heat label beside each DepEd 4H classification'
   assert.match(style, /\.dashboard-gauge-caption \.classification-inline,[\s\S]{0,120}flex-wrap: nowrap/);
   assert.match(script, /this\.renderDashboardLocationSummary\(\);\s*this\.renderSensorTrust\(\);\s*this\.updateDashboard\(\);\s*this\.updateMonitorGauge\(\);\s*this\.renderMap\(\);/);
   assert.match(script, /this\.currentTab === 'history'\) this\.renderHistory\(false\)/);
-  assert.match(serviceWorker, /schoolheat-v114/);
+  assert.match(serviceWorker, /schoolheat-v115/);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(locales, i18nContext);
