@@ -4430,6 +4430,25 @@ html[data-color-mode="automatic"][data-active-tab="hotlines"] {
   background: rgba(255, 173, 120, 0.08);
   color: #e6a174;
 }
+.dashboard-campus-reference {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dashboard-campus-reference img {
+  width: 100%;
+  aspect-ratio: 1303 / 492;
+  object-fit: cover;
+  border: 1px solid color-mix(in srgb, var(--brand-teal) 28%, var(--border));
+  border-radius: 11px;
+  background: var(--bg-primary);
+}
+.dashboard-campus-reference span {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
 .campus-preview-image-button {
   position: relative;
   display: block;

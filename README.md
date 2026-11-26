@@ -92,7 +92,8 @@ The campus view keeps the two-dimensional site map with the existing mapped
 coordinates. It also shows the school-provided Mahaplag National High School
 campus image in one framed card with a 3D-style pointer tilt. That image is an
 illustration, not a site map or shade measurement, so pins stay on the
-verified 2D map. A verified 3D campus model, approved student
+verified 2D map. The dashboard campus preview shows the same image above its
+2D map thumbnail. A verified 3D campus model, approved student
 comfort-feedback collection, and PDF reporting are not included; no geometry
 or feedback data is invented to simulate those features.
 

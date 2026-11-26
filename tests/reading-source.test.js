@@ -591,11 +591,15 @@ test('shows the school-provided campus image without presenting it as a measured
   assert.match(index, /id="campus-reference-stage"/);
   assert.match(index, /id="campus-reference-tilt"/);
   assert.match(index, /src="assets\/mnhs-campus-reference\.png"/);
+  assert.equal((index.match(/src="assets\/mnhs-campus-reference\.png"/g) || []).length, 2);
+  assert.match(index, /class="dashboard-campus-reference"/);
+  assert.match(index, /class="campus-preview-image-button"/);
   assert.match(index, /Illustration only · not a site map or shade measurement/);
   assert.match(index, /class="glass-card map-card"/);
   assert.doesNotMatch(index, /campus-gallery/);
   assert.doesNotMatch(index, /mnhs-campus-whole\.png/);
   assert.match(style, /\.campus-reference-view/);
+  assert.match(style, /\.dashboard-campus-reference/);
   assert.match(style, /\.campus-reference-tilt[\s\S]*?rotateX\(var\(--campus-rx/);
   assert.match(style, /prefers-reduced-motion: reduce/);
   assert.match(script, /setupCampusReferenceTilt\(\)/);
