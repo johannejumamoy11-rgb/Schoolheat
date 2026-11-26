@@ -579,42 +579,46 @@ test('keeps the offline shell independent of the optional campus illustration', 
   assert.doesNotMatch(index, /campus-heat-atlas\.svg/);
 });
 
-test('uses the interactive school map as the campus reference', () => {
+test('shows the school-provided campus image with pins on the interactive map', () => {
   const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
   const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
   const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
+  const referencePath = path.join(__dirname, '..', 'assets', 'mnhs-campus-reference.png');
   const mapPath = path.join(__dirname, '..', 'assets', 'campus-map.png');
 
+  assert.ok(fs.existsSync(referencePath), `${referencePath} exists`);
   assert.ok(fs.existsSync(mapPath), `${mapPath} exists`);
+  assert.match(serviceWorker, /\.\/assets\/mnhs-campus-reference\.png/);
   assert.match(serviceWorker, /\.\/assets\/campus-map\.png/);
-  assert.doesNotMatch(serviceWorker, /mnhs-campus-reference\.png/);
   assert.doesNotMatch(serviceWorker, /mnhs-campus-whole\.png/);
-  assert.equal((index.match(/src="assets\/campus-map\.png"/g) || []).length, 3);
-  assert.doesNotMatch(index, /mnhs-campus-reference\.png/);
+  assert.equal((index.match(/src="assets\/mnhs-campus-reference\.png"/g) || []).length, 2);
+  assert.equal((index.match(/src="assets\/campus-map\.png"/g) || []).length, 2);
   assert.doesNotMatch(index, /mnhs-campus-whole\.png/);
-  assert.doesNotMatch(index, /campus-reference-stage|campus-reference-tilt|campus-map-view|3D-style/);
-  assert.match(index, /<div class="glass-card map-card">/);
-  assert.match(index, /class="campus-reference-heading school-map-heading"/);
+  assert.doesNotMatch(index, /campus-gallery|school-map-heading/);
+  assert.match(index, /id="campus-reference-stage"/);
+  assert.match(index, /id="campus-reference-tilt"/);
   assert.match(index, /<h3>School map<\/h3>/);
-  assert.match(index, /dashboard-preview-tag">2D map/);
+  assert.match(index, /dashboard-preview-tag">3D-style/);
+  assert.match(index, /Illustration only · not a site map or shade measurement/);
   assert.match(index, /id="map-scroll-wrap"/);
   assert.match(index, /id="map-zoom-in"/);
   assert.match(index, /class="dashboard-campus-reference"/);
   assert.match(index, /class="campus-preview-image-button"/);
-  assert.doesNotMatch(index, /campus-gallery/);
-  assert.match(style, /\.school-map-heading/);
+  assert.match(style, /\.campus-reference-tilt[\s\S]*?rotateX\(var\(--campus-rx/);
+  assert.match(style, /\.campus-reference-view/);
   assert.match(style, /\.dashboard-campus-reference/);
-  assert.doesNotMatch(style, /\.campus-reference-tilt/);
-  assert.doesNotMatch(style, /\.campus-map-view/);
+  assert.match(style, /prefers-reduced-motion: reduce/);
+  assert.match(script, /setupCampusReferenceTilt\(\)/);
   assert.match(script, /setupMapZoomControls\(\)/);
-  assert.doesNotMatch(script, /setupCampusReferenceTilt/);
   assert.doesNotMatch(script, /setupCampusGallery/);
   assert.doesNotMatch(script, /campus-gallery-choice/);
 
   for (const label of [
     'MNHS CAMPUS VIEW',
     'School map',
-    '2D map'
+    '3D-style',
+    'Mahaplag National High School campus reference',
+    'Illustration only · not a site map or shade measurement'
   ]) {
     assert.match(locales, new RegExp(`'${label}':`));
   }

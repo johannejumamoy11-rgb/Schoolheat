@@ -392,7 +392,7 @@
             <span class="dashboard-preview-tag" id="dashboard-map-site-count">29 map pins</span>
           </div>
           <div class="dashboard-campus-reference">
-            <img src="assets/campus-map.png" alt="SchoolHeat's 2D campus site map with numbered buildings." loading="lazy" decoding="async">
+            <img src="assets/mnhs-campus-reference.png" alt="Mahaplag National High School campus reference" loading="lazy" decoding="async">
             <span>School map</span>
           </div>
           <button class="campus-preview-image-button" type="button" onclick="app.switchTab('map')" aria-label="Open the interactive campus map">
@@ -790,14 +790,24 @@
         <p class="panel-subtitle">Tap a mapped campus site to view heat status. The three study classrooms are selectable in Monitor but are not pinned without verified map coordinates.</p>
       </div>
 
-      <div class="glass-card map-card">
-        <div class="campus-reference-heading school-map-heading">
+      <div class="glass-card campus-reference-card">
+        <div class="campus-reference-heading">
           <div>
             <span class="dashboard-section-kicker">MNHS CAMPUS VIEW</span>
             <h3>School map</h3>
           </div>
-          <span class="dashboard-preview-tag">2D map</span>
+          <span class="dashboard-preview-tag">3D-style</span>
         </div>
+        <div class="campus-reference-stage" id="campus-reference-stage">
+          <div class="campus-reference-tilt campus-reference-view" id="campus-reference-tilt">
+            <img src="assets/mnhs-campus-reference.png" alt="Mahaplag National High School campus reference" loading="lazy" decoding="async">
+            <span class="campus-reference-glare" aria-hidden="true"></span>
+          </div>
+        </div>
+        <p>Illustration only · not a site map or shade measurement</p>
+      </div>
+
+      <div class="glass-card map-card">
         <div class="map-hint">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
           <span>Use the zoom controls, then scroll to explore the campus map</span>
