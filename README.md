@@ -89,11 +89,12 @@ confirm sensor calibration. The response guide provides general prompts for
 each 4H level; follow school policy and local advisories.
 
 The campus view uses the existing two-dimensional school map with its mapped
-pins and zoom controls. The same school map is shown in the framed campus
-reference card and in the dashboard campus preview; both are previews of the
-same map, not separate measured drawings. A verified 3D campus model,
-approved student comfort-feedback collection, and PDF reporting are not
-included; no geometry or feedback data is invented to simulate those features.
+pins and zoom controls. That interactive map is the campus reference; there is
+no separate static reference image in the Map tab. The dashboard campus
+preview stays a static thumbnail that opens the interactive map. A verified
+3D campus model, approved student comfort-feedback collection, and PDF
+reporting are not included; no geometry or feedback data is invented to
+simulate those features.
 
 The dashboard links to the interactive map, forecast, history analytics, and
 the local Ask SchoolHeat assistant. Its forecast preview uses the same

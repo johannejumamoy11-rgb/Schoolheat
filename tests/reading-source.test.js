@@ -579,7 +579,7 @@ test('keeps the offline shell independent of the optional campus illustration', 
   assert.doesNotMatch(index, /campus-heat-atlas\.svg/);
 });
 
-test('uses the school map for the campus reference previews', () => {
+test('uses the interactive school map as the campus reference', () => {
   const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
   const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
   const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
@@ -589,32 +589,32 @@ test('uses the school map for the campus reference previews', () => {
   assert.match(serviceWorker, /\.\/assets\/campus-map\.png/);
   assert.doesNotMatch(serviceWorker, /mnhs-campus-reference\.png/);
   assert.doesNotMatch(serviceWorker, /mnhs-campus-whole\.png/);
-  assert.match(index, /id="campus-reference-stage"/);
-  assert.match(index, /id="campus-reference-tilt"/);
-  assert.equal((index.match(/src="assets\/campus-map\.png"/g) || []).length, 4);
+  assert.equal((index.match(/src="assets\/campus-map\.png"/g) || []).length, 3);
   assert.doesNotMatch(index, /mnhs-campus-reference\.png/);
   assert.doesNotMatch(index, /mnhs-campus-whole\.png/);
-  assert.doesNotMatch(index, /3D-style/);
+  assert.doesNotMatch(index, /campus-reference-stage|campus-reference-tilt|campus-map-view|3D-style/);
+  assert.match(index, /<div class="glass-card map-card">/);
+  assert.match(index, /class="campus-reference-heading school-map-heading"/);
   assert.match(index, /<h3>School map<\/h3>/);
   assert.match(index, /dashboard-preview-tag">2D map/);
+  assert.match(index, /id="map-scroll-wrap"/);
+  assert.match(index, /id="map-zoom-in"/);
   assert.match(index, /class="dashboard-campus-reference"/);
   assert.match(index, /class="campus-preview-image-button"/);
-  assert.match(index, /The map shows saved readings only; locations without readings remain unclassified\./);
-  assert.match(index, /class="glass-card map-card"/);
   assert.doesNotMatch(index, /campus-gallery/);
-  assert.match(style, /\.campus-map-view/);
+  assert.match(style, /\.school-map-heading/);
   assert.match(style, /\.dashboard-campus-reference/);
-  assert.match(style, /\.campus-reference-tilt[\s\S]*?rotateX\(var\(--campus-rx/);
-  assert.match(style, /prefers-reduced-motion: reduce/);
-  assert.match(script, /setupCampusReferenceTilt\(\)/);
+  assert.doesNotMatch(style, /\.campus-reference-tilt/);
+  assert.doesNotMatch(style, /\.campus-map-view/);
+  assert.match(script, /setupMapZoomControls\(\)/);
+  assert.doesNotMatch(script, /setupCampusReferenceTilt/);
   assert.doesNotMatch(script, /setupCampusGallery/);
   assert.doesNotMatch(script, /campus-gallery-choice/);
 
   for (const label of [
     'MNHS CAMPUS VIEW',
     'School map',
-    '2D map',
-    'The map shows saved readings only; locations without readings remain unclassified.'
+    '2D map'
   ]) {
     assert.match(locales, new RegExp(`'${label}':`));
   }
