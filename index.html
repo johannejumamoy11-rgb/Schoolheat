@@ -795,12 +795,23 @@
           <span class="dashboard-preview-tag">3D-style</span>
         </div>
         <div class="campus-reference-stage" id="campus-reference-stage">
-          <div class="campus-reference-tilt" id="campus-reference-tilt">
-            <img src="assets/mnhs-campus-reference.png" alt="Mahaplag National High School campus reference" loading="lazy" decoding="async">
+          <div class="campus-reference-tilt campus-gallery-view" id="campus-reference-tilt">
+            <div class="campus-gallery-backdrop" id="campus-gallery-backdrop" aria-hidden="true"></div>
+            <img id="campus-gallery-image" src="assets/mnhs-campus-google.jpg" alt="Mahaplag National High School campus reference" loading="lazy" decoding="async">
             <span class="campus-reference-glare" aria-hidden="true"></span>
           </div>
         </div>
-        <p>Illustration only · not a site map or shade measurement</p>
+        <div class="campus-gallery-choices" id="campus-gallery-choices" role="group" aria-label="Campus image source">
+          <button type="button" class="campus-gallery-choice active" data-campus-image="assets/mnhs-campus-google.jpg" aria-pressed="true">
+            <img src="assets/mnhs-campus-google.jpg" alt="" aria-hidden="true">
+            <span>Google Maps</span>
+          </button>
+          <button type="button" class="campus-gallery-choice" data-campus-image="assets/mnhs-campus-website.webp" aria-pressed="false">
+            <img src="assets/mnhs-campus-website.webp" alt="" aria-hidden="true">
+            <span>Website</span>
+          </button>
+        </div>
+        <p>Sources: Google Maps listing and MNHS website · not a site map or shade measurement</p>
       </div>
 
       <div class="glass-card map-card">

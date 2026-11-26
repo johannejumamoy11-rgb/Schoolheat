@@ -579,29 +579,39 @@ test('keeps the offline shell independent of the optional campus illustration', 
   assert.doesNotMatch(index, /campus-heat-atlas\.svg/);
 });
 
-test('shows the school-provided campus reference as an illustration, not a measured map', () => {
+test('shows credited campus photo choices without presenting them as a measured map', () => {
   const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
   const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
   const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
-  const referencePath = path.join(__dirname, '..', 'assets', 'mnhs-campus-reference.png');
+  const assetDir = path.join(__dirname, '..', 'assets');
+  const assets = ['mnhs-campus-google.jpg', 'mnhs-campus-website.webp'];
 
-  assert.ok(fs.existsSync(referencePath), `${referencePath} exists`);
-  assert.match(index, /id="campus-reference-stage"/);
-  assert.match(index, /id="campus-reference-tilt"/);
-  assert.match(index, /src="assets\/mnhs-campus-reference\.png"/);
-  assert.match(index, /Illustration only · not a site map or shade measurement/);
+  for (const asset of assets) {
+    assert.ok(fs.existsSync(path.join(assetDir, asset)), `${asset} exists`);
+    assert.match(serviceWorker, new RegExp(`\\./assets/${asset.replace('.', '\\.')}`));
+  }
+
+  assert.match(index, /id="campus-gallery-image"/);
+  assert.match(index, /id="campus-gallery-choices"/);
+  assert.match(index, /data-campus-image="assets\/mnhs-campus-google\.jpg"/);
+  assert.match(index, /data-campus-image="assets\/mnhs-campus-website\.webp"/);
+  assert.match(index, /Sources: Google Maps listing and MNHS website · not a site map or shade measurement/);
   assert.match(index, /class="glass-card map-card"/);
+  assert.match(style, /\.campus-gallery-backdrop/);
+  assert.match(style, /\.campus-gallery-choice\.active/);
   assert.match(style, /\.campus-reference-tilt[\s\S]*?rotateX\(var\(--campus-rx/);
   assert.match(style, /prefers-reduced-motion: reduce/);
-  assert.match(script, /setupCampusReferenceTilt\(\)/);
-  assert.match(script, /--campus-ry/);
-  assert.match(serviceWorker, /\.\/assets\/mnhs-campus-reference\.png/);
+  assert.match(script, /setupCampusGallery\(\)/);
+  assert.match(script, /campus-gallery-choice/);
+  assert.match(script, /setBackdrop\(source\)/);
 
   for (const label of [
     'MNHS CAMPUS VIEW',
     'Campus reference',
-    'Mahaplag National High School campus reference',
-    '3D-style'
+    'Campus image source',
+    'Website',
+    '3D-style',
+    'Sources: Google Maps listing and MNHS website · not a site map or shade measurement'
   ]) {
     assert.match(locales, new RegExp(`'${label}':`));
   }
