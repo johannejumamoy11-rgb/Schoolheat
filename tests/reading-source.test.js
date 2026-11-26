@@ -608,6 +608,11 @@ test('shows one flat campus map with user-marked pins', () => {
   assert.match(style, /\.campus-map-pins \.map-pin\.tooltip-left \.map-pin-tooltip/);
   assert.match(style, /\.dashboard-map-preview/);
   assert.match(style, /\.dashboard-map-pin/);
+  assert.match(style, /\.campus-map-pins \.map-pin\s*\{[^}]*width: 22px;[^}]*height: 22px;/);
+  assert.match(style, /\.campus-map-pins \.map-pin::before\s*\{[^}]*width: 16px;[^}]*height: 16px;/);
+  assert.match(style, /border: 2px solid #fffdf6;/);
+  assert.match(style, /--pin-ring: 0 0 0 2px rgba\(8, 16, 14, 0\.92\)/);
+  assert.match(style, /\.dashboard-map-pin\s*\{[^}]*width: 8px;[^}]*height: 8px;/);
   assert.doesNotMatch(style, /\.campus-reference-tilt|rotateX\(var\(--campus-rx/);
   assert.doesNotMatch(style, /\.map-fallback|\.svg-map/);
   assert.match(script, /const CAMPUS_IMAGE_PINS = \[/);
@@ -716,7 +721,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v119/);
+  assert.match(serviceWorker, /schoolheat-v120/);
 
   for (const language of manuals) {
     const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
@@ -811,7 +816,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v119/);
+  assert.match(serviceWorker, /schoolheat-v120/);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8'), i18nContext);
