@@ -88,16 +88,14 @@ on the reading timestamp, not a sensor connection, and a recent label does not
 confirm sensor calibration. The response guide provides general prompts for
 each 4H level; follow school policy and local advisories.
 
-The campus view keeps the two-dimensional school map with its mapped pins and
-zoom controls. It also shows the school-provided Mahaplag National High School
-campus image in one framed card with a 3D-style pointer tilt. The 29 pins on
-that image use the building positions marked by the user on a copy of the same
-image; they are not measured coordinates. The interactive map below keeps its
-original 29 pins, zoom controls, and status tooltips. The dashboard campus
-preview shows the same image and opens the interactive map. A verified 3D
-campus model, approved student comfort-feedback collection, and PDF reporting
-are not included; no geometry or feedback data is invented to simulate those
-features.
+The campus view uses one flat map: the school-provided Mahaplag National High
+School campus image with 29 heat pins, zoom controls, and status tooltips.
+The pin positions follow the building numbers marked by the user on a copy of
+that same image; they are not measured coordinates. The dashboard campus card
+is only a preview of this same flat map and opens it. There is no second map,
+pointer tilt, or 3D-style effect. A verified 3D campus model, approved student
+comfort-feedback collection, and PDF reporting are not included; no geometry
+or feedback data is invented to simulate those features.
 
 The dashboard links to the interactive map, forecast, history analytics, and
 the local Ask SchoolHeat assistant. Its forecast preview uses the same

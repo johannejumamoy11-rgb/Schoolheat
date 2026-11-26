@@ -387,17 +387,21 @@
           <div class="dashboard-preview-heading">
             <div>
               <span class="dashboard-section-kicker">CAMPUS INTELLIGENCE</span>
-              <h3>2D Campus Map</h3>
+              <h3>School map</h3>
             </div>
             <span class="dashboard-preview-tag" id="dashboard-map-site-count">29 map pins</span>
           </div>
-          <div class="dashboard-campus-reference">
-            <img src="assets/mnhs-campus-reference.png" alt="Mahaplag National High School campus reference" loading="lazy" decoding="async">
-            <span>School map</span>
-          </div>
-          <button class="campus-preview-image-button" type="button" onclick="app.switchTab('map')" aria-label="Open the interactive campus map">
-            <img src="assets/campus-map.png" alt="SchoolHeat's 2D campus site map with numbered buildings." loading="lazy" decoding="async">
-            <span>Open interactive map <span aria-hidden="true">↗</span></span>
+          <button class="dashboard-campus-reference dashboard-map-preview-button" type="button" onclick="app.switchTab('map')" aria-label="Open the interactive campus map">
+            <span class="dashboard-map-preview">
+              <img src="assets/mnhs-campus-reference.png" alt="Mahaplag National High School campus map with heat pins" loading="lazy" decoding="async">
+              <span class="dashboard-map-pins" id="dashboard-map-pins" aria-hidden="true"></span>
+            </span>
+            <span class="dashboard-map-preview-label">
+              <span>School map</span>
+              <span aria-hidden="true">·</span>
+              <span>Open interactive map</span>
+              <span aria-hidden="true">↗</span>
+            </span>
           </button>
           <p id="dashboard-map-summary">The map shows saved readings, including demo data; locations without readings remain unclassified.</p>
           <p class="dashboard-preview-note">A verified 3D campus model is not available. Map markers do not imply that every building has its own sensor.</p>
@@ -790,25 +794,13 @@
         <p class="panel-subtitle">Tap a mapped campus site to view heat status. The three study classrooms are selectable in Monitor but are not pinned without verified map coordinates.</p>
       </div>
 
-      <div class="glass-card campus-reference-card">
+      <div class="glass-card map-card campus-map-card">
         <div class="campus-reference-heading">
           <div>
             <span class="dashboard-section-kicker">MNHS CAMPUS VIEW</span>
             <h3>School map</h3>
           </div>
-          <span class="dashboard-preview-tag">3D-style</span>
         </div>
-        <div class="campus-reference-stage" id="campus-reference-stage">
-          <div class="campus-reference-tilt campus-reference-view" id="campus-reference-tilt">
-            <img src="assets/mnhs-campus-reference.png" alt="Mahaplag National High School campus reference" loading="lazy" decoding="async">
-            <div class="campus-reference-pins" id="campus-reference-pins"></div>
-            <span class="campus-reference-glare" aria-hidden="true"></span>
-          </div>
-        </div>
-        <p id="campus-reference-caption">Pins follow the marked building positions; image is illustrative.</p>
-      </div>
-
-      <div class="glass-card map-card">
         <div class="map-hint">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
           <span>Use the zoom controls, then scroll to explore the campus map</span>
@@ -821,44 +813,14 @@
         </div>
         <div class="map-scroll-wrap" id="map-scroll-wrap">
           <div class="map-wrap" id="map-wrap">
-            <img 
-              src="assets/campus-map.png" 
-              alt="Campus Map" 
-              class="map-image" 
+            <img
+              src="assets/mnhs-campus-reference.png"
+              alt="Mahaplag National High School campus map with heat pins"
+              class="map-image"
               id="map-img"
               onload="if (window.app && typeof window.app.syncMapPins === 'function') window.app.syncMapPins()"
-              onerror="app.tryNextMapImage(this)"
-              data-attempt="0"
             >
-            <div class="map-fallback" id="map-fallback">
-              <svg class="svg-map" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-                <defs>
-                  <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                    <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.3"/>
-                  </pattern>
-                </defs>
-                <rect width="100" height="100" fill="url(#grid)" rx="2"/>
-                <rect x="5" y="5" width="90" height="90" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.5" rx="2"/>
-                <rect x="15" y="15" width="20" height="12" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" rx="1"/>
-                <rect x="42" y="15" width="16" height="12" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" rx="1"/>
-                <rect x="65" y="15" width="20" height="12" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" rx="1"/>
-                <rect x="15" y="35" width="14" height="10" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" rx="1"/>
-                <rect x="35" y="35" width="14" height="10" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" rx="1"/>
-                <rect x="55" y="35" width="14" height="10" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" rx="1"/>
-                <rect x="75" y="35" width="14" height="10" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" rx="1"/>
-                <rect x="15" y="52" width="12" height="10" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" rx="1"/>
-                <rect x="32" y="52" width="12" height="10" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" rx="1"/>
-                <rect x="49" y="52" width="12" height="10" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" rx="1"/>
-                <rect x="66" y="52" width="12" height="10" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" rx="1"/>
-                <rect x="83" y="52" width="12" height="10" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.15)" rx="1"/>
-                <rect x="20" y="70" width="60" height="8" fill="rgba(16,185,129,0.06)" stroke="rgba(16,185,129,0.12)" rx="1"/>
-                <rect x="15" y="85" width="25" height="8" fill="rgba(245,158,11,0.06)" stroke="rgba(245,158,11,0.12)" rx="1"/>
-                <rect x="50" y="85" width="35" height="8" fill="rgba(245,158,11,0.06)" stroke="rgba(245,158,11,0.12)" rx="1"/>
-                <text x="50" y="50" text-anchor="middle" fill="rgba(255,255,255,0.15)" font-size="4" font-family="Inter, sans-serif">CAMPUS MAP</text>
-                <text x="50" y="55" text-anchor="middle" fill="rgba(255,255,255,0.08)" font-size="2.5" font-family="Inter, sans-serif">Upload campus-map.jpg for full map</text>
-              </svg>
-            </div>
-            <div class="map-pins" id="map-pins"></div>
+            <div class="map-pins campus-map-pins" id="map-pins"></div>
           </div>
         </div>
         <div class="map-legend">
@@ -869,6 +831,7 @@
           <div class="legend-item"><span class="legend-pin nodata"></span><span>No Data</span></div>
         </div>
         <p class="map-data-note">Each pin reflects only the latest saved record for that mapped location. Demo and historical readings are labeled in the pin details; no value is copied to sites without a reading. A recent timestamp is not proof of a current device connection.</p>
+        <p id="campus-reference-caption">Flat campus image · pins follow the marked building positions.</p>
       </div>
     </section>
 

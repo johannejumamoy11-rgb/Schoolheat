@@ -550,7 +550,6 @@ class SchoolHeatApp {
     this.setupDistributionObserver();
     this.setupPullToRefresh();
     this.setupMapZoomControls();
-    this.setupCampusReferenceTilt();
     this.setupResizeHandler();
     this.setupOfflineAndInstall();
     try {
@@ -864,29 +863,6 @@ class SchoolHeatApp {
     });
     document.getElementById('map-zoom-reset')?.addEventListener('click', () => {
       this.setMapZoom(1);
-    });
-  }
-
-  setupCampusReferenceTilt() {
-    const stage = document.getElementById('campus-reference-stage');
-    const tilt = document.getElementById('campus-reference-tilt');
-    if (!stage || !tilt) return;
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-
-    stage.addEventListener('pointermove', event => {
-      const rect = tilt.getBoundingClientRect();
-      if (!rect.width || !rect.height) return;
-      const px = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
-      const py = Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height));
-      tilt.style.setProperty('--campus-ry', `${((px - 0.5) * 16).toFixed(2)}deg`);
-      tilt.style.setProperty('--campus-rx', `${((0.5 - py) * 10).toFixed(2)}deg`);
-      tilt.style.setProperty('--campus-glare', (0.06 + (1 - px) * 0.12).toFixed(2));
-    });
-
-    stage.addEventListener('pointerleave', () => {
-      tilt.style.setProperty('--campus-ry', '0deg');
-      tilt.style.setProperty('--campus-rx', '0deg');
-      tilt.style.setProperty('--campus-glare', '0');
     });
   }
 
@@ -2899,6 +2875,18 @@ class SchoolHeatApp {
         : this.translateText('No saved readings are available for any mapped pin yet.');
     }
 
+    const dashboardPins = document.getElementById('dashboard-map-pins');
+    if (dashboardPins) {
+      dashboardPins.innerHTML = CAMPUS_IMAGE_PINS.map(pin => {
+        const loc = LOCATIONS[pin.number - 1];
+        if (!loc) return '';
+        const reading = latestByLoc.get(loc.name);
+        const heatIndex = Number(reading?.heatIndex);
+        const status = reading && this.hasValidMeasurement(reading) ? this.getStatus(heatIndex) : 'nodata';
+        return `<span class="dashboard-map-pin ${status}" style="left:${pin.x}%;top:${pin.y}%"></span>`;
+      }).join('');
+    }
+
     const coverageCount = document.getElementById('dashboard-coverage-count');
     const coverageTotal = document.getElementById('dashboard-coverage-total');
     const coverageMissing = document.getElementById('dashboard-coverage-missing');
@@ -4882,14 +4870,7 @@ class SchoolHeatApp {
 
     const pinsContainer = document.getElementById('map-pins');
     if (pinsContainer) {
-      pinsContainer.innerHTML = LOCATIONS.map(loc => pinMarkup(loc, latestByLoc[loc.name], loc.x, loc.y)).join('');
-      bindPins(pinsContainer);
-      this.syncMapPins();
-    }
-
-    const referencePins = document.getElementById('campus-reference-pins');
-    if (referencePins) {
-      referencePins.innerHTML = CAMPUS_IMAGE_PINS.map(pin => {
+      pinsContainer.innerHTML = CAMPUS_IMAGE_PINS.map(pin => {
         const loc = LOCATIONS[pin.number - 1];
         if (!loc) return '';
         const edgeClasses = [];
@@ -4898,7 +4879,8 @@ class SchoolHeatApp {
         if (pin.x > 73) edgeClasses.push('tooltip-left');
         return pinMarkup(loc, latestByLoc[loc.name], pin.x, pin.y, edgeClasses.join(' '));
       }).join('');
-      bindPins(referencePins);
+      bindPins(pinsContainer);
+      this.syncMapPins();
     }
   }
 
@@ -4918,59 +4900,20 @@ class SchoolHeatApp {
     const mapImg = document.getElementById('map-img');
     const pinsContainer = document.getElementById('map-pins');
     const mapWrap = document.getElementById('map-wrap');
-    const fallback = document.getElementById('map-fallback');
     if (!pinsContainer || !mapWrap) return;
 
     pinsContainer.style.right = 'auto';
     pinsContainer.style.bottom = 'auto';
 
-    if (mapImg && mapImg.complete && mapImg.naturalWidth > 0 && mapImg.style.display !== 'none') {
+    if (mapImg && mapImg.complete && mapImg.naturalWidth > 0) {
       pinsContainer.style.width = mapImg.clientWidth + 'px';
       pinsContainer.style.height = mapImg.clientHeight + 'px';
-      if (fallback) fallback.classList.remove('active');
       return;
-    }
-
-    if (fallback && fallback.classList.contains('active')) {
-      const svg = fallback.querySelector('.svg-map');
-      if (svg) {
-        const rect = svg.getBoundingClientRect();
-        pinsContainer.style.width = rect.width + 'px';
-        pinsContainer.style.height = rect.height + 'px';
-        return;
-      }
     }
 
     const wrapRect = mapWrap.getBoundingClientRect();
     pinsContainer.style.width = Math.max(wrapRect.width - 32, 300) + 'px';
     pinsContainer.style.height = Math.max(wrapRect.height - 32, 300) + 'px';
-  }
-
-  tryNextMapImage(img) {
-    if (!img) return;
-    const attempts = [
-      'assets/campus-map.jpg',
-      'assets/campus-map.png',
-      'assets/campus-map.jpeg',
-      'assets/map.jpg',
-      'assets/map.png',
-      'assets/school-map.jpg',
-      'assets/school-map.png'
-    ];
-    let current = parseInt(img.dataset.attempt || '0');
-    current++;
-    if (current < attempts.length) {
-      img.dataset.attempt = current;
-      img.src = attempts[current];
-    } else {
-      img.style.display = 'none';
-      const fallback = document.getElementById('map-fallback');
-      if (fallback) {
-        fallback.classList.add('active');
-        fallback.style.display = 'block';
-      }
-      this.syncMapPins();
-    }
   }
 
   applySettings() {
@@ -5364,10 +5307,6 @@ class SchoolHeatApp {
         this.renderMap();
         this.applyMapZoom();
         this.syncMapPins();
-        const img = document.getElementById('map-img');
-        if (img && !img.src && img.dataset.attempt === '0') {
-          img.src = 'assets/campus-map.jpg';
-        }
       }, 100);
     }
     if (tabId === 'dashboard') {

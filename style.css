@@ -1687,141 +1687,65 @@ html[data-theme="dark"] .ambient-orb {
   display: block;
   width: 100%;
   min-width: 340px;
+  aspect-ratio: 1303 / 492;
   height: auto;
+  object-fit: contain;
+  border: 1px solid color-mix(in srgb, var(--brand-teal) 28%, var(--border));
   border-radius: var(--radius-sm);
-  background: rgba(255,255,255,0.03);
+  background: var(--bg-primary);
 }
 
-.campus-reference-card {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 12px;
-  padding: clamp(16px, 2.4vw, 22px);
-}
 .campus-reference-heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  padding: 14px 16px 4px;
 }
 .campus-reference-heading h3 {
   margin: 4px 0 0;
   font-size: 1rem;
 }
-.campus-reference-stage {
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  padding: 14px;
-  border-radius: var(--radius-sm);
-  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--brand-teal) 12%, var(--bg-primary)), var(--bg-primary));
-  perspective: 1200px;
+.campus-map-card > p {
+  margin: 0;
+  padding: 10px 16px 14px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
 }
-.campus-reference-tilt {
-  position: relative;
-  width: 100%;
-  max-width: 960px;
-  overflow: hidden;
-  border-radius: 14px;
-  transform: rotateX(var(--campus-rx, 0deg)) rotateY(var(--campus-ry, 0deg));
-  transform-style: preserve-3d;
-  transition: transform 150ms ease-out;
-  box-shadow: 0 24px 48px rgba(0,0,0,0.28);
-  will-change: transform;
-}
-.campus-reference-view {
-  aspect-ratio: 1303 / 492;
-  border: 1px solid color-mix(in srgb, var(--brand-teal) 28%, var(--border));
-  background: var(--bg-primary);
-}
-.campus-reference-view > img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: translateZ(18px) scale(1.01);
-}
-.campus-reference-pins {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-  transform: translateZ(24px);
-}
-.campus-reference-pins .map-pin {
+
+.campus-map-pins .map-pin {
   width: 14px;
   height: 14px;
 }
-.campus-reference-pins .map-pin::before {
+.campus-map-pins .map-pin::before {
   width: 10px;
   height: 10px;
 }
-.campus-reference-pins .map-pin-tooltip {
+.campus-map-pins .map-pin-tooltip {
   bottom: 16px;
   padding: 3px 5px;
   font-size: 0.58rem;
   line-height: 1.15;
 }
-.campus-reference-pins .map-pin.tooltip-below .map-pin-tooltip {
+.campus-map-pins .map-pin.tooltip-below .map-pin-tooltip {
   bottom: auto;
   top: 12px;
 }
-.campus-reference-pins .map-pin.tooltip-right .map-pin-tooltip {
+.campus-map-pins .map-pin.tooltip-right .map-pin-tooltip {
   left: 0;
   transform: translateX(0) scale(0.9);
 }
-.campus-reference-pins .map-pin.tooltip-left .map-pin-tooltip {
+.campus-map-pins .map-pin.tooltip-left .map-pin-tooltip {
   left: auto;
   right: 0;
   transform: translateX(0) scale(0.9);
 }
-.campus-reference-pins .map-pin.tooltip-right:hover .map-pin-tooltip,
-.campus-reference-pins .map-pin.tooltip-right.active .map-pin-tooltip,
-.campus-reference-pins .map-pin.tooltip-left:hover .map-pin-tooltip,
-.campus-reference-pins .map-pin.tooltip-left.active .map-pin-tooltip {
+.campus-map-pins .map-pin.tooltip-right:hover .map-pin-tooltip,
+.campus-map-pins .map-pin.tooltip-right.active .map-pin-tooltip,
+.campus-map-pins .map-pin.tooltip-left:hover .map-pin-tooltip,
+.campus-map-pins .map-pin.tooltip-left.active .map-pin-tooltip {
   transform: translateX(0) scale(1);
-}
-.campus-reference-glare {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  background: linear-gradient(115deg, rgba(255,255,255,var(--campus-glare, 0)) 0%, rgba(255,255,255,0) 45%);
-  transform: translateZ(20px);
-}
-.campus-reference-card > p {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  line-height: 1.5;
-}
-@media (prefers-reduced-motion: reduce) {
-  .campus-reference-tilt {
-    transform: none !important;
-    transition: none;
-  }
-}
-
-.map-fallback {
-  display: none;
-  width: 100%;
-  min-width: 340px;
-  min-height: 320px;
-  padding: 0;
-  position: relative;
-}
-.map-fallback.active {
-  display: block;
-}
-
-.svg-map {
-  width: 100%;
-  height: auto;
-  min-height: 320px;
-  display: block;
-  border-radius: var(--radius-sm);
-  background: rgba(10, 10, 25, 0.6);
 }
 
 .map-pins {
@@ -2471,7 +2395,6 @@ html[data-theme="dark"] .nav-btn.active { color: #8ce0df; }
 .btn-icon:hover { background: var(--bg-card-hover); color: var(--text-primary); }
 .map-legend { background: var(--bg-card); }
 .map-pin-tooltip { background: var(--bg-card); }
-.svg-map { background: var(--bg-primary); }
 .app-footer { color: var(--text-secondary); }
 
 @media (min-width: 768px) {
@@ -4475,47 +4398,60 @@ html[data-color-mode="automatic"][data-active-tab="hotlines"] {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
-.dashboard-campus-reference img {
+.dashboard-map-preview {
+  position: relative;
+  display: block;
   width: 100%;
   aspect-ratio: 1303 / 492;
-  object-fit: cover;
+  overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--brand-teal) 28%, var(--border));
   border-radius: 11px;
   background: var(--bg-primary);
 }
-.dashboard-campus-reference span {
+.dashboard-map-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 180ms ease;
+}
+.dashboard-map-preview-button:hover img { transform: scale(1.015); }
+.dashboard-map-pins {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.dashboard-map-pin {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0,0,0,0.6);
+}
+.dashboard-map-pin.safe { background: var(--safe); }
+.dashboard-map-pin.caution { background: var(--caution); }
+.dashboard-map-pin.danger { background: var(--danger); }
+.dashboard-map-pin.extreme { background: var(--extreme); }
+.dashboard-map-pin.nodata { background: var(--text-muted); }
+.dashboard-map-preview-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   color: var(--text-muted);
   font-size: 0.65rem;
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
-.campus-preview-image-button {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: clamp(155px, 22vw, 225px);
-  overflow: hidden;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 13px;
-  background: #e9edf0;
-  cursor: pointer;
-}
-.campus-preview-image-button img { width: 100%; height: 100%; object-fit: contain; }
-.campus-preview-image-button > span {
-  position: absolute;
-  right: 9px;
-  bottom: 9px;
-  padding: 7px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.17);
-  border-radius: 9px;
-  background: rgba(8, 20, 33, 0.87);
-  color: #f4f8ff;
-  font-size: 0.67rem;
-  font-weight: 720;
-}
-.campus-preview-image-button:hover img { transform: scale(1.015); }
 
 /* Study-atlas gauge and palette refinements */
 .reading-gauge-wrap,
@@ -4683,7 +4619,6 @@ html[data-color-mode="automatic"][data-active-tab="hotlines"] {
     font-size: 0.52rem;
   }
 }
-.campus-preview-image-button img { transition: transform 180ms ease; }
 .dashboard-preview-card > p,
 .dashboard-preview-note {
   margin: 0;
@@ -4813,7 +4748,7 @@ html[data-color-mode="automatic"][data-active-tab="hotlines"] {
   background: color-mix(in srgb, var(--brand-teal) 9%, var(--bg-card-hover));
 }
 .dashboard-action-card:focus-visible,
-.campus-preview-image-button:focus-visible {
+.dashboard-map-preview-button:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--brand-teal) 75%, white);
   outline-offset: 3px;
 }
@@ -4842,7 +4777,6 @@ html[data-color-mode="automatic"][data-active-tab="hotlines"] {
   .dashboard-hero-meta > div { min-width: calc(50% - 5px); flex: 1 1 calc(50% - 5px); }
   .dashboard-insights { grid-template-columns: minmax(0, 1fr); gap: 11px; }
   .dashboard-preview-card { min-height: 0; }
-  .campus-preview-image-button { height: min(58vw, 240px); }
 }
 @media (max-width: 480px) {
   #tab-dashboard.active { gap: 13px; }
@@ -4863,7 +4797,7 @@ html[data-color-mode="automatic"][data-active-tab="hotlines"] {
   .dashboard-forecast-content canvas { height: 135px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .campus-preview-image-button img,
+  .dashboard-map-preview img,
   .dashboard-action-card { transition: none; }
   .dashboard-action-card:hover { transform: none; }
 }

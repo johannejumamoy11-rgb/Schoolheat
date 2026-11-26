@@ -579,61 +579,56 @@ test('keeps the offline shell independent of the optional campus illustration', 
   assert.doesNotMatch(index, /campus-heat-atlas\.svg/);
 });
 
-test('shows the school-provided campus image with user-marked pins', () => {
+test('shows one flat campus map with user-marked pins', () => {
   const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
   const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
   const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
   const referencePath = path.join(__dirname, '..', 'assets', 'mnhs-campus-reference.png');
-  const mapPath = path.join(__dirname, '..', 'assets', 'campus-map.png');
 
   assert.ok(fs.existsSync(referencePath), `${referencePath} exists`);
-  assert.ok(fs.existsSync(mapPath), `${mapPath} exists`);
   assert.match(serviceWorker, /\.\/assets\/mnhs-campus-reference\.png/);
-  assert.match(serviceWorker, /\.\/assets\/campus-map\.png/);
+  assert.doesNotMatch(serviceWorker, /campus-map\.(png|jpg)/);
   assert.doesNotMatch(serviceWorker, /mnhs-campus-whole\.png/);
   assert.equal((index.match(/src="assets\/mnhs-campus-reference\.png"/g) || []).length, 2);
-  assert.equal((index.match(/src="assets\/campus-map\.png"/g) || []).length, 2);
+  assert.doesNotMatch(index, /assets\/campus-map\.(png|jpg)/);
   assert.doesNotMatch(index, /mnhs-campus-whole\.png/);
   assert.doesNotMatch(index, /campus-gallery|school-map-heading/);
-  assert.match(index, /id="campus-reference-stage"/);
-  assert.match(index, /id="campus-reference-tilt"/);
-  assert.match(index, /id="campus-reference-pins"/);
+  assert.doesNotMatch(index, /campus-reference-(stage|tilt|glare)/);
+  assert.doesNotMatch(index, /3D-style|map-fallback|campus-preview-image-button/);
+  assert.match(index, /id="map-pins"/);
+  assert.doesNotMatch(index, /id="campus-reference-pins"/);
   assert.match(index, /id="campus-reference-caption"/);
+  assert.match(index, /Flat campus image · pins follow the marked building positions\./);
   assert.match(index, /<h3>School map<\/h3>/);
-  assert.match(index, /dashboard-preview-tag">3D-style/);
-  assert.match(index, /Pins follow the marked building positions; image is illustrative\./);
   assert.match(index, /id="map-scroll-wrap"/);
   assert.match(index, /id="map-zoom-in"/);
-  assert.match(index, /class="dashboard-campus-reference"/);
-  assert.match(index, /class="campus-preview-image-button"/);
-  assert.match(style, /\.campus-reference-tilt[\s\S]*?rotateX\(var\(--campus-rx/);
-  assert.match(style, /\.campus-reference-view/);
-  assert.match(style, /\.campus-reference-pins/);
-  assert.match(style, /\.campus-reference-pins \.map-pin\.tooltip-below \.map-pin-tooltip/);
-  assert.match(style, /\.campus-reference-pins \.map-pin\.tooltip-right \.map-pin-tooltip/);
-  assert.match(style, /\.campus-reference-pins \.map-pin\.tooltip-left \.map-pin-tooltip/);
-  assert.match(style, /\.dashboard-campus-reference/);
-  assert.match(style, /prefers-reduced-motion: reduce/);
+  assert.match(index, /dashboard-map-preview-button/);
+  assert.match(style, /\.campus-map-pins \.map-pin\.tooltip-below \.map-pin-tooltip/);
+  assert.match(style, /\.campus-map-pins \.map-pin\.tooltip-right \.map-pin-tooltip/);
+  assert.match(style, /\.campus-map-pins \.map-pin\.tooltip-left \.map-pin-tooltip/);
+  assert.match(style, /\.dashboard-map-preview/);
+  assert.match(style, /\.dashboard-map-pin/);
+  assert.doesNotMatch(style, /\.campus-reference-tilt|rotateX\(var\(--campus-rx/);
+  assert.doesNotMatch(style, /\.map-fallback|\.svg-map/);
   assert.match(script, /const CAMPUS_IMAGE_PINS = \[/);
   assert.equal((script.match(/number: \d+, x: [\d.]+, y: [\d.]+/g) || []).length, 29);
   for (let number = 1; number <= 29; number++) {
     assert.match(script, new RegExp(`number: ${number}, x: [\\d.]+, y: [\\d.]+`));
   }
-  assert.match(script, /renderMap\(\)[\s\S]*?campus-reference-pins[\s\S]*?CAMPUS_IMAGE_PINS\.map/);
+  assert.match(script, /renderMap\(\)[\s\S]*?getElementById\('map-pins'\)[\s\S]*?CAMPUS_IMAGE_PINS\.map/);
   assert.match(script, /if \(pin\.y < 60\) edgeClasses\.push\('tooltip-below'\)/);
   assert.match(script, /if \(pin\.x < 24\) edgeClasses\.push\('tooltip-right'\)/);
   assert.match(script, /if \(pin\.x > 73\) edgeClasses\.push\('tooltip-left'\)/);
-  assert.match(script, /setupCampusReferenceTilt\(\)/);
   assert.match(script, /setupMapZoomControls\(\)/);
+  assert.doesNotMatch(script, /setupCampusReferenceTilt|tryNextMapImage|assets\/campus-map\.(png|jpg)/);
   assert.doesNotMatch(script, /setupCampusGallery/);
   assert.doesNotMatch(script, /campus-gallery-choice/);
 
   for (const label of [
     'MNHS CAMPUS VIEW',
     'School map',
-    '3D-style',
-    'Mahaplag National High School campus reference',
-    'Pins follow the marked building positions; image is illustrative.'
+    'Mahaplag National High School campus map with heat pins',
+    'Flat campus image · pins follow the marked building positions.'
   ]) {
     assert.match(locales, new RegExp(`'${label}':`));
   }
@@ -721,7 +716,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v118/);
+  assert.match(serviceWorker, /schoolheat-v119/);
 
   for (const language of manuals) {
     const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
@@ -816,7 +811,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v118/);
+  assert.match(serviceWorker, /schoolheat-v119/);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8'), i18nContext);
