@@ -579,6 +579,34 @@ test('keeps the offline shell independent of the optional campus illustration', 
   assert.doesNotMatch(index, /campus-heat-atlas\.svg/);
 });
 
+test('shows the school-provided campus reference as an illustration, not a measured map', () => {
+  const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
+  const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
+  const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
+  const referencePath = path.join(__dirname, '..', 'assets', 'mnhs-campus-reference.png');
+
+  assert.ok(fs.existsSync(referencePath), `${referencePath} exists`);
+  assert.match(index, /id="campus-reference-stage"/);
+  assert.match(index, /id="campus-reference-tilt"/);
+  assert.match(index, /src="assets\/mnhs-campus-reference\.png"/);
+  assert.match(index, /Illustration only · not a site map or shade measurement/);
+  assert.match(index, /class="glass-card map-card"/);
+  assert.match(style, /\.campus-reference-tilt[\s\S]*?rotateX\(var\(--campus-rx/);
+  assert.match(style, /prefers-reduced-motion: reduce/);
+  assert.match(script, /setupCampusReferenceTilt\(\)/);
+  assert.match(script, /--campus-ry/);
+  assert.match(serviceWorker, /\.\/assets\/mnhs-campus-reference\.png/);
+
+  for (const label of [
+    'MNHS CAMPUS VIEW',
+    'Campus reference',
+    'Mahaplag National High School campus reference',
+    '3D-style'
+  ]) {
+    assert.match(locales, new RegExp(`'${label}':`));
+  }
+});
+
 test('demo readings never receive future timestamps', () => {
   const previousTZ = process.env.TZ;
   process.env.TZ = 'Asia/Manila';

@@ -47,6 +47,7 @@ const ASSETS = [
   './manual/APP_OPERATION_MANUAL-war.md',
   './assets/app-logo.png',
   './assets/campus-map.png',
+  './assets/mnhs-campus-reference.png',
   './assets/school-bg-mobile.jpg'
 ];
 

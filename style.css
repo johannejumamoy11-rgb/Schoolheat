@@ -1692,6 +1692,70 @@ html[data-theme="dark"] .ambient-orb {
   background: rgba(255,255,255,0.03);
 }
 
+.campus-reference-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  padding: clamp(16px, 2.4vw, 22px);
+}
+.campus-reference-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.campus-reference-heading h3 {
+  margin: 4px 0 0;
+  font-size: 1rem;
+}
+.campus-reference-stage {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--brand-teal) 12%, var(--bg-primary)), var(--bg-primary));
+  perspective: 1200px;
+}
+.campus-reference-tilt {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  overflow: hidden;
+  border-radius: 14px;
+  transform: rotateX(var(--campus-rx, 0deg)) rotateY(var(--campus-ry, 0deg));
+  transform-style: preserve-3d;
+  transition: transform 150ms ease-out;
+  box-shadow: 0 24px 48px rgba(0,0,0,0.28);
+  will-change: transform;
+}
+.campus-reference-tilt img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform: translateZ(18px) scale(1.02);
+}
+.campus-reference-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(115deg, rgba(255,255,255,var(--campus-glare, 0)) 0%, rgba(255,255,255,0) 45%);
+  transform: translateZ(20px);
+}
+.campus-reference-card > p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+@media (prefers-reduced-motion: reduce) {
+  .campus-reference-tilt {
+    transform: none !important;
+    transition: none;
+  }
+}
+
 .map-fallback {
   display: none;
   width: 100%;

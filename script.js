@@ -518,6 +518,7 @@ class SchoolHeatApp {
     this.setupDistributionObserver();
     this.setupPullToRefresh();
     this.setupMapZoomControls();
+    this.setupCampusReferenceTilt();
     this.setupResizeHandler();
     this.setupOfflineAndInstall();
     try {
@@ -831,6 +832,29 @@ class SchoolHeatApp {
     });
     document.getElementById('map-zoom-reset')?.addEventListener('click', () => {
       this.setMapZoom(1);
+    });
+  }
+
+  setupCampusReferenceTilt() {
+    const stage = document.getElementById('campus-reference-stage');
+    const tilt = document.getElementById('campus-reference-tilt');
+    if (!stage || !tilt) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+
+    stage.addEventListener('pointermove', event => {
+      const rect = tilt.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const px = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+      const py = Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height));
+      tilt.style.setProperty('--campus-ry', `${((px - 0.5) * 16).toFixed(2)}deg`);
+      tilt.style.setProperty('--campus-rx', `${((0.5 - py) * 10).toFixed(2)}deg`);
+      tilt.style.setProperty('--campus-glare', (0.06 + (1 - px) * 0.12).toFixed(2));
+    });
+
+    stage.addEventListener('pointerleave', () => {
+      tilt.style.setProperty('--campus-ry', '0deg');
+      tilt.style.setProperty('--campus-rx', '0deg');
+      tilt.style.setProperty('--campus-glare', '0');
     });
   }
 
