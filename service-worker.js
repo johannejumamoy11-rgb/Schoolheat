@@ -31,7 +31,7 @@ firebase.messaging().onBackgroundMessage(payload => {
   console.warn('SchoolHeat push notifications require internet access:', error);
 }
 
-const CACHE_NAME = 'schoolheat-v120';
+const CACHE_NAME = 'schoolheat-v121';
 const ASSETS = [
   './',
   './index.html',
@@ -53,7 +53,15 @@ const ASSETS = [
 self.addEventListener('install', e => {
   self.skipWaiting();
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS.map(asset => new URL(asset, self.registration.scope))))
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.all(ASSETS.map(asset => {
+        const url = new URL(asset, self.registration.scope).href;
+        return fetch(url, { cache: 'reload' }).then(response => {
+          if (!response.ok) throw new Error(`Cannot cache ${url}: ${response.status}`);
+          return cache.put(url, response);
+        });
+      }))
+    )
   );
 });
 
