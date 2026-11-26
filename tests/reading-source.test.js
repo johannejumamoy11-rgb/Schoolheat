@@ -579,21 +579,23 @@ test('keeps the offline shell independent of the optional campus illustration', 
   assert.doesNotMatch(index, /campus-heat-atlas\.svg/);
 });
 
-test('shows the whole campus aerial view without presenting it as a measured map', () => {
+test('shows the school-provided campus image without presenting it as a measured map', () => {
   const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
   const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'service-worker.js'), 'utf8');
   const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
-  const wholeCampusPath = path.join(__dirname, '..', 'assets', 'mnhs-campus-whole.png');
+  const referencePath = path.join(__dirname, '..', 'assets', 'mnhs-campus-reference.png');
 
-  assert.ok(fs.existsSync(wholeCampusPath), `${wholeCampusPath} exists`);
-  assert.match(serviceWorker, /\.\/assets\/mnhs-campus-whole\.png/);
+  assert.ok(fs.existsSync(referencePath), `${referencePath} exists`);
+  assert.match(serviceWorker, /\.\/assets\/mnhs-campus-reference\.png/);
+  assert.doesNotMatch(serviceWorker, /mnhs-campus-whole\.png/);
   assert.match(index, /id="campus-reference-stage"/);
   assert.match(index, /id="campus-reference-tilt"/);
-  assert.match(index, /src="assets\/mnhs-campus-whole\.png"/);
-  assert.match(index, /Whole main campus · Imagery: Esri World Imagery · boundary: OpenStreetMap contributors · not a site map or shade measurement/);
+  assert.match(index, /src="assets\/mnhs-campus-reference\.png"/);
+  assert.match(index, /Illustration only · not a site map or shade measurement/);
   assert.match(index, /class="glass-card map-card"/);
   assert.doesNotMatch(index, /campus-gallery/);
-  assert.match(style, /\.campus-whole-view/);
+  assert.doesNotMatch(index, /mnhs-campus-whole\.png/);
+  assert.match(style, /\.campus-reference-view/);
   assert.match(style, /\.campus-reference-tilt[\s\S]*?rotateX\(var\(--campus-rx/);
   assert.match(style, /prefers-reduced-motion: reduce/);
   assert.match(script, /setupCampusReferenceTilt\(\)/);
@@ -605,7 +607,7 @@ test('shows the whole campus aerial view without presenting it as a measured map
     'Campus reference',
     'Mahaplag National High School campus reference',
     '3D-style',
-    'Whole main campus · Imagery: Esri World Imagery · boundary: OpenStreetMap contributors · not a site map or shade measurement'
+    'Illustration only · not a site map or shade measurement'
   ]) {
     assert.match(locales, new RegExp(`'${label}':`));
   }
