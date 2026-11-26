@@ -90,12 +90,14 @@ each 4H level; follow school policy and local advisories.
 
 The campus view keeps the two-dimensional school map with its mapped pins and
 zoom controls. It also shows the school-provided Mahaplag National High School
-campus image in one framed card with a 3D-style pointer tilt. That image is an
-illustration, not a measured site map, so pins stay on the interactive map
-below. The dashboard campus preview shows the same image and opens the
-interactive map. A verified 3D campus model, approved student
-comfort-feedback collection, and PDF reporting are not included; no geometry
-or feedback data is invented to simulate those features.
+campus image in one framed card with a 3D-style pointer tilt. The 29 pins on
+that image use the building positions marked by the user on a copy of the same
+image; they are not measured coordinates. The interactive map below keeps its
+original 29 pins, zoom controls, and status tooltips. The dashboard campus
+preview shows the same image and opens the interactive map. A verified 3D
+campus model, approved student comfort-feedback collection, and PDF reporting
+are not included; no geometry or feedback data is invented to simulate those
+features.
 
 The dashboard links to the interactive map, forecast, history analytics, and
 the local Ask SchoolHeat assistant. Its forecast preview uses the same

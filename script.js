@@ -35,6 +35,38 @@ const LOCATIONS = [
   { name: "1 Classroom, DepEd SS Building", x: 50.4, y: 37.4, baseTemp: 31.5, baseHum: 66 }
 ];
 
+const CAMPUS_IMAGE_PINS = [
+  { number: 1, x: 78.78, y: 80.18 },
+  { number: 2, x: 86.38, y: 71.24 },
+  { number: 3, x: 44.13, y: 80.18 },
+  { number: 4, x: 21.45, y: 88.52 },
+  { number: 5, x: 31.77, y: 88.62 },
+  { number: 6, x: 64.81, y: 29.57 },
+  { number: 7, x: 68.07, y: 52.74 },
+  { number: 8, x: 7.52, y: 67.17 },
+  { number: 9, x: 15.62, y: 52.74 },
+  { number: 10, x: 6.02, y: 33.03 },
+  { number: 11, x: 28.68, y: 24.70 },
+  { number: 12, x: 74.81, y: 40.29 },
+  { number: 13, x: 22.72, y: 50.71 },
+  { number: 14, x: 11.86, y: 8.64 },
+  { number: 15, x: 20.28, y: 24.54 },
+  { number: 16, x: 35.21, y: 24.54 },
+  { number: 17, x: 51.00, y: 31.81 },
+  { number: 18, x: 83.15, y: 20.83 },
+  { number: 19, x: 72.76, y: 19.41 },
+  { number: 20, x: 95.28, y: 20.17 },
+  { number: 21, x: 22.77, y: 5.74 },
+  { number: 22, x: 41.25, y: 11.18 },
+  { number: 23, x: 62.82, y: 14.18 },
+  { number: 24, x: 69.97, y: 19.36 },
+  { number: 25, x: 87.51, y: 45.63 },
+  { number: 26, x: 96.39, y: 54.52 },
+  { number: 27, x: 81.16, y: 40.29 },
+  { number: 28, x: 2.69, y: 12.30 },
+  { number: 29, x: 77.28, y: 20.17 }
+];
+
 const STUDY_CLASSROOMS = [
   "Einstein Classroom",
   "Newton Classroom",
@@ -4810,9 +4842,6 @@ class SchoolHeatApp {
   }
 
   renderMap() {
-    const pinsContainer = document.getElementById('map-pins');
-    if (!pinsContainer) return;
-
     const latestByLoc = {};
     this.readings.forEach(r => {
       if (!latestByLoc[r.location] || new Date(r.timestamp) > new Date(latestByLoc[r.location].timestamp)) {
@@ -4820,8 +4849,7 @@ class SchoolHeatApp {
       }
     });
 
-    pinsContainer.innerHTML = LOCATIONS.map(loc => {
-      const reading = latestByLoc[loc.name];
+    const pinMarkup = (loc, reading, x, y, extraClass = '') => {
       const heatIndex = Number(reading?.heatIndex);
       const hasValidReading = this.hasValidMeasurement(reading);
       const status = hasValidReading ? this.getStatus(heatIndex) : 'nodata';
@@ -4831,26 +4859,47 @@ class SchoolHeatApp {
       const readingTime = reading ? this.escapeHTML(this.formatTime(reading.timestamp)) : 'No stored measurement';
       const accessibleLabel = this.escapeHTML(`${loc.name}: ${dataStatus}, ${hi}`);
       return `
-        <div class="map-pin ${status}" role="button" tabindex="0" aria-expanded="false" aria-label="${accessibleLabel}" style="left:${loc.x}%;top:${loc.y}%" data-loc="${safeName}">
+        <div class="map-pin ${status} ${extraClass}" role="button" tabindex="0" aria-expanded="false" aria-label="${accessibleLabel}" style="left:${x}%;top:${y}%" data-loc="${safeName}">
           <div class="map-pin-tooltip">
             <div class="tt-loc">${safeName}</div>
-                <div class="tt-source map-data-status">${this.translateText(dataStatus)}</div>
+            <div class="tt-source map-data-status">${this.translateText(dataStatus)}</div>
             <div class="tt-hi ${status}">${hi}</div>
             <div class="tt-time">${readingTime}</div>
           </div>
         </div>
       `;
-    }).join('');
-
-    pinsContainer.querySelectorAll('.map-pin').forEach(pin => {
-      pin.addEventListener('click', () => this.togglePinTooltip(pin));
-      pin.addEventListener('keydown', event => {
-        if (event.key !== 'Enter' && event.key !== ' ') return;
-        event.preventDefault();
-        this.togglePinTooltip(pin);
+    };
+    const bindPins = container => {
+      container.querySelectorAll('.map-pin').forEach(pin => {
+        pin.addEventListener('click', () => this.togglePinTooltip(pin));
+        pin.addEventListener('keydown', event => {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          this.togglePinTooltip(pin);
+        });
       });
-    });
-    this.syncMapPins();
+    };
+
+    const pinsContainer = document.getElementById('map-pins');
+    if (pinsContainer) {
+      pinsContainer.innerHTML = LOCATIONS.map(loc => pinMarkup(loc, latestByLoc[loc.name], loc.x, loc.y)).join('');
+      bindPins(pinsContainer);
+      this.syncMapPins();
+    }
+
+    const referencePins = document.getElementById('campus-reference-pins');
+    if (referencePins) {
+      referencePins.innerHTML = CAMPUS_IMAGE_PINS.map(pin => {
+        const loc = LOCATIONS[pin.number - 1];
+        if (!loc) return '';
+        const edgeClasses = [];
+        if (pin.y < 60) edgeClasses.push('tooltip-below');
+        if (pin.x < 24) edgeClasses.push('tooltip-right');
+        if (pin.x > 73) edgeClasses.push('tooltip-left');
+        return pinMarkup(loc, latestByLoc[loc.name], pin.x, pin.y, edgeClasses.join(' '));
+      }).join('');
+      bindPins(referencePins);
+    }
   }
 
   togglePinTooltip(pinEl) {

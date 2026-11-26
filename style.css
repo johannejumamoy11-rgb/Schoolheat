@@ -1742,9 +1742,50 @@ html[data-theme="dark"] .ambient-orb {
   object-fit: cover;
   transform: translateZ(18px) scale(1.01);
 }
+.campus-reference-pins {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  transform: translateZ(24px);
+}
+.campus-reference-pins .map-pin {
+  width: 14px;
+  height: 14px;
+}
+.campus-reference-pins .map-pin::before {
+  width: 10px;
+  height: 10px;
+}
+.campus-reference-pins .map-pin-tooltip {
+  bottom: 16px;
+  padding: 3px 5px;
+  font-size: 0.58rem;
+  line-height: 1.15;
+}
+.campus-reference-pins .map-pin.tooltip-below .map-pin-tooltip {
+  bottom: auto;
+  top: 12px;
+}
+.campus-reference-pins .map-pin.tooltip-right .map-pin-tooltip {
+  left: 0;
+  transform: translateX(0) scale(0.9);
+}
+.campus-reference-pins .map-pin.tooltip-left .map-pin-tooltip {
+  left: auto;
+  right: 0;
+  transform: translateX(0) scale(0.9);
+}
+.campus-reference-pins .map-pin.tooltip-right:hover .map-pin-tooltip,
+.campus-reference-pins .map-pin.tooltip-right.active .map-pin-tooltip,
+.campus-reference-pins .map-pin.tooltip-left:hover .map-pin-tooltip,
+.campus-reference-pins .map-pin.tooltip-left.active .map-pin-tooltip {
+  transform: translateX(0) scale(1);
+}
 .campus-reference-glare {
   position: absolute;
   inset: 0;
+  z-index: 2;
   pointer-events: none;
   background: linear-gradient(115deg, rgba(255,255,255,var(--campus-glare, 0)) 0%, rgba(255,255,255,0) 45%);
   transform: translateZ(20px);
