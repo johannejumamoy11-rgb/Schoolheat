@@ -89,13 +89,12 @@ confirm sensor calibration. The response guide provides general prompts for
 each 4H level; follow school policy and local advisories.
 
 The campus view keeps the two-dimensional site map with the existing mapped
-coordinates. It also shows a small campus image gallery with a Google Maps
-listing photo and an image from a site titled Mahaplag National High School
-Official Website, with a 3D-style pointer tilt. These images are credited but
-are not a site map or shade measurement, so pins stay on the verified 2D map.
-A verified 3D campus model, approved student comfort-feedback collection, and
-PDF reporting are not included; no geometry or feedback data is invented to
-simulate those features.
+coordinates. It also shows the whole main campus as an Esri World Imagery
+aerial view with the OpenStreetMap school boundary and a 3D-style pointer
+tilt. The aerial view is credited and is not a site map or shade measurement,
+so pins stay on the verified 2D map. A verified 3D campus model, approved
+student comfort-feedback collection, and PDF reporting are not included; no
+geometry or feedback data is invented to simulate those features.
 
 The dashboard links to the interactive map, forecast, history analytics, and
 the local Ask SchoolHeat assistant. Its forecast preview uses the same

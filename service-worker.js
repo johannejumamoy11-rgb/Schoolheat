@@ -48,8 +48,7 @@ const ASSETS = [
   './assets/app-logo.png',
   './assets/campus-map.png',
   './assets/mnhs-campus-reference.png',
-  './assets/mnhs-campus-google.jpg',
-  './assets/mnhs-campus-website.webp',
+  './assets/mnhs-campus-whole.png',
   './assets/school-bg-mobile.jpg'
 ];
 

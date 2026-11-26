@@ -519,7 +519,6 @@ class SchoolHeatApp {
     this.setupPullToRefresh();
     this.setupMapZoomControls();
     this.setupCampusReferenceTilt();
-    this.setupCampusGallery();
     this.setupResizeHandler();
     this.setupOfflineAndInstall();
     try {
@@ -856,32 +855,6 @@ class SchoolHeatApp {
       tilt.style.setProperty('--campus-ry', '0deg');
       tilt.style.setProperty('--campus-rx', '0deg');
       tilt.style.setProperty('--campus-glare', '0');
-    });
-  }
-
-  setupCampusGallery() {
-    const choices = document.getElementById('campus-gallery-choices');
-    const main = document.getElementById('campus-gallery-image');
-    const backdrop = document.getElementById('campus-gallery-backdrop');
-    if (!choices || !main || !backdrop) return;
-
-    const setBackdrop = source => {
-      backdrop.style.backgroundImage = `url("${source}")`;
-    };
-    setBackdrop(main.getAttribute('src'));
-
-    choices.addEventListener('click', event => {
-      const button = event.target.closest?.('.campus-gallery-choice');
-      if (!button) return;
-      const source = button.dataset.campusImage;
-      if (!source) return;
-      main.src = source;
-      setBackdrop(source);
-      choices.querySelectorAll('.campus-gallery-choice').forEach(choice => {
-        const isActive = choice === button;
-        choice.classList.toggle('active', isActive);
-        choice.setAttribute('aria-pressed', String(isActive));
-      });
     });
   }
 
