@@ -115,6 +115,8 @@ Gamita an test SMS la kon nagbe-verify hin bag-o nga setup. Nalakip ini ha lima 
 - Mangita pinaagi han lokasyon o status ngan mag-filter pinaagi han **All Status (Ngatanan nga Status) / Hayo / Hinay / Hinga / Hinto**.
 - An **Heat Index Trend (Trend han Heat Index)** nag-aabtos hin tap, drag, ngan arrow keys. An **Show Status Summary (Ipakita an Buod han Status)** nagbibigay hin breakdown.
 - **All Readings (Ngatanan nga Pagbasa)** nagpapakita hin 50 kada pahina. Gamita an trash button para deladohon an usa nga pagbasa tikang ha mao nga browser; diri ini pwede ibalik. An na-publish nga Python forecast nagamit hin bulag nga CSV dataset ngan diri nagbabag-o.
+- An **Choose data file (Pumili han data file)** nag-i-import hin CSV o XLSX ha mao nga browser la. Diri ini nagpapadara han pagbasa ngadto ha Firebase ngan diri ini nagbabag-o han live forecast.
+- An **Upload CSV to live forecast (I-upload an CSV ha live forecast)** nagpapuli han na-publish nga source data ngan nagtikang han Python job. Isulod an forecast access code, pumili hin six-column CSV o SchoolHeat averages CSV, ngan hintayi nga tapos an job. Kinahanglan an Firebase sign-in, App Check, ngan usa ka upload kada account kada lima ka minuto. An GitHub token aadto la ha upload Worker.
 - An **Export CSV (I-export an CSV)** may-ada kolum nga **Demo Data (Datos Demo)**. An **Export JSON (I-export an JSON)** nagtitipig han `schoolheat_readings.json`.
 
 ### Tagna

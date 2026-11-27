@@ -172,6 +172,13 @@ five-minute limit and may use one credit.
 - **All Readings** shows 50 per page. Use the trash button to delete one
   reading from this browser; this cannot be undone. The published Python
   forecast uses the separate CSV dataset and is not changed.
+- **Choose data file** imports a CSV or XLSX into this browser only. It does
+  not send readings to Firebase and does not change the live forecast.
+- **Upload CSV to live forecast** replaces the published source data and queues
+  the Python job. Enter the forecast access code, choose the six-column CSV or
+  the SchoolHeat averages CSV, then wait for the job to finish. Firebase
+  sign-in, App Check, and one upload per account every five minutes are
+  required. The GitHub token is stored only on the upload Worker.
 - **Export CSV** includes a **Demo Data** column. **Export JSON** saves
   `schoolheat_readings.json`.
 

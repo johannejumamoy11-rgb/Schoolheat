@@ -1236,6 +1236,53 @@ button { touch-action: manipulation; }
    HISTORY SECTION
    ============================================ */
 
+.upload-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+}
+.upload-card > div {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.upload-card h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.upload-card p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.upload-card .upload-hint {
+  flex-basis: 100%;
+  font-size: 0.76rem;
+}
+.upload-code-label {
+  flex-basis: 100%;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+.upload-code-input {
+  flex: 0 1 220px;
+  min-width: 160px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.85rem;
+}
+.upload-code-input:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+
 .filter-bar {
   display: flex;
   gap: 8px;

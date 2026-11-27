@@ -1,6 +1,11 @@
 name: Generate 60-minute Python forecast
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - data/schoolheat_readings.csv
   schedule:
     - cron: '17 2 * * *'
   workflow_dispatch:

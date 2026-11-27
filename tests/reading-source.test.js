@@ -20,10 +20,41 @@ vm.runInNewContext(
 
 const app = Object.create(context.SchoolHeatAppForTest.prototype);
 
-test('removes file-import controls and implementation', () => {
-  assert.doesNotMatch(index, /history-upload|history-file-input|Choose data file/);
-  assert.doesNotMatch(script, /importReadingsFile|parseDelimitedText|parseXlsxFile|normalizeUploadedReadings/);
-  assert.doesNotMatch(script, /getReadingSourceLabel/);
+test('restores local file import and adds the secure live forecast upload', () => {
+  assert.match(index, /id="history-file-input"/);
+  assert.match(index, /id="history-upload-button"/);
+  assert.match(index, /Choose data file/);
+  assert.match(index, /id="forecast-file-input"/);
+  assert.match(index, /id="forecast-upload-code"/);
+  assert.match(script, /async importReadingsFile\(file\)/);
+  assert.match(script, /parseDelimitedText/);
+  assert.match(script, /parseXlsxFile/);
+  assert.match(script, /normalizeUploadedReadings/);
+  assert.match(script, /getReadingSourceLabel/);
+  assert.match(script, /async publishForecastFile\(file\)/);
+  assert.match(script, /X-Forecast-Upload-Code/);
+  assert.match(index, /Readings are saved on this device only/);
+  assert.doesNotMatch(script, /GITHUB_TOKEN|ghp_[A-Za-z0-9]/);
+});
+
+test('local CSV import parses the supplied averages format', () => {
+  context.document = { getElementById: () => null };
+  app.settings = { tempOffset: 0, humidityOffset: 0 };
+  const rows = app.parseDelimitedText([
+    'Reading #,Location,Date,Time,Average Temperature (°C),Average Humidity (%),Average Heat Index (°C)',
+    '1,"3 Storey, 15 Classroom, DepEd SS Building",3-Nov-26,7:00:00,29.933,77.767,36.843',
+    '2,"3 Storey, 15 Classroom, DepEd SS Building",3-Nov-26,7:05:00,30.133,75.833,36.917'
+  ].join('\r\n'));
+  assert.equal(rows.length, 3);
+  assert.equal(rows[1][1], '3 Storey, 15 Classroom, DepEd SS Building');
+  const parsed = app.normalizeUploadedReadings(rows, 'readings.csv');
+  assert.equal(parsed.skipped, 0);
+  assert.equal(parsed.readings.length, 2);
+  assert.equal(parsed.readings[0].source, 'imported');
+  assert.equal(parsed.readings[0].location, '3 Storey, 15 Classroom, DepEd SS Building');
+  assert.equal(parsed.readings[0].temperature, 29.9);
+  assert.equal(parsed.readings[0].humidity, 77.8);
+  assert.equal(parsed.readings[0].sourceFile, 'readings.csv');
 });
 
 test('offers one-tap swatches plus one full-spectrum picker', () => {
@@ -1247,7 +1278,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v145/);
+  assert.match(serviceWorker, /schoolheat-v146/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -1345,7 +1376,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v145/);
+  assert.match(serviceWorker, /schoolheat-v146/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);

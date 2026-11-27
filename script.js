@@ -757,6 +757,457 @@ class SchoolHeatApp {
     return freshness;
   }
 
+  getReadingSourceLabel(reading) {
+    if (!reading) return this.translateText('No source information');
+    if (reading.source === 'demo' || reading.isDemo) return this.translateText('DEMO DATA');
+    if (reading.source === 'esp32' || String(reading.id ?? '').startsWith('esp32-')) {
+      return this.translateText('ESP32 DHT22');
+    }
+    if (reading.source === 'imported' || reading.sourceFile) {
+      const sourceFile = String(reading.sourceFile || '').slice(0, 100);
+      const importedLabel = this.translateText('IMPORTED');
+      return sourceFile ? `${importedLabel} · ${sourceFile}` : importedLabel;
+    }
+    if (reading.source === 'manual') return this.translateText('MANUAL ENTRY');
+    return this.translateText('SOURCE NOT RECORDED');
+  }
+
+  async importReadingsFile(file) {
+    const maxFileSize = 5 * 1024 * 1024;
+    if (file.size > maxFileSize) {
+      this.toast('Choose a file smaller than 5 MB.', 'error');
+      return;
+    }
+
+    try {
+      const extension = file.name.split('.').pop()?.toLowerCase();
+      let rows;
+      if (extension === 'csv') {
+        rows = this.parseDelimitedText(await file.text());
+      } else if (extension === 'xlsx') {
+        rows = await this.parseXlsxFile(file);
+      } else {
+        throw new Error('Choose a CSV or Excel (.xlsx) file.');
+      }
+
+      const parsed = this.normalizeUploadedReadings(rows, file.name);
+      if (!parsed.readings.length) {
+        throw new Error('No valid rows found. Check the timestamp, temperature, and humidity columns.');
+      }
+
+      const existingIds = new Set(this.readings.map(reading => String(reading.id)));
+      const imported = parsed.readings.filter(reading => !existingIds.has(String(reading.id)));
+      if (!imported.length) {
+        this.toast('These readings are already in your history.', 'info');
+        return;
+      }
+
+      const previousReadings = this.readings;
+      this.readings = [...previousReadings, ...imported].sort((a, b) => {
+        const timeA = new Date(a.timestamp).getTime();
+        const timeB = new Date(b.timestamp).getTime();
+        if (!Number.isFinite(timeA)) return Number.isFinite(timeB) ? 1 : 0;
+        if (!Number.isFinite(timeB)) return -1;
+        return timeB - timeA;
+      });
+      try {
+        this.saveReadings();
+      } catch (error) {
+        this.readings = previousReadings;
+        throw new Error(`Could not save imported readings in this browser: ${error.message}`);
+      }
+
+      this.lastObservedReadingId = this.readings[0]?.id ?? this.lastObservedReadingId;
+      this.forecastComparisonCache = null;
+      this.updateDashboard();
+      this.renderHistory();
+      this.renderMap();
+      this.updateMonitorGauge();
+      if (this.currentTab === 'forecast') this.drawForecastChart();
+      const skipped = parsed.skipped ? ` ${parsed.skipped} invalid row(s) skipped.` : '';
+      this.toast(`Imported ${imported.length} reading(s) from ${file.name}.${skipped} These stay on this device and do not change the live forecast.`, 'success');
+    } catch (error) {
+      console.error('Could not import SchoolHeat readings:', error);
+      this.toast(error.message || 'Could not read this file.', 'error');
+    }
+  }
+
+  parseDelimitedText(text) {
+    const source = String(text ?? '').replace(/^\uFEFF/, '');
+    const firstLine = source.split(/\r?\n/, 1)[0] || '';
+    let delimiter = ',';
+    let maxCount = -1;
+    for (const candidate of [',', ';', '\t']) {
+      let count = 0;
+      let quoted = false;
+      for (let index = 0; index < firstLine.length; index++) {
+        if (firstLine[index] === '"') {
+          if (quoted && firstLine[index + 1] === '"') index++;
+          else quoted = !quoted;
+        } else if (!quoted && firstLine[index] === candidate) {
+          count++;
+        }
+      }
+      if (count > maxCount) {
+        delimiter = candidate;
+        maxCount = count;
+      }
+    }
+    if (maxCount < 1) throw new Error('The CSV file does not appear to contain a header row.');
+
+    const rows = [];
+    let row = [];
+    let cell = '';
+    let quoted = false;
+    for (let index = 0; index < source.length; index++) {
+      const character = source[index];
+      if (character === '"') {
+        if (quoted && source[index + 1] === '"') {
+          cell += '"';
+          index++;
+        } else {
+          quoted = !quoted;
+        }
+      } else if (!quoted && character === delimiter) {
+        row.push(cell);
+        cell = '';
+      } else if (!quoted && (character === '\n' || character === '\r')) {
+        if (character === '\r' && source[index + 1] === '\n') index++;
+        row.push(cell);
+        if (row.some(value => String(value).trim())) rows.push(row);
+        row = [];
+        cell = '';
+      } else {
+        cell += character;
+      }
+    }
+    if (quoted) throw new Error('The CSV file has an unclosed quoted field.');
+    row.push(cell);
+    if (row.some(value => String(value).trim())) rows.push(row);
+    return rows;
+  }
+
+  async parseXlsxFile(file) {
+    if (typeof DecompressionStream !== 'function' || typeof DOMParser !== 'function') {
+      throw new Error('Excel import needs a current Chrome or Edge browser. You can also save the spreadsheet as CSV.');
+    }
+
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const endOfCentralDirectorySignature = 0x06054b50;
+    let endOffset = -1;
+    for (let offset = Math.max(0, bytes.length - 65557); offset <= bytes.length - 22; offset++) {
+      if (view.getUint32(offset, true) === endOfCentralDirectorySignature) endOffset = offset;
+    }
+    if (endOffset < 0) throw new Error('This is not a valid .xlsx workbook.');
+
+    const entryCount = view.getUint16(endOffset + 10, true);
+    let directoryOffset = view.getUint32(endOffset + 16, true);
+    const entries = new Map();
+    for (let index = 0; index < entryCount; index++) {
+      if (directoryOffset + 46 > bytes.length || view.getUint32(directoryOffset, true) !== 0x02014b50) {
+        throw new Error('The Excel workbook has an invalid ZIP directory.');
+      }
+      const flags = view.getUint16(directoryOffset + 8, true);
+      const method = view.getUint16(directoryOffset + 10, true);
+      const compressedSize = view.getUint32(directoryOffset + 20, true);
+      const uncompressedSize = view.getUint32(directoryOffset + 24, true);
+      const nameLength = view.getUint16(directoryOffset + 28, true);
+      const extraLength = view.getUint16(directoryOffset + 30, true);
+      const commentLength = view.getUint16(directoryOffset + 32, true);
+      const localOffset = view.getUint32(directoryOffset + 42, true);
+      const nameStart = directoryOffset + 46;
+      const name = new TextDecoder().decode(bytes.subarray(nameStart, nameStart + nameLength));
+      if (uncompressedSize > 20 * 1024 * 1024) throw new Error('An Excel worksheet is too large to import safely.');
+      entries.set(name, { flags, method, compressedSize, uncompressedSize, localOffset });
+      directoryOffset = nameStart + nameLength + extraLength + commentLength;
+    }
+
+    const readEntry = async name => {
+      const entry = entries.get(name);
+      if (!entry) return null;
+      if (entry.flags & 1) throw new Error('Password-protected Excel files are not supported.');
+      const local = entry.localOffset;
+      if (view.getUint32(local, true) !== 0x04034b50) throw new Error('The Excel workbook contains an invalid worksheet.');
+      const dataStart = local + 30 + view.getUint16(local + 26, true) + view.getUint16(local + 28, true);
+      const compressed = bytes.slice(dataStart, dataStart + entry.compressedSize);
+      let content;
+      if (entry.method === 0) {
+        content = compressed;
+      } else if (entry.method === 8) {
+        const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+        const reader = stream.getReader();
+        const chunks = [];
+        let totalSize = 0;
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          totalSize += value.length;
+          if (totalSize > 20 * 1024 * 1024) {
+            await reader.cancel();
+            throw new Error('An Excel worksheet is too large to import safely.');
+          }
+          chunks.push(value);
+        }
+        content = new Uint8Array(totalSize);
+        let offset = 0;
+        chunks.forEach(chunk => {
+          content.set(chunk, offset);
+          offset += chunk.length;
+        });
+      } else {
+        throw new Error('This Excel workbook uses an unsupported compression format.');
+      }
+      if (content.length !== entry.uncompressedSize) throw new Error('An Excel worksheet could not be decompressed.');
+      return new DOMParser().parseFromString(new TextDecoder().decode(content), 'application/xml');
+    };
+
+    const workbook = await readEntry('xl/workbook.xml');
+    const relationships = await readEntry('xl/_rels/workbook.xml.rels');
+    if (!workbook || !relationships) throw new Error('The Excel workbook is missing its sheet information.');
+    const sheet = workbook.getElementsByTagNameNS('*', 'sheet')[0];
+    if (!sheet) throw new Error('The Excel workbook has no worksheets.');
+    const relationshipId = sheet.getAttribute('r:id') ||
+      sheet.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
+    const relation = [...relationships.getElementsByTagNameNS('*', 'Relationship')]
+      .find(item => item.getAttribute('Id') === relationshipId);
+    if (!relation) throw new Error('The first worksheet could not be located.');
+    const target = String(relation.getAttribute('Target') || '').replace(/\\/g, '/');
+    const worksheetPath = target.startsWith('/')
+      ? target.slice(1)
+      : target.startsWith('xl/')
+        ? target
+        : `xl/${target}`;
+    const worksheet = await readEntry(worksheetPath);
+    if (!worksheet) throw new Error('The first worksheet could not be read.');
+
+    const sharedStringsXml = await readEntry('xl/sharedStrings.xml');
+    const sharedStrings = sharedStringsXml
+      ? [...sharedStringsXml.getElementsByTagNameNS('*', 'si')].map(item =>
+        [...item.getElementsByTagNameNS('*', 't')].map(text => text.textContent || '').join(''))
+      : [];
+    const xmlRows = [...worksheet.getElementsByTagNameNS('*', 'row')];
+    return xmlRows.map(xmlRow => {
+      const values = [];
+      [...xmlRow.getElementsByTagNameNS('*', 'c')].forEach((cell, fallbackIndex) => {
+        const reference = cell.getAttribute('r') || '';
+        const letters = reference.match(/[A-Z]+/i)?.[0];
+        let column = fallbackIndex;
+        if (letters) {
+          column = 0;
+          for (const letter of letters.toUpperCase()) column = column * 26 + letter.charCodeAt(0) - 64;
+          column--;
+        }
+        const type = cell.getAttribute('t');
+        const valueElement = cell.getElementsByTagNameNS('*', 'v')[0];
+        let value = valueElement?.textContent || '';
+        if (type === 's') value = sharedStrings[Number(value)] ?? '';
+        if (type === 'inlineStr') {
+          value = [...cell.getElementsByTagNameNS('*', 't')].map(text => text.textContent || '').join('');
+        }
+        values[column] = value;
+      });
+      return values;
+    });
+  }
+
+  normalizeUploadedReadings(rows, fileName) {
+    if (!rows.length) return { readings: [], skipped: 0 };
+    const normalizeHeader = value => String(value ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const headers = rows[0].map(normalizeHeader);
+    const findColumn = aliases => headers.findIndex(header => aliases.includes(header));
+    const temperatureIndex = findColumn(['temperature', 'temperaturec', 'temp', 'tempc', 'airtemperature', 'airtemperaturec', 'averagetemperaturec']);
+    const humidityIndex = findColumn(['humidity', 'humiditypercent', 'relativehumidity', 'relativehumiditypercent', 'rh', 'averagehumidity']);
+    const timestampIndex = findColumn(['timestamp', 'datetime', 'dateandtime', 'recordedat', 'date', 'readingdate']);
+    const timeIndex = findColumn(['time', 'readingtime']);
+    const locationIndex = findColumn(['location', 'site', 'campuslocation']);
+    const demoIndex = findColumn(['isdemo', 'demo', 'demodata', 'synthetic']);
+    if (temperatureIndex < 0 || humidityIndex < 0 || timestampIndex < 0) {
+      throw new Error('Required columns not found. Include timestamp (or date), temperature, and humidity.');
+    }
+
+    const parseMeasurement = value => {
+      if (typeof value === 'number') return value;
+      const text = String(value ?? '').trim().replace(/[^\d.,-]/g, '').replace(/\s/g, '');
+      const normalized = text.includes(',') && !text.includes('.')
+        ? text.replace(',', '.')
+        : text.replace(/,/g, '');
+      return normalized ? Number(normalized) : NaN;
+    };
+    const parseTimeParts = value => {
+      if (typeof value === 'number' && value >= 0 && value < 1) {
+        const seconds = Math.round(value * 86400);
+        return [Math.floor(seconds / 3600) % 24, Math.floor(seconds / 60) % 60, seconds % 60];
+      }
+      const match = String(value ?? '').trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+      if (!match) return null;
+      let hour = Number(match[1]);
+      const meridiem = match[4]?.toUpperCase();
+      if (meridiem === 'PM' && hour < 12) hour += 12;
+      if (meridiem === 'AM' && hour === 12) hour = 0;
+      const minute = Number(match[2]);
+      const second = Number(match[3] || 0);
+      if (hour > 23 || minute > 59 || second > 59) return null;
+      return [hour, minute, second];
+    };
+    const parseTimestamp = (dateValue, timeValue) => {
+      if (dateValue instanceof Date) return Number.isFinite(dateValue.getTime()) ? dateValue.toISOString() : null;
+      if (typeof dateValue === 'number' || /^\d{4,6}(?:\.\d+)?$/.test(String(dateValue ?? '').trim())) {
+        const serial = Number(dateValue);
+        if (!Number.isFinite(serial) || serial < 1 || serial > 100000) return null;
+        const wholeDays = Math.floor(serial);
+        const fraction = serial - wholeDays;
+        const date = new Date(1899, 11, 30 + wholeDays);
+        const time = parseTimeParts(timeValue);
+        if (time) date.setHours(...time);
+        else date.setSeconds(Math.round(fraction * 86400));
+        return date.toISOString();
+      }
+      const dateText = String(dateValue ?? '').trim();
+      if (!dateText) return null;
+      let combined = dateText;
+      if (timeValue !== undefined && String(timeValue).trim()) {
+        if (typeof timeValue === 'number') {
+          const time = parseTimeParts(timeValue);
+          if (!time) return null;
+          const date = new Date(dateText);
+          if (!Number.isFinite(date.getTime())) return null;
+          date.setHours(...time);
+          return date.toISOString();
+        }
+        combined = `${dateText} ${String(timeValue).trim()}`;
+      }
+      const date = new Date(combined);
+      return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+    };
+
+    const fallbackLocation = document.getElementById('location-select')?.value || 'Uploaded Data';
+    const fileKey = `${fileName}\n${JSON.stringify(rows)}`;
+    let hash = 2166136261;
+    for (let index = 0; index < fileKey.length; index++) {
+      hash = Math.imul(hash ^ fileKey.charCodeAt(index), 16777619);
+    }
+    const fileId = (hash >>> 0).toString(36);
+    const sourceFile = fileName.slice(0, 160);
+    const readings = [];
+    let skipped = 0;
+    rows.slice(1, 5001).forEach((row, rowIndex) => {
+      const temperature = parseMeasurement(row[temperatureIndex]);
+      const humidity = parseMeasurement(row[humidityIndex]);
+      const timestamp = parseTimestamp(row[timestampIndex], timeIndex >= 0 ? row[timeIndex] : undefined);
+      if (!Number.isFinite(temperature) || temperature < 0 || temperature > 60 ||
+          !Number.isFinite(humidity) || humidity < 0 || humidity > 100 || !timestamp) {
+        skipped++;
+        return;
+      }
+      const locationValue = locationIndex >= 0 ? String(row[locationIndex] ?? '').trim() : '';
+      const location = (locationValue || fallbackLocation).slice(0, 120);
+      const calibratedTemp = temperature + this.settings.tempOffset;
+      const calibratedHumidity = Math.max(0, Math.min(100, humidity + this.settings.humidityOffset));
+      const heatIndex = this.calculateHeatIndex(calibratedTemp, calibratedHumidity);
+      const quality = this.getQualityScore(calibratedTemp, calibratedHumidity);
+      const isDemo = demoIndex >= 0 && ['true', 'yes', '1', 'demo'].includes(String(row[demoIndex] ?? '').trim().toLowerCase());
+      readings.push({
+        id: `file-${fileId}-${rowIndex}`,
+        source: isDemo ? 'demo' : 'imported',
+        location,
+        temperature: parseFloat(calibratedTemp.toFixed(1)),
+        humidity: parseFloat(calibratedHumidity.toFixed(1)),
+        heatIndex: parseFloat(heatIndex.toFixed(2)),
+        status: this.getStatus(heatIndex),
+        quality: quality.label,
+        qualityClass: quality.class,
+        timestamp,
+        sourceFile,
+        isDemo
+      });
+    });
+    if (rows.length > 5001) skipped += rows.length - 5001;
+    return { readings, skipped };
+  }
+
+  async publishForecastFile(file) {
+    const status = document.getElementById('forecast-upload-status');
+    const setStatus = message => {
+      if (status) status.textContent = message;
+    };
+    if (!/\.csv$/i.test(file.name)) {
+      this.toast('Choose a CSV file for the live forecast.', 'error');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      this.toast('Choose a forecast CSV smaller than 2 MB.', 'error');
+      return;
+    }
+
+    const accessCode = document.getElementById('forecast-upload-code')?.value?.trim() || '';
+    if (!accessCode) {
+      setStatus('Enter the forecast access code before uploading.');
+      this.toast('Enter the forecast access code before uploading.', 'error');
+      return;
+    }
+
+    setStatus('Signing in and checking this device…');
+    try {
+      const config = window.SCHOOLHEAT_CLOUD;
+      if (!config?.forecastUploadWorkerUrl) {
+        throw new Error('The forecast upload Worker URL is not configured.');
+      }
+      const service = await this.getAlertService();
+      if (service.error) {
+        throw new Error('Firebase sign-in and App Check are required for forecast upload.');
+      }
+      if (!service.auth.currentUser) await service.authSdk.signInAnonymously(service.auth);
+      const [idToken, appCheckToken] = await Promise.all([
+        service.auth.currentUser.getIdToken(),
+        service.appCheckSdk.getToken(service.appCheck, false)
+      ]);
+      const requestId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `forecast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+      setStatus('Uploading CSV and queuing the Python forecast…');
+      const response = await fetch(config.forecastUploadWorkerUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Idempotency-Key': requestId,
+          'X-Firebase-AppCheck': appCheckToken.token,
+          'X-Forecast-Upload-Code': accessCode
+        },
+        body: await file.text()
+      });
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error('The forecast upload Worker returned an invalid response.');
+      }
+      if (!response.ok) {
+        const retry = Number.isFinite(result.retryAfterSeconds)
+          ? ` Try again in about ${result.retryAfterSeconds} seconds.`
+          : '';
+        throw new Error(`${result.error || `Upload failed (HTTP ${response.status}).`}${retry}`);
+      }
+
+      this.publishedForecastCache = null;
+      this.forecastComparisonCache = null;
+      this.scheduleDashboardForecastRender?.();
+      const rows = Number.isFinite(result.rows) ? `${result.rows} rows` : 'the new source data';
+      setStatus(result.workflowQueued
+        ? `Saved ${rows}. The 60-minute forecast is regenerating.`
+        : `Saved ${rows}, but the forecast workflow could not be queued. Please retry.`);
+      this.toast(result.workflowQueued
+        ? 'CSV saved. The live forecast will update after the Python job finishes.'
+        : 'CSV saved, but the forecast regeneration could not be queued.', result.workflowQueued ? 'success' : 'warning');
+    } catch (error) {
+      console.error('Could not publish SchoolHeat forecast data:', error);
+      setStatus(error.message || 'The forecast CSV could not be uploaded.');
+      this.toast(error.message || 'The forecast CSV could not be uploaded.', 'error');
+    }
+  }
+
   updateHeatGuidance(reading, freshness) {
     const card = document.getElementById('heat-guidance-card');
     const level = document.getElementById('heat-guidance-level');
@@ -955,6 +1406,32 @@ class SchoolHeatApp {
       this.clearMonitorFormStatus();
       this.updateLocationPickerUI();
     });
+    const historyUploadButton = document.getElementById('history-upload-button');
+    const historyUploadInput = document.getElementById('history-file-input');
+    historyUploadButton?.addEventListener('click', () => historyUploadInput?.click());
+    historyUploadInput?.addEventListener('change', async () => {
+      const file = historyUploadInput.files?.[0];
+      if (!file) return;
+      try {
+        await this.importReadingsFile(file);
+      } finally {
+        historyUploadInput.value = '';
+      }
+    });
+
+    const forecastUploadButton = document.getElementById('forecast-upload-button');
+    const forecastUploadInput = document.getElementById('forecast-file-input');
+    forecastUploadButton?.addEventListener('click', () => forecastUploadInput?.click());
+    forecastUploadInput?.addEventListener('change', async () => {
+      const file = forecastUploadInput.files?.[0];
+      if (!file) return;
+      try {
+        await this.publishForecastFile(file);
+      } finally {
+        forecastUploadInput.value = '';
+      }
+    });
+
     document.getElementById('history-list')?.addEventListener('click', event => {
       const pageButton = event.target.closest('[data-history-page]');
       if (pageButton) {

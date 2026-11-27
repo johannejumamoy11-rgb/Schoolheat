@@ -115,6 +115,8 @@ Gamitin ang test SMS kapag beripikasyon lamang ng bagong setup. Nabibilang ito s
 - Hanapin ayon sa lokasyon o status at i-filter gamit ang **All Status / Hayo / Hinay / Hinga / Hinto (Lahat ng Status / Hayo / Hinay / Hinga / Hinto)**.
 - Sinusuportahan ng **Heat Index Trend (Trend ng Heat Index)** ang tap, drag, at arrow keys. Nagbibigay ng breakdown ang **Show Status Summary (Ipakita ang Buod ng Status)**.
 - Ang **All Readings (Lahat ng Pagbasa)** ay nagpapakita ng 50 bawat pahina. Gamitin ang trash button para tanggalin ang isang pagbasa mula sa browser na ito; hindi ito maaaring i-undo. Ang nai-publish na Python forecast ay gumagamit ng hiwalay na CSV dataset at hindi nagbabago.
+- Ang **Choose data file (Pumili ng data file)** ay nag-i-import ng CSV o XLSX sa browser na ito lamang. Hindi nito ipinapadala ang readings sa Firebase at hindi nito binabago ang live forecast.
+- Ang **Upload CSV to live forecast (I-upload ang CSV sa live forecast)** ay pumapalit sa nai-publish na source data at nagsisimula ng Python job. Ilagay ang forecast access code, pumili ng six-column CSV o SchoolHeat averages CSV, at hintayin ang job. Kailangan ang Firebase sign-in, App Check, at isang upload bawat account bawat limang minuto. Ang GitHub token ay nasa upload Worker lamang.
 - Kasama sa **Export CSV (I-export ang CSV)** ang isang column na **Demo Data (Data mula sa Demo)**. Ini-save ng **Export JSON (I-export ang JSON)** ang `schoolheat_readings.json`.
 
 ### Pagtataya

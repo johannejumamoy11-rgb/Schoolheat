@@ -1,0 +1,11 @@
+name = "schoolheat-forecast-upload"
+main = "src/index.js"
+compatibility_date = "2025-03-01"
+
+[[durable_objects.bindings]]
+name = "FORECAST_UPLOAD_RATE_LIMITER"
+class_name = "ForecastUploadRateLimiter"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["ForecastUploadRateLimiter"]
