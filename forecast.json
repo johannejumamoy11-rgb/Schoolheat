@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "ready",
   "horizonMinutes": 60,
-  "generatedAt": "2026-11-27T14:24:21Z",
+  "generatedAt": "2026-11-27T14:28:11Z",
   "sourceFile": "data/schoolheat_readings.csv",
   "dataStart": "2026-11-03T07:30:00+08:00",
   "dataEnd": "2026-11-11T16:00:00+08:00",
