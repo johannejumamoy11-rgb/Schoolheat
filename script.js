@@ -4884,11 +4884,13 @@ class SchoolHeatApp {
   getBestForecastModel(modelResult) {
     const scoredModels = Object.entries(modelResult.metrics || {})
       .filter(([name, metric]) =>
-        FORECAST_CANDIDATE_MODELS.includes(name) && metric.samples >= 10 && Number.isFinite(metric.rmse))
+        FORECAST_CANDIDATE_MODELS.includes(name) && Number.isFinite(metric.rmse))
       .sort((a, b) => a[1].rmse - b[1].rmse || a[1].mae - b[1].mae);
     const preferred = FORECAST_CANDIDATE_MODELS.includes(modelResult.bestModel) ? modelResult.bestModel : null;
-    const selected = preferred && scoredModels.find(([name]) => name === preferred)
-      || scoredModels[0]
+    const preferredMetric = preferred ? modelResult.metrics?.[preferred] : null;
+    const selected = preferredMetric && Number.isFinite(preferredMetric.rmse)
+      ? [preferred, preferredMetric]
+      : scoredModels[0]
       || [FORECAST_DEFAULT_MODEL, null];
     const [name, metric] = selected;
     return {

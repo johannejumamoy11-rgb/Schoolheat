@@ -423,6 +423,32 @@ test('normalizes the published 60-minute forecast and selects the lowest-RMSE mo
   assert.equal(best.metric.rmse, 0.9);
 });
 
+test('honors the published best model when holdouts are provisional', () => {
+  const provisionalApp = Object.create(context.SchoolHeatAppForTest.prototype);
+  const metric = rmse => ({
+    mae: rmse * 0.8, rmse, mape: 2, r2: 0.8, samples: 9,
+    hazardMisses: 0, hazardSamples: 9, hazardMissRate: 0
+  });
+  const best = provisionalApp.getBestForecastModel({
+    bestModel: 'random-forest',
+    models: {
+      'random-forest': { value: 35.47, status: 'danger' },
+      'xgboost-style': { value: 37.42, status: 'danger' },
+      'lightgbm-style': { value: 37.28, status: 'danger' }
+    },
+    metrics: {
+      'random-forest': metric(2.202),
+      'xgboost-style': metric(2.3325),
+      'lightgbm-style': metric(2.5933)
+    }
+  });
+
+  assert.equal(best.name, 'random-forest');
+  assert.equal(best.label, 'Random Forest (Python)');
+  assert.equal(best.metric.samples, 9);
+  assert.equal(best.result.value, 35.47);
+});
+
 test('publishes a real Python 60-minute forecast job', () => {
   const root = path.join(__dirname, '..');
   for (const file of [
