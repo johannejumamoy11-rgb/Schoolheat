@@ -616,6 +616,10 @@ test('shows what each overview classification means and explains it on hover or 
     ]
   );
   assert.match(index, /<p class="status-source">From DepEd Order No\. 014, s\. 2026 and DepEd Memorandum No\. 64, s\. 2026\. Hover or focus a card for details\.<\/p>/);
+  assert.match(index, /<section class="memorandum-card" aria-labelledby="memorandum-title">/);
+  assert.match(index, /DM No\. 064, s\. 2026 — Anticipatory Action, Preparedness, and Protective Measures for the 2026–2027 Super El Niño\./);
+  assert.match(index, /href="https:\/\/www\.deped\.gov\.ph\/wp-content\/uploads\/DM_s2026_064r\.pdf" target="_blank" rel="noopener noreferrer">Open memorandum PDF<\/a>/);
+  assert.match(index, /href="https:\/\/www\.deped\.gov\.ph\/wp-content\/uploads\/DO_s2026_014r\.pdf" target="_blank" rel="noopener noreferrer">Open 4H order PDF<\/a>/);
   assert.doesNotMatch(index, /classification-dialog|classification-hint/);
   assert.doesNotMatch(script, /CLASSIFICATION_DETAILS|setupClassificationCards|showClassificationDialog/);
   assert.match(style, /\.status-meaning/);
@@ -630,6 +634,8 @@ test('shows what each overview classification means and explains it on hover or 
   assert.match(style, /border: 1px solid var\(--status-accent\);/);
   assert.match(style, /border-right: 1px solid var\(--status-accent\);/);
   assert.match(style, /\.status-source/);
+  assert.match(style, /\.memorandum-card/);
+  assert.match(style, /\.memorandum-links/);
   assert.match(style, /@media \(max-height: 650px\)/);
   assert.match(style, /top: calc\(100% \+ 6px\)/);
   assert.match(style, /#tab-dashboard > \.status-grid \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
@@ -642,7 +648,12 @@ test('shows what each overview classification means and explains it on hover or 
     'Hinay (Ease-in): Ease into structured distance learning. In heat, shorten face-to-face hours or use hybrid/home-based schedules.',
     'Hinga (Check-in): Check-ins and light distance learning. In heat, suspend face-to-face classes and reduce academic demands.',
     'Hinto (Stop): All forms of learning are suspended. In heat, stop face-to-face and home-based activities; safety checks come first.',
-    'From DepEd Order No. 014, s. 2026 and DepEd Memorandum No. 64, s. 2026. Hover or focus a card for details.'
+    'From DepEd Order No. 014, s. 2026 and DepEd Memorandum No. 64, s. 2026. Hover or focus a card for details.',
+    'SOURCE · DEPED 4H',
+    'DepEd memorandum',
+    'DM No. 064, s. 2026 — Anticipatory Action, Preparedness, and Protective Measures for the 2026–2027 Super El Niño.',
+    'Open memorandum PDF',
+    'Open 4H order PDF'
   ]) {
     assert.equal(locales.split(`'${key}':`).length - 1, 3, `${key} is translated into tl, ceb, and war`);
   }
@@ -996,7 +1007,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v141/);
+  assert.match(serviceWorker, /schoolheat-v142/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -1094,7 +1105,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v141/);
+  assert.match(serviceWorker, /schoolheat-v142/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
