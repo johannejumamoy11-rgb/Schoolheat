@@ -119,7 +119,7 @@ Gamita an test SMS la kon nagbe-verify hin bag-o nga setup. Nalakip ini ha lima 
 
 ### Tagna
 
-An **60-Minute Forecast (60-Minuto nga Tagna)** ginhimo han nakaiskedyul nga Python job tikang ha `data/schoolheat_readings.csv`, diri tikang ha mga natipig nga pagbasa ha mao nga browser. Ginhahambing ini an Random Forest, XGBoost, ngan LightGBM ha diri-nagkakalapsob nga 60-minuto nga holdout ngan ginpipili an pinakamababa nga validated RMSE. Tubtob ma-publish an `forecast.json`, masabi han app nga diri pa generated an forecast. Diri ginhahatag han forecast an pagkumpirma han calibration han sensor.
+An **60-Minute Forecast (60-Minuto nga Tagna)** ginhimo han nakaiskedyul nga Python job tikang ha `data/schoolheat_readings.csv`, diri tikang ha mga natipig nga pagbasa ha mao nga browser. Ginhahambing ini an Random Forest, XGBoost, ngan LightGBM ha diri-nagkakalapsob nga 60-minuto nga holdout ngan ginpipili an pinakamababa nga pinagsama nga ranggo han RMSE ngan MAPE. Ipinapakita han panel han pagtanding an RMSE ngan MAPE. Tubtob ma-publish an `forecast.json`, masabi han app nga diri pa generated an forecast. Diri ginhahatag han forecast an pagkumpirma han calibration han sensor.
 
 ### Mapa han Campus
 

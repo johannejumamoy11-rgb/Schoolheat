@@ -420,6 +420,7 @@ const FORECAST_CANDIDATE_MODELS = [
 
 const FORECAST_DEFAULT_MODEL = 'xgboost-style';
 const FORECAST_HORIZON_MINUTES = 60;
+const FORECAST_MIN_HOLDOUTS = 10;
 
 const FORECAST_MODEL_LABELS = {
   'random-forest': 'Random Forest (Python)',
@@ -3262,10 +3263,13 @@ class SchoolHeatApp {
     }
     if (model) {
       const score = best.metric && Number.isFinite(best.metric.rmse)
-        ? ` · RMSE ${best.metric.rmse.toFixed(1)}°C`
+        ? ` · RMSE ${best.metric.rmse.toFixed(1)}°C · MAPE ${Number.isFinite(best.metric.mape) ? `${best.metric.mape.toFixed(1)}%` : 'n/a'}`
+        : '';
+      const provisional = !best.metric || best.metric.samples < FORECAST_MIN_HOLDOUTS
+        ? ' · provisional'
         : '';
       const dataDate = forecast.dataEnd ? ` · data through ${this.formatDate(forecast.dataEnd.toISOString())}` : '';
-      model.textContent = `${best.label}${score}${dataDate}`;
+      model.textContent = `${best.label}${score}${provisional}${dataDate}`;
     }
     if (time) time.textContent = `For ${this.formatTime(forecast.date.toISOString())}`;
 
@@ -3780,11 +3784,18 @@ class SchoolHeatApp {
       if (result.pending) return result.message || 'The scheduled Python forecast has not run yet.';
       const best = this.getBestForecastModel(result);
       const metric = best.metric;
+      const provisional = !metric || metric.samples < FORECAST_MIN_HOLDOUTS;
       const generatedAt = result.generatedAt ? this.formatTime(result.generatedAt.toISOString()) : 'not recorded';
       const estimate = `${best.label} predicts ${best.result.value.toFixed(1)}°C Heat Index at ${this.formatTime(result.date.toISOString())} for ${result.location}.`;
-      const evaluation = metric
-        ? `Walk-forward evaluation used ${metric.samples} non-overlapping 60-minute holdout(s) from ${this.formatTime(metric.evaluationStart.toISOString())} to ${this.formatTime(metric.evaluationEnd.toISOString())}; RMSE was ${metric.rmse.toFixed(2)}°C.`
-        : 'There are not yet enough holdout samples to report validated model performance; this selection is provisional.';
+      let evaluation = 'There are not yet enough holdout samples to report validated model performance; this selection is provisional.';
+      if (metric) {
+        const period = metric.evaluationStart && metric.evaluationEnd
+          ? `from ${this.formatTime(metric.evaluationStart.toISOString())} to ${this.formatTime(metric.evaluationEnd.toISOString())}`
+          : 'over an unavailable period';
+        const mape = Number.isFinite(metric.mape) ? `${metric.mape.toFixed(1)}%` : 'not defined';
+        evaluation = `Selection used equal-weight RMSE and MAPE ranks over ${metric.samples} non-overlapping 60-minute holdout(s) ${period}; RMSE was ${metric.rmse.toFixed(2)}°C and MAPE was ${mape}.`;
+        if (provisional) evaluation += ` Fewer than ${FORECAST_MIN_HOLDOUTS} holdouts are available, so this selection is provisional.`;
+      }
       return `${estimate} Forecast generated ${generatedAt}. ${evaluation} This is a prediction, not a measured value or official safety decision.`;
     }
 
@@ -4882,15 +4893,29 @@ class SchoolHeatApp {
   }
 
   getBestForecastModel(modelResult) {
-    const scoredModels = Object.entries(modelResult.metrics || {})
+    const compare = (left, right) => left < right ? -1 : left > right ? 1 : 0;
+    const mapeOf = metric => Number.isFinite(metric.mape) ? metric.mape : Number.POSITIVE_INFINITY;
+    const withRmse = Object.entries(modelResult.metrics || {})
       .filter(([name, metric]) =>
-        FORECAST_CANDIDATE_MODELS.includes(name) && Number.isFinite(metric.rmse))
-      .sort((a, b) => a[1].rmse - b[1].rmse || a[1].mae - b[1].mae);
+        FORECAST_CANDIDATE_MODELS.includes(name) && Number.isFinite(metric.rmse));
+    const withBoth = withRmse.filter(([, metric]) => Number.isFinite(metric.mape));
+    const pool = withBoth.length ? withBoth : withRmse;
+    const rmseOrder = [...pool].sort((a, b) =>
+      a[1].rmse - b[1].rmse || compare(mapeOf(a[1]), mapeOf(b[1])));
+    const mapeOrder = [...pool].sort((a, b) =>
+      compare(mapeOf(a[1]), mapeOf(b[1])) || a[1].rmse - b[1].rmse);
+    const rankOf = (order, name) => {
+      const index = order.findIndex(([candidate]) => candidate === name);
+      return index < 0 ? pool.length : index;
+    };
+    const combinedRank = name => rankOf(rmseOrder, name) + rankOf(mapeOrder, name);
+    const ranked = [...pool].sort((a, b) =>
+      combinedRank(a[0]) - combinedRank(b[0])
+      || a[1].rmse - b[1].rmse
+      || compare(mapeOf(a[1]), mapeOf(b[1])));
     const preferred = FORECAST_CANDIDATE_MODELS.includes(modelResult.bestModel) ? modelResult.bestModel : null;
-    const preferredMetric = preferred ? modelResult.metrics?.[preferred] : null;
-    const selected = preferredMetric && Number.isFinite(preferredMetric.rmse)
-      ? [preferred, preferredMetric]
-      : scoredModels[0]
+    const selected = preferred && pool.find(([name]) => name === preferred)
+      || ranked[0]
       || [FORECAST_DEFAULT_MODEL, null];
     const [name, metric] = selected;
     return {
@@ -4998,10 +5023,10 @@ class SchoolHeatApp {
     const generatedAt = document.getElementById('forecast-generated-at');
     if (generatedAt) generatedAt.textContent = `Generated ${this.formatTime(modelResult.generatedAt.toISOString())}`;
     const modelName = bestModel.name;
-    const isMeasuredBest = Boolean(bestModel.metric);
+    const isProvisional = !bestModel.metric || bestModel.metric.samples < FORECAST_MIN_HOLDOUTS;
     const bestModelName = document.getElementById('forecast-best-model-name');
     if (bestModelName) bestModelName.textContent = bestModel.label;
-    if (badge) badge.textContent = `${bestModel.label} · ${isMeasuredBest ? 'Best so far' : 'Provisional'}`;
+    if (badge) badge.textContent = `${bestModel.label} · ${isProvisional ? 'Provisional' : 'Best so far'}`;
     const forecast = modelResult.models[modelName];
     const anchorMinute = modelResult.current.minute;
     const allValues = [
@@ -5117,7 +5142,7 @@ class SchoolHeatApp {
     if (cardsEl) {
       cardsEl.innerHTML = `
         <div class="forecast-day model-comparison-card selected">
-          <div class="forecast-day-name">${bestModel.label}${isMeasuredBest ? ' · Best so far' : ' · Provisional'}</div>
+          <div class="forecast-day-name">${bestModel.label}${isProvisional ? ' · Provisional' : ' · Best so far'}</div>
           <div class="forecast-day-date">+${FORECAST_HORIZON_MINUTES} min · ${modelResult.date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
           <div class="forecast-day-temp ${forecast.status}">${forecast.value.toFixed(1)}°C</div>
           <div class="forecast-day-label ${forecast.status}">${STATUS_LABELS[forecast.status]}</div>
@@ -5137,9 +5162,19 @@ class SchoolHeatApp {
     }
 
     const bestBadge = document.getElementById('forecast-best-badge');
-    if (bestBadge) bestBadge.textContent = bestModel.metric
-      ? `Lowest holdout RMSE (${bestModel.metric.samples} samples): ${bestModel.label} · ${bestModel.metric.rmse.toFixed(2)}°C`
-      : `At least 10 holdout samples needed · showing provisional ${FORECAST_MODEL_LABELS[FORECAST_DEFAULT_MODEL]}`;
+    if (bestBadge) {
+      if (bestModel.metric) {
+        const mape = Number.isFinite(bestModel.metric.mape)
+          ? ` · MAPE ${bestModel.metric.mape.toFixed(1)}%`
+          : '';
+        const badgeTitle = isProvisional
+          ? 'Provisional combined RMSE + MAPE rank'
+          : 'Lowest combined RMSE + MAPE rank';
+        bestBadge.textContent = `${badgeTitle} (${bestModel.metric.samples} samples): ${bestModel.label} · RMSE ${bestModel.metric.rmse.toFixed(2)}°C${mape}`;
+      } else {
+        bestBadge.textContent = `At least ${FORECAST_MIN_HOLDOUTS} holdout samples needed · showing provisional ${FORECAST_MODEL_LABELS[FORECAST_DEFAULT_MODEL]}`;
+      }
+    }
     const legend = document.getElementById('forecast-best-legend');
     if (legend) legend.textContent = `${bestModel.label} prediction`;
     const comparison = document.getElementById('forecast-comparison');
@@ -5151,18 +5186,14 @@ class SchoolHeatApp {
       const evaluatedModels = Object.entries(modelResult.metrics || {})
         .filter(([, metric]) => metric.samples > 0 && Number.isFinite(metric.rmse))
         .map(([name, metric]) => {
-          const label = `${modelLabels[name] || name}${name === bestModel.name && bestModel.metric ? ' · Selected by RMSE' : ''}`;
-          const r2 = Number.isFinite(metric.r2) ? metric.r2.toFixed(2) : 'not defined';
+          const label = `${modelLabels[name] || name}${name === bestModel.name && bestModel.metric ? ' · Selected by RMSE + MAPE rank' : ''}`;
           const mape = Number.isFinite(metric.mape) ? `${metric.mape.toFixed(1)}%` : 'not defined';
-          const hazardRate = metric.hazardSamples
-            ? ` (${(metric.hazardMissRate * 100).toFixed(1)}%)`
-            : ' (no Hinga/Hinto holdout readings)';
-          return `<p class="forecast-accuracy-caption">${label}: MAE ${metric.mae.toFixed(2)}°C · RMSE ${metric.rmse.toFixed(2)}°C · MAPE ${mape} · R² ${r2} · Hinga/Hinto under-predictions ${metric.hazardMisses}/${metric.hazardSamples}${hazardRate}.</p>`;
+          return `<p class="forecast-accuracy-caption">${label}: RMSE ${metric.rmse.toFixed(2)}°C · MAPE ${mape}.</p>`;
         }).join('');
-      comparison.innerHTML = `<div class="forecast-accuracy-heading">Walk-forward model comparison <span>Lower MAE/RMSE/MAPE is better; higher R² is better.</span></div>
-        <p class="forecast-accuracy-caption">${evaluationMetric?.samples || 0} non-overlapping 60-minute holdouts per model.${evaluationPeriod} An under-prediction means an actual heat index of at least 33°C was predicted below 33°C.</p>
+      comparison.innerHTML = `<div class="forecast-accuracy-heading">Walk-forward model comparison <span>Lower RMSE and MAPE is better; selection uses equal-weight ranks.</span></div>
+        <p class="forecast-accuracy-caption">${evaluationMetric?.samples || 0} non-overlapping 60-minute holdouts per model.${evaluationPeriod} Selection ranks each model by RMSE and MAPE; the selected model has the lowest combined rank.</p>
         ${evaluatedModels}
-        ${bestModel.metric ? '' : '<div class="forecast-accuracy-empty">At least 10 holdout forecasts are required before declaring a best model; the prediction above is provisional.</div>'}`;
+        ${isProvisional ? `<div class="forecast-accuracy-empty">Fewer than ${FORECAST_MIN_HOLDOUTS} holdout forecasts are available, so this selection is provisional.</div>` : ''}`;
     }
 
     if (tooltip) {

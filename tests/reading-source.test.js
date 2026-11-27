@@ -14,7 +14,7 @@ assert.match(script, appBootstrap);
 const isolatedScript = script.replace(appBootstrap, '');
 const context = { window: {} };
 vm.runInNewContext(
-  `${isolatedScript}\nglobalThis.SchoolHeatAppForTest = SchoolHeatApp;\nglobalThis.SchoolHeatLocationsForTest = LOCATIONS;\nglobalThis.SchoolHeatStatusColorForTest = getStatusColor;\nglobalThis.SchoolHeatAccessibleAccentForTest = getAccessibleAccent;\nglobalThis.SchoolHeatAccessibleColorForTest = getAccessibleColor;\nglobalThis.SchoolHeatContrastRatioForTest = getContrastRatio;\nglobalThis.SchoolHeatReadableTextColorForTest = getReadableTextColor;\nglobalThis.SchoolHeatCustomPaletteDefaultsForTest = CUSTOM_THEME_COLOR_DEFAULTS;\nglobalThis.SchoolHeatPaletteValidationForTest = getCustomPaletteValidationError;\nglobalThis.SchoolHeatPaletteNormalizationForTest = normalizeCustomPaletteColors;\nglobalThis.SchoolHeatColorPalettesForTest = APP_COLOR_PALETTES;\nglobalThis.SchoolHeatCustomAccentChoicesForTest = CUSTOM_ACCENT_CHOICES;\nglobalThis.SchoolHeatCustomPaletteGeneratorForTest = createCustomPaletteColors;\nglobalThis.SchoolHeatNormalizeTextSizeForTest = normalizeTextSize;globalThis.ForecastCandidatesForTest = FORECAST_CANDIDATE_MODELS;globalThis.ForecastHorizonForTest = FORECAST_HORIZON_MINUTES;globalThis.ForecastDefaultForTest = FORECAST_DEFAULT_MODEL;`,
+  `${isolatedScript}\nglobalThis.SchoolHeatAppForTest = SchoolHeatApp;\nglobalThis.SchoolHeatLocationsForTest = LOCATIONS;\nglobalThis.SchoolHeatStatusColorForTest = getStatusColor;\nglobalThis.SchoolHeatAccessibleAccentForTest = getAccessibleAccent;\nglobalThis.SchoolHeatAccessibleColorForTest = getAccessibleColor;\nglobalThis.SchoolHeatContrastRatioForTest = getContrastRatio;\nglobalThis.SchoolHeatReadableTextColorForTest = getReadableTextColor;\nglobalThis.SchoolHeatCustomPaletteDefaultsForTest = CUSTOM_THEME_COLOR_DEFAULTS;\nglobalThis.SchoolHeatPaletteValidationForTest = getCustomPaletteValidationError;\nglobalThis.SchoolHeatPaletteNormalizationForTest = normalizeCustomPaletteColors;\nglobalThis.SchoolHeatColorPalettesForTest = APP_COLOR_PALETTES;\nglobalThis.SchoolHeatCustomAccentChoicesForTest = CUSTOM_ACCENT_CHOICES;\nglobalThis.SchoolHeatCustomPaletteGeneratorForTest = createCustomPaletteColors;\nglobalThis.SchoolHeatNormalizeTextSizeForTest = normalizeTextSize;globalThis.ForecastCandidatesForTest = FORECAST_CANDIDATE_MODELS;globalThis.ForecastHorizonForTest = FORECAST_HORIZON_MINUTES;globalThis.ForecastDefaultForTest = FORECAST_DEFAULT_MODEL;globalThis.ForecastMinHoldoutsForTest = FORECAST_MIN_HOLDOUTS;`,
   context
 );
 
@@ -369,7 +369,7 @@ test('shows the pending published forecast without evaluating local JS models', 
   assert.match(attributes['aria-label'], /not been generated/);
 });
 
-test('normalizes the published 60-minute forecast and selects the lowest-RMSE model', () => {
+test('normalizes the published 60-minute forecast and selects the combined RMSE/MAPE rank', () => {
   const publishedApp = Object.create(context.SchoolHeatAppForTest.prototype);
   const now = Date.now();
   const at = minutes => new Date(now + minutes * 60000).toISOString();
@@ -449,6 +449,31 @@ test('honors the published best model when holdouts are provisional', () => {
   assert.equal(best.result.value, 35.47);
 });
 
+test('uses RMSE and MAPE together when choosing the best model', () => {
+  const rankApp = Object.create(context.SchoolHeatAppForTest.prototype);
+  const metric = (rmse, mape) => ({
+    mae: rmse * 0.8, rmse, mape, r2: 0.9, samples: 12,
+    hazardMisses: 0, hazardSamples: 2, hazardMissRate: 0
+  });
+  const best = rankApp.getBestForecastModel({
+    bestModel: 'xgboost-style',
+    models: {
+      'random-forest': { value: 35, status: 'danger' },
+      'xgboost-style': { value: 36, status: 'danger' },
+      'lightgbm-style': { value: 37, status: 'danger' }
+    },
+    metrics: {
+      'random-forest': metric(1.0, 3.0),
+      'xgboost-style': metric(2.0, 1.0),
+      'lightgbm-style': metric(3.0, 2.0)
+    }
+  });
+
+  assert.equal(best.name, 'xgboost-style');
+  assert.equal(best.metric.rmse, 2.0);
+  assert.equal(best.metric.mape, 1.0);
+});
+
 test('publishes a real Python 60-minute forecast job', () => {
   const root = path.join(__dirname, '..');
   for (const file of [
@@ -471,10 +496,14 @@ test('publishes a real Python 60-minute forecast job', () => {
     assert.match(publishedForecast.generatedAt, /^\d{4}-\d{2}-\d{2}T/);
     assert.ok(publishedForecast.bestModel);
     const rankedModels = Object.entries(publishedForecast.metrics)
-      .filter(([, metric]) => Number.isFinite(metric.rmse))
-      .sort((a, b) => a[1].rmse - b[1].rmse);
+      .filter(([, metric]) => Number.isFinite(metric.rmse) && Number.isFinite(metric.mape));
     if (rankedModels.length) {
-      assert.equal(publishedForecast.bestModel, rankedModels[0][0]);
+      const rmseOrder = [...rankedModels].sort((a, b) => a[1].rmse - b[1].rmse).map(([name]) => name);
+      const mapeOrder = [...rankedModels].sort((a, b) => a[1].mape - b[1].mape).map(([name]) => name);
+      const rank = name => rmseOrder.indexOf(name) + mapeOrder.indexOf(name);
+      const topModel = [...rankedModels]
+        .sort((a, b) => rank(a[0]) - rank(b[0]) || a[1].rmse - b[1].rmse)[0][0];
+      assert.equal(publishedForecast.bestModel, topModel);
     }
   }
 
@@ -501,7 +530,10 @@ test('publishes a real Python 60-minute forecast job', () => {
   assert.match(python, /VALIDATION_DAYS = 4/);
   assert.match(python, /all_dates\[-VALIDATION_DAYS:\]/);
   assert.doesNotMatch(python, /all_dates\[8:\]/);
-  assert.match(python, /lowest validated RMSE/i);
+  assert.match(python, /def selection_ranks\(metrics: dict\) -> dict:/);
+  assert.match(python, /lowest equal-weight combined RMSE and MAPE rank/i);
+  assert.match(python, /history_start = latest\["date"\] - pd\.Timedelta\(minutes=HORIZON_MINUTES\)/);
+  assert.doesNotMatch(python, /full\.tail\(HORIZON_STEPS\)/);
   assert.doesNotMatch(python, /metric\["samples"\] >= MIN_HOLDOUTS/);
   assert.match(python, /Fewer than \{MIN_HOLDOUTS\} holdout samples are available, so this forecast is provisional\./);
   assert.doesNotMatch(python, /send_sms|twilio|semaphore/i);
@@ -529,7 +561,7 @@ test('publishes a real Python 60-minute forecast job', () => {
   const csvRows = fs.readFileSync(path.join(root, 'data', 'schoolheat_readings.csv'), 'utf8')
     .trim()
     .split(/\r?\n/);
-  assert.ok(csvRows[csvRows.length - 1].startsWith('2026-11-25,'));
+  assert.match(csvRows[csvRows.length - 1], /^\d{4}-\d{2}-\d{2},\d{2}:\d{2}:\d{2},/);
   const sourceMetadata = JSON.parse(
     fs.readFileSync(path.join(root, 'data', 'schoolheat_forecast_source.json'), 'utf8')
   );
@@ -541,13 +573,14 @@ test('publishes a real Python 60-minute forecast job', () => {
   ]);
   assert.equal(context.ForecastHorizonForTest, 60);
   assert.equal(context.ForecastDefaultForTest, 'xgboost-style');
+  assert.equal(context.ForecastMinHoldoutsForTest, 10);
 
   const serviceWorker = fs.readFileSync(path.join(root, 'service-worker.js'), 'utf8');
   assert.match(serviceWorker, /pathname\.endsWith\('\/forecast\.json'\)/);
   assert.match(serviceWorker, /fetch\(e\.request, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /caches\.open\(CACHE_NAME\)\.then\(cache => cache\.put\(requestUrl\.href, copy\)\)/);
   assert.match(index, /60-Minute Forecast/);
-  assert.doesNotMatch(index, /30-Minute Forecast|custom JavaScript|offline custom JavaScript models|at least 12 complete/i);
+  assert.doesNotMatch(index, /30-Minute Forecast|30 Minutes Ahead|custom JavaScript|offline custom JavaScript models|at least 12 complete/i);
 
   const i18nContext = { window: {} };
   vm.runInNewContext(fs.readFileSync(path.join(root, 'locales.js'), 'utf8'), i18nContext);

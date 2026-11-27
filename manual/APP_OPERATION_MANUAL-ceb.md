@@ -209,7 +209,7 @@ Ang **60-Minute Forecast (Tagna sa 60 Minutos)** gihimo sa nakaiskedyul nga
 Python job gikan sa `data/schoolheat_readings.csv`, dili gikan sa mga natipig
 nga pagbasa niining browser. Gitandi niini ang Random Forest, XGBoost, ug
 LightGBM sa dili magkapatong nga 60-minutos nga holdout ug gipili ang
-pinakaubos nga validated RMSE. Hangtod ma-publish ang `forecast.json`, isulti sa
+pinakaubos nga pinagsama nga ranggo sa RMSE ug MAPE. Gipakita sa panel sa pagtandi ang RMSE ug MAPE. Hangtod ma-publish ang `forecast.json`, isulti sa
 app nga wala pa mahimo ang forecast. Dili mapamatud-an sa forecast ang
 calibration sa sensor.
 

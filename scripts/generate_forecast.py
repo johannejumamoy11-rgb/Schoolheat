@@ -4,8 +4,8 @@
 The job reads the six-column series CSV and its optional source metadata,
 validates them without inventing values, builds lagged heat-index features,
 and evaluates Random Forest, XGBoost, and LightGBM on non-overlapping
-60-minute walk-forward holdouts. The lowest validated RMSE model is used for
-the published prediction.
+60-minute walk-forward holdouts. The candidate with the lowest equal-weight
+combined RMSE and MAPE rank is used for the published prediction.
 
 Outputs forecast.json for GitHub Pages. This script never sends SMS, never
 changes sensor firmware, and never deploys anything by itself.
@@ -184,7 +184,7 @@ def select_device(raw: pd.DataFrame, metadata: dict | None = None) -> tuple[str,
     frame = raw[raw["device_id"] == device_id].copy()
     frame = frame.drop_duplicates("datetime", keep="last").sort_values("datetime")
     if len(frame) < 40:
-        raise ValueError(f"Device {device_id} has too few school-hour readings to forecast.")
+        raise ValueError(f"Device {device_id} has too few readings to forecast.")
     return device_id, frame
 
 
@@ -263,6 +263,43 @@ def compute_metrics(items: list[dict]) -> dict:
     }
 
 
+def selection_ranks(metrics: dict) -> dict:
+    candidates = [
+        name
+        for name, metric in metrics.items()
+        if metric.get("samples", 0) > 0 and metric.get("rmse") is not None
+    ]
+    if not candidates:
+        return {}
+
+    def ordered(key: str) -> list[str]:
+        return sorted(
+            candidates,
+            key=lambda name: (
+                metrics[name].get(key) is None,
+                metrics[name].get(key)
+                if metrics[name].get(key) is not None
+                else float("inf"),
+                metrics[name].get("rmse")
+                if metrics[name].get("rmse") is not None
+                else float("inf"),
+            ),
+        )
+
+    rmse_rank = {name: index for index, name in enumerate(ordered("rmse"))}
+    mape_rank = {name: index for index, name in enumerate(ordered("mape"))}
+    return {
+        name: (
+            rmse_rank[name] + mape_rank[name],
+            metrics[name]["rmse"],
+            metrics[name].get("mape")
+            if metrics[name].get("mape") is not None
+            else float("inf"),
+        )
+        for name in candidates
+    }
+
+
 def evaluate(train_rows: pd.DataFrame, models: dict) -> dict:
     errors = {name: [] for name in models}
     all_dates = sorted(train_rows["school_date"].unique())
@@ -336,16 +373,8 @@ def generate() -> None:
 
     models = make_models()
     metrics = evaluate(train_rows, models)
-    ranked = [
-        (name, metric)
-        for name, metric in metrics.items()
-        if metric["rmse"] is not None
-    ]
-    best_model = (
-        sorted(ranked, key=lambda item: (item[1]["rmse"], item[1]["mae"]))[0][0]
-        if ranked
-        else "xgboost-style"
-    )
+    ranks = selection_ranks(metrics)
+    best_model = sorted(ranks, key=lambda name: ranks[name])[0] if ranks else "xgboost-style"
     provisional = metrics[best_model]["samples"] < MIN_HOLDOUTS
 
     x_train = train_rows[FEATURES].to_numpy(dtype=float)
@@ -367,19 +396,23 @@ def generate() -> None:
 
     forecast_value = model_predictions[best_model]["value"]
     forecast_date = latest["date"] + pd.Timedelta(minutes=HORIZON_MINUTES)
+    history_start = latest["date"] - pd.Timedelta(minutes=HORIZON_MINUTES)
+    history_frame = frame[
+        (frame["datetime"] >= history_start) & (frame["datetime"] <= latest["date"])
+    ].sort_values("datetime")
     history = [
         {
-            "minute": int(row["minute"]),
-            "date": json_date(row["date"]),
-            "value": round(float(row["heat_index"]), 2),
+            "minute": int(row["datetime"].timestamp() // 60),
+            "date": json_date(row["datetime"]),
+            "value": round(float(row["heat_index_c"]), 2),
         }
-        for _, row in full.tail(HORIZON_STEPS).iterrows()
+        for _, row in history_frame.iterrows()
     ]
 
     notes = [
         "Real scikit-learn RandomForestRegressor, xgboost.XGBRegressor, and lightgbm.LGBMRegressor models.",
-        "Validation uses non-overlapping 60-minute school-hour holdouts from sequential future days.",
-        "The selected model has the lowest validated RMSE.",
+        "Validation uses non-overlapping 60-minute school-hour holdouts from sequential calendar days.",
+        "The selected model has the lowest equal-weight combined RMSE and MAPE rank.",
     ]
     if provisional:
         notes.append(

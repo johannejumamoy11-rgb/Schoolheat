@@ -119,7 +119,7 @@ Gamitin ang test SMS kapag beripikasyon lamang ng bagong setup. Nabibilang ito s
 
 ### Pagtataya
 
-Ang **60-Minute Forecast (60-Minolutong Pagtataya)** ay ginawa ng nakaiskedyul na Python job mula sa `data/schoolheat_readings.csv`, hindi mula sa mga naka-save na pagbasa sa browser na ito. Ihinahambing nito ang Random Forest, XGBoost, at LightGBM sa hindi magkakapatong na 60-minutong holdout at pinipili ang pinakamababang validated RMSE. Hangga't hindi naipapublish ang `forecast.json`, sasabihin ng app na hindi pa generated ang forecast. Hindi pinatutunayan ng forecast ang calibration ng sensor.
+Ang **60-Minute Forecast (60-Minolutong Pagtataya)** ay ginawa ng nakaiskedyul na Python job mula sa `data/schoolheat_readings.csv`, hindi mula sa mga naka-save na pagbasa sa browser na ito. Ihinahambing nito ang Random Forest, XGBoost, at LightGBM sa hindi magkakapatong na 60-minutong holdout at pinipili ang pinakamababang pinagsamang ranggo ng RMSE at MAPE. Ipinapakita ng panel ng paghahambing ang RMSE at MAPE. Hangga't hindi naipapublish ang `forecast.json`, sasabihin ng app na hindi pa generated ang forecast. Hindi pinatutunayan ng forecast ang calibration ng sensor.
 
 ### Mapa ng Kampus
 
