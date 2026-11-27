@@ -1,7 +1,165 @@
 {
   "schemaVersion": 1,
-  "status": "pending",
+  "status": "ready",
   "horizonMinutes": 60,
-  "generatedAt": null,
-  "message": "The scheduled Python forecast has not run yet. A real 60-minute forecast using Random Forest, XGBoost, and LightGBM will appear after the GitHub Actions workflow completes."
+  "generatedAt": "2026-11-27T14:19:54Z",
+  "sourceFile": "data/schoolheat_readings.csv",
+  "dataStart": "2026-11-03T07:30:00+08:00",
+  "dataEnd": "2026-11-11T16:00:00+08:00",
+  "deviceId": "1",
+  "location": "Classroom device 1",
+  "locationNote": "Device ID from the source CSV; not mapped to a campus map pin.",
+  "devices": [
+    {
+      "deviceId": "1",
+      "label": "Classroom device 1",
+      "readings": 1077
+    },
+    {
+      "deviceId": "2",
+      "label": "Classroom device 2",
+      "readings": 1331
+    },
+    {
+      "deviceId": "3",
+      "label": "Classroom device 3",
+      "readings": 1077
+    }
+  ],
+  "current": {
+    "minute": 29906400,
+    "date": "2026-11-11T16:00:00+08:00",
+    "value": 35.27,
+    "temperature": 29.6,
+    "humidity": 75.2
+  },
+  "forecast": [
+    {
+      "date": "2026-11-11T17:00:00+08:00",
+      "value": 37.42,
+      "status": "danger"
+    }
+  ],
+  "history": [
+    {
+      "minute": 29906345,
+      "date": "2026-11-11T15:05:00+08:00",
+      "value": 38.81
+    },
+    {
+      "minute": 29906350,
+      "date": "2026-11-11T15:10:00+08:00",
+      "value": 38.77
+    },
+    {
+      "minute": 29906355,
+      "date": "2026-11-11T15:15:00+08:00",
+      "value": 41.85
+    },
+    {
+      "minute": 29906360,
+      "date": "2026-11-11T15:20:00+08:00",
+      "value": 39.19
+    },
+    {
+      "minute": 29906365,
+      "date": "2026-11-11T15:25:00+08:00",
+      "value": 38.12
+    },
+    {
+      "minute": 29906370,
+      "date": "2026-11-11T15:30:00+08:00",
+      "value": 37.38
+    },
+    {
+      "minute": 29906375,
+      "date": "2026-11-11T15:35:00+08:00",
+      "value": 38.56
+    },
+    {
+      "minute": 29906380,
+      "date": "2026-11-11T15:40:00+08:00",
+      "value": 37.78
+    },
+    {
+      "minute": 29906385,
+      "date": "2026-11-11T15:45:00+08:00",
+      "value": 35.19
+    },
+    {
+      "minute": 29906390,
+      "date": "2026-11-11T15:50:00+08:00",
+      "value": 38.02
+    },
+    {
+      "minute": 29906395,
+      "date": "2026-11-11T15:55:00+08:00",
+      "value": 35.06
+    },
+    {
+      "minute": 29906400,
+      "date": "2026-11-11T16:00:00+08:00",
+      "value": 35.27
+    }
+  ],
+  "models": {
+    "random-forest": {
+      "value": 35.47,
+      "status": "danger"
+    },
+    "xgboost-style": {
+      "value": 37.42,
+      "status": "danger"
+    },
+    "lightgbm-style": {
+      "value": 37.28,
+      "status": "danger"
+    }
+  },
+  "bestModel": "xgboost-style",
+  "metrics": {
+    "random-forest": {
+      "mae": 1.8679,
+      "rmse": 2.202,
+      "mape": 4.8954,
+      "r2": -0.3431,
+      "samples": 9,
+      "hazardMisses": 0,
+      "hazardSamples": 9,
+      "hazardMissRate": 0.0,
+      "evaluationStart": "2026-11-11T08:00:00+08:00",
+      "evaluationEnd": "2026-11-11T16:00:00+08:00"
+    },
+    "xgboost-style": {
+      "mae": 1.884,
+      "rmse": 2.3325,
+      "mape": 4.9565,
+      "r2": -0.507,
+      "samples": 9,
+      "hazardMisses": 0,
+      "hazardSamples": 9,
+      "hazardMissRate": 0.0,
+      "evaluationStart": "2026-11-11T08:00:00+08:00",
+      "evaluationEnd": "2026-11-11T16:00:00+08:00"
+    },
+    "lightgbm-style": {
+      "mae": 2.0149,
+      "rmse": 2.5933,
+      "mape": 5.3294,
+      "r2": -0.8628,
+      "samples": 9,
+      "hazardMisses": 0,
+      "hazardSamples": 9,
+      "hazardMissRate": 0.0,
+      "evaluationStart": "2026-11-11T08:00:00+08:00",
+      "evaluationEnd": "2026-11-11T16:00:00+08:00"
+    }
+  },
+  "trainingSamples": 915,
+  "notes": [
+    "Real scikit-learn RandomForestRegressor, xgboost.XGBRegressor, and lightgbm.LGBMRegressor models.",
+    "Validation uses non-overlapping 60-minute school-hour holdouts from sequential future days.",
+    "The selected model has the lowest validated RMSE; provisional selection is XGBoost-style trees.",
+    "Sensor calibration is not verified by this forecast."
+  ]
 }
