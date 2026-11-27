@@ -3619,6 +3619,10 @@ class SchoolHeatApp {
       maxVal = Math.max(maxVal, entry.value);
     }));
     const span = maxVal - minVal || 1;
+    const tapBarLabel = this.translateText('Tap a bar');
+    const selectedLabel = this.translateText('Selected reading:');
+    const oldestLabel = this.translateText('Oldest');
+    const newestLabel = this.translateText('Newest');
 
     grid.innerHTML = summaries.map(summary => {
       const bars = summary.entries.map(entry => {
@@ -3628,7 +3632,7 @@ class SchoolHeatApp {
         const label = `${this.formatTime(entry.timestamp)} · ${entry.value.toFixed(1)}°C · ${statusLabel}`;
         const safeLabel = this.escapeHTML(label);
         return `
-          <button type="button" class="location-trend-bar-button" data-label="${safeLabel}" aria-label="${safeLabel}" aria-pressed="false">
+          <button type="button" class="location-trend-bar-button" data-label="${safeLabel}" aria-label="${safeLabel}" title="${safeLabel}" aria-pressed="false">
             <span class="location-trend-bar ${entry.status}${isPeak ? ' peak' : ''}" style="height:${barHeight.toFixed(1)}%"></span>
           </button>`;
       }).join('');
@@ -3646,8 +3650,10 @@ class SchoolHeatApp {
             </div>
           </div>
           <div class="location-trend-bars" role="group" aria-label="${aria}">${bars}</div>
+          <div class="location-trend-axis"><span>${oldestLabel}</span><span>${newestLabel}</span></div>
           <div class="location-trend-detail" aria-live="polite" hidden></div>
           <div class="location-trend-foot">
+            <span class="location-trend-hint">${tapBarLabel}</span>
             <span class="location-trend-status ${summary.peak.status}">${statusLabel}</span>
           </div>
         </article>`;
@@ -3676,7 +3682,8 @@ class SchoolHeatApp {
       }
       button.classList.add('active');
       button.setAttribute('aria-pressed', 'true');
-      detail.textContent = button.dataset.label || '';
+      const selectedLabel = this.translateText('Selected reading:');
+      detail.textContent = `${selectedLabel} ${button.dataset.label || ''}`.trim();
       detail.hidden = false;
     });
   }

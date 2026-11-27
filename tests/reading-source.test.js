@@ -508,7 +508,11 @@ test('draws heat-index bar graphs and peak for each saved location in history', 
   for (const key of [
     'Heat Index by Location',
     'Highest heat index',
-    'Highest first. Each graph uses saved readings; the tallest bar is the highest heat index. Tap a bar for details.',
+    'Cards are sorted by highest heat index. Tap a bar to see its time, heat index, and status.',
+    'Tap a bar',
+    'Selected reading:',
+    'Oldest',
+    'Newest',
     'No saved readings yet'
   ]) {
     assert.equal(locales.split(`'${key}':`).length - 1, 3, `${key} is translated into tl, ceb, and war`);
@@ -535,8 +539,12 @@ test('draws heat-index bar graphs and peak for each saved location in history', 
   assert.doesNotMatch(grid.innerHTML, /50\.0°C/);
   assert.equal((grid.innerHTML.match(/class="location-trend-bar-button"/g) || []).length, 3);
   assert.equal((grid.innerHTML.match(/class="location-trend-bar [a-z]+ peak"/g) || []).length, 2);
+  assert.match(style, /\.location-trend-bar-button\s*\{\s*flex: 0 0 44px;/);
+  assert.match(grid.innerHTML, /class="location-trend-axis"><span>Oldest<\/span><span>Newest<\/span>/);
   assert.match(grid.innerHTML, /class="location-trend-detail" aria-live="polite" hidden/);
+  assert.match(grid.innerHTML, /class="location-trend-hint">Tap a bar/);
   assert.match(grid.innerHTML, /data-label="[^"]*39\.0°C/);
+  assert.match(grid.innerHTML, /title="[^"]*39\.0°C/);
   assert.doesNotMatch(grid.innerHTML, /<svg/);
   assert.doesNotMatch(grid.innerHTML, /<rect/);
   assert.doesNotMatch(grid.innerHTML, /<polyline/);
@@ -549,6 +557,7 @@ test('shows reading details when a location bar is tapped', () => {
     getElementById: id => id === 'location-trend-grid' ? grid : null
   };
   const interactionApp = Object.create(context.SchoolHeatAppForTest.prototype);
+  interactionApp.translateText = text => text;
   interactionApp.setupLocationTrendEvents();
 
   const classes = new Set();
@@ -574,7 +583,7 @@ test('shows reading details when a location bar is tapped', () => {
   };
 
   clickHandler({ target: button });
-  assert.equal(detail.textContent, 'Nov 27, 2026 • 39.0°C • Hinga');
+  assert.equal(detail.textContent, 'Selected reading: Nov 27, 2026 • 39.0°C • Hinga');
   assert.equal(detail.hidden, false);
   assert.equal(attributes['aria-pressed'], 'true');
   assert.ok(classes.has('active'));
@@ -934,7 +943,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v135/);
+  assert.match(serviceWorker, /schoolheat-v136/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -1032,7 +1041,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v135/);
+  assert.match(serviceWorker, /schoolheat-v136/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
