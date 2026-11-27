@@ -20,21 +20,90 @@ vm.runInNewContext(
 
 const app = Object.create(context.SchoolHeatAppForTest.prototype);
 
-test('restores local file import and adds the secure live forecast upload', () => {
+test('one data-file action updates History and the live forecast', () => {
   assert.match(index, /id="history-file-input"/);
   assert.match(index, /id="history-upload-button"/);
   assert.match(index, /Choose data file/);
-  assert.match(index, /id="forecast-file-input"/);
   assert.match(index, /id="forecast-upload-code"/);
-  assert.match(script, /async importReadingsFile\(file\)/);
+  assert.match(index, /id="forecast-remember-code"/);
+  assert.doesNotMatch(index, /id="forecast-file-input"/);
+  assert.doesNotMatch(index, /id="forecast-upload-button"/);
+  assert.match(script, /async importReadingsFile\(file, options = \{\}\)/);
   assert.match(script, /parseDelimitedText/);
   assert.match(script, /parseXlsxFile/);
   assert.match(script, /normalizeUploadedReadings/);
   assert.match(script, /getReadingSourceLabel/);
-  assert.match(script, /async publishForecastFile\(file\)/);
+  assert.match(script, /async uploadDataFile\(file\)/);
+  assert.match(script, /await this\.uploadDataFile\(file\)/);
+  assert.match(script, /buildForecastCsvFromReadings/);
+  assert.match(script, /async publishForecastCsv\(csvText, accessCode\)/);
+  assert.match(script, /restoreForecastUploadCode\(\)/);
+  assert.match(script, /sh_forecast_upload_code/);
   assert.match(script, /X-Forecast-Upload-Code/);
-  assert.match(index, /Readings are saved on this device only/);
+  assert.match(index, /saved in History and the same readings are used/);
   assert.doesNotMatch(script, /GITHUB_TOKEN|ghp_[A-Za-z0-9]/);
+});
+
+test('builds a validated six-column forecast CSV from imported readings', () => {
+  context.document = { getElementById: () => null };
+  const csv = app.buildForecastCsvFromReadings([
+    {
+      timestamp: '2026-11-03T07:00:00',
+      temperature: 29.933,
+      humidity: 77.767,
+      heatIndex: 36.843,
+      location: '3 Storey, 15 Classroom, DepEd SS Building',
+      source: 'demo',
+      isDemo: true
+    },
+    {
+      timestamp: '2026-11-03T07:00:00',
+      temperature: 29.933,
+      humidity: 77.767,
+      heatIndex: 36.843,
+      location: '3 Storey, 15 Classroom, DepEd SS Building'
+    },
+    {
+      timestamp: '2026-11-03T07:05:00',
+      temperature: 30.133,
+      humidity: 75.833,
+      heatIndex: 36.917,
+      location: '3 Storey, 15 Classroom, DepEd SS Building'
+    }
+  ]);
+  const lines = csv.trim().split(/\r?\n/);
+  assert.equal(lines[0], 'date,timestamp,device_id,location,temperature_c,relative_humidity_pct,heat_index_c');
+  assert.equal(lines.length, 3);
+  assert.match(lines[1], /^2026-11-03,07:00:00,1,"3 Storey, 15 Classroom, DepEd SS Building",29\.933,77\.767,36\.843$/);
+  assert.match(lines[2], /^2026-11-03,07:05:00,1,"3 Storey, 15 Classroom, DepEd SS Building",30\.133,75\.833,36\.917$/);
+});
+
+test('restores the forecast access code only when remembering is enabled', () => {
+  const values = new Map([
+    ['sh_forecast_remember_code', 'true'],
+    ['sh_forecast_upload_code', 'remembered-code']
+  ]);
+  context.localStorage = {
+    getItem: key => values.has(key) ? values.get(key) : null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: key => values.delete(key)
+  };
+  const input = { value: '' };
+  const remember = { checked: false };
+  context.document = {
+    getElementById: id => id === 'forecast-upload-code' ? input
+      : id === 'forecast-remember-code' ? remember
+        : null
+  };
+  app.restoreForecastUploadCode();
+  assert.equal(remember.checked, true);
+  assert.equal(input.value, 'remembered-code');
+  assert.equal(app.getForecastUploadCode(), 'remembered-code');
+
+  values.set('sh_forecast_remember_code', 'false');
+  app.restoreForecastUploadCode();
+  assert.equal(input.value, '');
+  assert.equal(app.getForecastUploadCode(), '');
 });
 
 test('local CSV import parses the supplied averages format', () => {
@@ -1278,7 +1347,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v147/);
+  assert.match(serviceWorker, /schoolheat-v148/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -1376,7 +1445,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v147/);
+  assert.match(serviceWorker, /schoolheat-v148/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);

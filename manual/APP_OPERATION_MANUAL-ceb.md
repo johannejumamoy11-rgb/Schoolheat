@@ -199,14 +199,14 @@ limitasyon sa limang minuto ug mahimong mogamit og usa ka credit.
   trash button aron tangtangon ang usa ka pagbasa niining browser; dili kini
   ma-undo. Ang na-publish nga Python forecast naggamit sa bulag nga CSV dataset
   ug dili mausab.
-- Ang **Choose data file (Pilia ang data file)** nag-import og CSV o XLSX niining
-  browser lamang. Dili niini ipadala ang mga pagbasa ngadto sa Firebase ug dili
-  niini usbon ang live forecast.
-- Ang **Upload CSV to live forecast (I-upload ang CSV sa live forecast)** mopuli
-  sa na-publish nga source data ug magsugod sa Python job. Isulod ang forecast
-  access code, pagpili og six-column CSV o SchoolHeat averages CSV, ug hulata
-  ang job. Gikinahanglan ang Firebase sign-in, App Check, ug usa ka upload matag
-  account matag limang minuto. Ang GitHub token anaa lamang sa upload Worker.
+- Ang **Choose data file (Pilia ang data file)** karon duha ang nahimo: nag-import
+  og CSV o XLSX ngadto sa `sh_readings` niining browser, gihimo ang balidong
+  mga rows ngadto sa six-column forecast CSV, ug gipadala kini sa upload Worker.
+  Isulod ang forecast access code kausa ug ibilin nga naka-check ang **Remember
+  code on this device**; ang sunod nga file awtomatikong mag-update sa History
+  ug sa na-publish nga forecast. Gikinahanglan ang Firebase sign-in, App Check,
+  ug usa ka upload matag account matag limang minuto. Ang GitHub token anaa
+  lamang sa upload Worker. Ang demo readings dili gayud i-upload.
 - Ang **Export CSV (I-export ang CSV)** naglakip og kolumn nga **Demo Data (Data
   sa Demo)**. Ang **Export JSON (I-export ang JSON)** nagtipig og
   `schoolheat_readings.json`.

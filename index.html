@@ -707,24 +707,15 @@
 
       <div class="glass-card upload-card history-upload">
         <div>
-          <h3>Import readings</h3>
-          <p>Upload a CSV or Excel (.xlsx) file with date, temperature, and humidity columns. Location is optional.</p>
-        </div>
-        <input type="file" id="history-file-input" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
-        <button class="btn-secondary" id="history-upload-button" type="button">Choose data file</button>
-        <p class="upload-hint">Readings are saved on this device only. This does not change the live published forecast.</p>
-      </div>
-
-      <div class="glass-card upload-card forecast-upload">
-        <div>
-          <h3>Refresh published forecast</h3>
-          <p>Upload the six-column forecast CSV or the SchoolHeat averages CSV to replace the source data and queue a new 60-minute Python forecast.</p>
+          <h3>Import readings & refresh forecast</h3>
+          <p>Choose a CSV or Excel (.xlsx) file once. Readings are saved in History and the same readings are used to regenerate the live 60-minute forecast.</p>
         </div>
         <label class="upload-code-label" for="forecast-upload-code">Forecast access code</label>
         <input type="password" id="forecast-upload-code" class="upload-code-input" placeholder="Enter the upload code" autocomplete="off" maxlength="200">
-        <input type="file" id="forecast-file-input" accept=".csv,text/csv" hidden>
-        <button class="btn-secondary" id="forecast-upload-button" type="button">Upload CSV to live forecast</button>
-        <p class="upload-hint" id="forecast-upload-status" role="status" aria-live="polite">Firebase sign-in, App Check, and an upload code are required. The GitHub token stays on the upload Worker.</p>
+        <label class="upload-remember"><input type="checkbox" id="forecast-remember-code" checked> Remember code on this device</label>
+        <input type="file" id="history-file-input" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+        <button class="btn-secondary" id="history-upload-button" type="button">Choose data file</button>
+        <p class="upload-hint" id="forecast-upload-status" role="status" aria-live="polite">Enter the access code once. Future uploads update both History and the published forecast automatically.</p>
       </div>
 
       <div class="glass-card filter-bar">

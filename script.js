@@ -546,6 +546,7 @@ class SchoolHeatApp {
   init() {
     this.populateLocations();
     this.applySettings();
+    this.restoreForecastUploadCode();
     this.bindEvents();
     this.renderLocalContacts();
     this.setupNavigation();
@@ -772,64 +773,61 @@ class SchoolHeatApp {
     return this.translateText('SOURCE NOT RECORDED');
   }
 
-  async importReadingsFile(file) {
+  async importReadingsFile(file, options = {}) {
     const maxFileSize = 5 * 1024 * 1024;
     if (file.size > maxFileSize) {
-      this.toast('Choose a file smaller than 5 MB.', 'error');
-      return;
+      throw new Error('Choose a file smaller than 5 MB.');
     }
 
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    let rows;
+    if (extension === 'csv') {
+      rows = this.parseDelimitedText(await file.text());
+    } else if (extension === 'xlsx') {
+      rows = await this.parseXlsxFile(file);
+    } else {
+      throw new Error('Choose a CSV or Excel (.xlsx) file.');
+    }
+
+    const parsed = this.normalizeUploadedReadings(rows, file.name);
+    if (!parsed.readings.length) {
+      throw new Error('No valid rows found. Check the timestamp, temperature, and humidity columns.');
+    }
+
+    const existingIds = new Set(this.readings.map(reading => String(reading.id)));
+    const imported = parsed.readings.filter(reading => !existingIds.has(String(reading.id)));
+    if (!imported.length) {
+      if (!options.silent) this.toast('These readings are already in your history.', 'info');
+      return { imported: [], skipped: parsed.skipped, duplicate: true };
+    }
+
+    const previousReadings = this.readings;
+    this.readings = [...previousReadings, ...imported].sort((a, b) => {
+      const timeA = new Date(a.timestamp).getTime();
+      const timeB = new Date(b.timestamp).getTime();
+      if (!Number.isFinite(timeA)) return Number.isFinite(timeB) ? 1 : 0;
+      if (!Number.isFinite(timeB)) return -1;
+      return timeB - timeA;
+    });
     try {
-      const extension = file.name.split('.').pop()?.toLowerCase();
-      let rows;
-      if (extension === 'csv') {
-        rows = this.parseDelimitedText(await file.text());
-      } else if (extension === 'xlsx') {
-        rows = await this.parseXlsxFile(file);
-      } else {
-        throw new Error('Choose a CSV or Excel (.xlsx) file.');
-      }
-
-      const parsed = this.normalizeUploadedReadings(rows, file.name);
-      if (!parsed.readings.length) {
-        throw new Error('No valid rows found. Check the timestamp, temperature, and humidity columns.');
-      }
-
-      const existingIds = new Set(this.readings.map(reading => String(reading.id)));
-      const imported = parsed.readings.filter(reading => !existingIds.has(String(reading.id)));
-      if (!imported.length) {
-        this.toast('These readings are already in your history.', 'info');
-        return;
-      }
-
-      const previousReadings = this.readings;
-      this.readings = [...previousReadings, ...imported].sort((a, b) => {
-        const timeA = new Date(a.timestamp).getTime();
-        const timeB = new Date(b.timestamp).getTime();
-        if (!Number.isFinite(timeA)) return Number.isFinite(timeB) ? 1 : 0;
-        if (!Number.isFinite(timeB)) return -1;
-        return timeB - timeA;
-      });
-      try {
-        this.saveReadings();
-      } catch (error) {
-        this.readings = previousReadings;
-        throw new Error(`Could not save imported readings in this browser: ${error.message}`);
-      }
-
-      this.lastObservedReadingId = this.readings[0]?.id ?? this.lastObservedReadingId;
-      this.forecastComparisonCache = null;
-      this.updateDashboard();
-      this.renderHistory();
-      this.renderMap();
-      this.updateMonitorGauge();
-      if (this.currentTab === 'forecast') this.drawForecastChart();
-      const skipped = parsed.skipped ? ` ${parsed.skipped} invalid row(s) skipped.` : '';
-      this.toast(`Imported ${imported.length} reading(s) from ${file.name}.${skipped} These stay on this device and do not change the live forecast.`, 'success');
+      this.saveReadings();
     } catch (error) {
-      console.error('Could not import SchoolHeat readings:', error);
-      this.toast(error.message || 'Could not read this file.', 'error');
+      this.readings = previousReadings;
+      throw new Error(`Could not save imported readings in this browser: ${error.message}`);
     }
+
+    this.lastObservedReadingId = this.readings[0]?.id ?? this.lastObservedReadingId;
+    this.forecastComparisonCache = null;
+    this.updateDashboard();
+    this.renderHistory();
+    this.renderMap();
+    this.updateMonitorGauge();
+    if (this.currentTab === 'forecast') this.drawForecastChart();
+    if (!options.silent) {
+      const skipped = parsed.skipped ? ` ${parsed.skipped} invalid row(s) skipped.` : '';
+      this.toast(`Imported ${imported.length} reading(s) from ${file.name}.${skipped}`, 'success');
+    }
+    return { imported, skipped: parsed.skipped, duplicate: false };
   }
 
   parseDelimitedText(text) {
@@ -1126,86 +1124,188 @@ class SchoolHeatApp {
     return { readings, skipped };
   }
 
-  async publishForecastFile(file) {
+  buildForecastCsvFromReadings(readings) {
+    const candidates = (readings || []).filter(reading =>
+      reading.source !== 'demo' &&
+      !reading.isDemo &&
+      this.hasValidMeasurement(reading) &&
+      Number.isFinite(new Date(reading.timestamp).getTime()));
+    if (!candidates.length) throw new Error('No complete readings are available for the forecast.');
+
+    const sorted = [...candidates].sort((a, b) =>
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    const location = String(sorted.find(reading => String(reading.location || '').trim())?.location || '')
+      .trim()
+      .slice(0, 160);
+    const pad = value => String(value).padStart(2, '0');
+    const cell = value => {
+      const text = String(value ?? '');
+      return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    };
+    const lines = ['date,timestamp,device_id,location,temperature_c,relative_humidity_pct,heat_index_c'];
+    const seen = new Set();
+    sorted.forEach(reading => {
+      const date = new Date(reading.timestamp);
+      const dateText = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+      const timeText = `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+      const key = `${dateText}\t${timeText}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      lines.push([
+        dateText,
+        timeText,
+        '1',
+        location,
+        Number(reading.temperature).toFixed(3),
+        Number(reading.humidity).toFixed(3),
+        Number(reading.heatIndex).toFixed(3)
+      ].map(cell).join(','));
+    });
+    return `${lines.join('\n')}\n`;
+  }
+
+  getForecastUploadCode() {
+    const inputCode = document.getElementById('forecast-upload-code')?.value?.trim() || '';
+    if (inputCode) return inputCode;
+    try {
+      if (localStorage.getItem('sh_forecast_remember_code') === 'false') return '';
+      return String(localStorage.getItem('sh_forecast_upload_code') || '').trim();
+    } catch {
+      return '';
+    }
+  }
+
+  restoreForecastUploadCode() {
+    const input = document.getElementById('forecast-upload-code');
+    const remember = document.getElementById('forecast-remember-code');
+    if (!input) return;
+    try {
+      const shouldRemember = localStorage.getItem('sh_forecast_remember_code') !== 'false';
+      if (remember) remember.checked = shouldRemember;
+      if (shouldRemember) {
+        input.value = String(localStorage.getItem('sh_forecast_upload_code') || '');
+      } else {
+        input.value = '';
+      }
+    } catch {
+      // Storage can be unavailable in private browsing; the code can still be typed.
+    }
+  }
+
+  saveForecastUploadCode(code) {
+    const remember = document.getElementById('forecast-remember-code')?.checked !== false;
+    try {
+      localStorage.setItem('sh_forecast_remember_code', remember ? 'true' : 'false');
+      if (remember && code) localStorage.setItem('sh_forecast_upload_code', code);
+      else localStorage.removeItem('sh_forecast_upload_code');
+    } catch {
+      // Storage can be unavailable in private browsing; the code still works this session.
+    }
+  }
+
+  async publishForecastCsv(csvText, accessCode) {
     const status = document.getElementById('forecast-upload-status');
     const setStatus = message => {
       if (status) status.textContent = message;
     };
-    if (!/\.csv$/i.test(file.name)) {
-      this.toast('Choose a CSV file for the live forecast.', 'error');
-      return;
+    if (!accessCode) throw new Error('Enter the forecast access code before uploading.');
+    if (typeof csvText !== 'string' || !csvText.trim()) {
+      throw new Error('No forecast data is available to upload.');
     }
-    if (file.size > 2 * 1024 * 1024) {
-      this.toast('Choose a forecast CSV smaller than 2 MB.', 'error');
-      return;
-    }
-
-    const accessCode = document.getElementById('forecast-upload-code')?.value?.trim() || '';
-    if (!accessCode) {
-      setStatus('Enter the forecast access code before uploading.');
-      this.toast('Enter the forecast access code before uploading.', 'error');
-      return;
+    if (new TextEncoder().encode(csvText).byteLength > 2 * 1024 * 1024) {
+      throw new Error('The forecast CSV is larger than 2 MB.');
     }
 
     setStatus('Signing in and checking this device…');
+    const config = window.SCHOOLHEAT_CLOUD;
+    if (!config?.forecastUploadWorkerUrl) {
+      throw new Error('The forecast upload Worker URL is not configured.');
+    }
+    const service = await this.getAlertService();
+    if (service.error) {
+      throw new Error('Firebase sign-in and App Check are required for forecast upload.');
+    }
+    if (!service.auth.currentUser) await service.authSdk.signInAnonymously(service.auth);
+    const [idToken, appCheckToken] = await Promise.all([
+      service.auth.currentUser.getIdToken(),
+      service.appCheckSdk.getToken(service.appCheck, false)
+    ]);
+    const requestId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `forecast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    setStatus('Uploading readings and regenerating the 60-minute forecast…');
+    const response = await fetch(config.forecastUploadWorkerUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Idempotency-Key': requestId,
+        'X-Firebase-AppCheck': appCheckToken.token,
+        'X-Forecast-Upload-Code': accessCode
+      },
+      body: csvText
+    });
+    let result;
     try {
-      const config = window.SCHOOLHEAT_CLOUD;
-      if (!config?.forecastUploadWorkerUrl) {
-        throw new Error('The forecast upload Worker URL is not configured.');
-      }
-      const service = await this.getAlertService();
-      if (service.error) {
-        throw new Error('Firebase sign-in and App Check are required for forecast upload.');
-      }
-      if (!service.auth.currentUser) await service.authSdk.signInAnonymously(service.auth);
-      const [idToken, appCheckToken] = await Promise.all([
-        service.auth.currentUser.getIdToken(),
-        service.appCheckSdk.getToken(service.appCheck, false)
-      ]);
-      const requestId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-        ? crypto.randomUUID()
-        : `forecast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      result = await response.json();
+    } catch {
+      throw new Error('The forecast upload Worker returned an invalid response.');
+    }
+    if (!response.ok) {
+      const retry = Number.isFinite(result.retryAfterSeconds)
+        ? ` Try again in about ${result.retryAfterSeconds} seconds.`
+        : '';
+      throw new Error(`${result.error || `Upload failed (HTTP ${response.status}).`}${retry}`);
+    }
 
-      setStatus('Uploading CSV and queuing the Python forecast…');
-      const response = await fetch(config.forecastUploadWorkerUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${idToken}`,
-          'Content-Type': 'text/csv; charset=utf-8',
-          'Idempotency-Key': requestId,
-          'X-Firebase-AppCheck': appCheckToken.token,
-          'X-Forecast-Upload-Code': accessCode
-        },
-        body: await file.text()
-      });
-      let result;
-      try {
-        result = await response.json();
-      } catch {
-        throw new Error('The forecast upload Worker returned an invalid response.');
-      }
-      if (!response.ok) {
-        const retry = Number.isFinite(result.retryAfterSeconds)
-          ? ` Try again in about ${result.retryAfterSeconds} seconds.`
-          : '';
-        throw new Error(`${result.error || `Upload failed (HTTP ${response.status}).`}${retry}`);
+    this.publishedForecastCache = null;
+    this.forecastComparisonCache = null;
+    this.scheduleDashboardForecastRender?.();
+    this.saveForecastUploadCode(accessCode);
+    const rows = Number.isFinite(result.rows) ? `${result.rows} rows` : 'the new readings';
+    setStatus(`Saved ${rows}. The 60-minute forecast is regenerating.`);
+    return result;
+  }
+
+  async uploadDataFile(file) {
+    const status = document.getElementById('forecast-upload-status');
+    const setStatus = message => {
+      if (status) status.textContent = message;
+    };
+    try {
+      const accessCode = this.getForecastUploadCode();
+      if (!accessCode) {
+        setStatus('Enter the forecast access code once. After that, choosing a file updates both History and the forecast.');
+        this.toast('Enter the forecast access code before choosing a file.', 'error');
+        return;
       }
 
-      this.publishedForecastCache = null;
-      this.forecastComparisonCache = null;
-      this.scheduleDashboardForecastRender?.();
-      const rows = Number.isFinite(result.rows) ? `${result.rows} rows` : 'the new source data';
-      const queued = result.forecastQueued !== false;
-      setStatus(queued
-        ? `Saved ${rows}. The 60-minute forecast is regenerating.`
-        : `Saved ${rows}, but the forecast regeneration could not be queued. Please retry.`);
-      this.toast(queued
-        ? 'CSV saved. The live forecast will update after the Python job finishes.'
-        : 'CSV saved, but the forecast regeneration could not be queued.', queued ? 'success' : 'warning');
+      setStatus('Reading the file, saving History, and preparing the forecast…');
+      const imported = await this.importReadingsFile(file, { silent: true });
+      const sourceReadings = imported.duplicate
+        ? this.readings.filter(reading =>
+          String(reading.sourceFile || '') === file.name &&
+          reading.source !== 'demo' &&
+          !reading.isDemo)
+        : imported.imported;
+      if (!sourceReadings.length) {
+        throw new Error('No saved readings were available to refresh the forecast.');
+      }
+
+      const csvText = this.buildForecastCsvFromReadings(sourceReadings);
+      const result = await this.publishForecastCsv(csvText, accessCode);
+      const skipped = imported.skipped ? ` ${imported.skipped} invalid row(s) skipped.` : '';
+      const rows = Number.isFinite(result.rows) ? `${result.rows} rows` : 'the saved readings';
+      const historyNote = imported.duplicate
+        ? 'Readings were already in History'
+        : `History updated with ${imported.imported.length} reading(s)`;
+      setStatus(`${historyNote}. Live forecast regenerating from ${rows}.${skipped}`);
+      this.toast('History and live forecast updated. The forecast will refresh when the Python job finishes.', 'success');
     } catch (error) {
-      console.error('Could not publish SchoolHeat forecast data:', error);
-      setStatus(error.message || 'The forecast CSV could not be uploaded.');
-      this.toast(error.message || 'The forecast CSV could not be uploaded.', 'error');
+      console.error('Could not upload SchoolHeat data file:', error);
+      setStatus(error.message || 'The data file could not be uploaded.');
+      this.toast(error.message || 'The data file could not be uploaded.', 'error');
     }
   }
 
@@ -1414,22 +1514,9 @@ class SchoolHeatApp {
       const file = historyUploadInput.files?.[0];
       if (!file) return;
       try {
-        await this.importReadingsFile(file);
+        await this.uploadDataFile(file);
       } finally {
         historyUploadInput.value = '';
-      }
-    });
-
-    const forecastUploadButton = document.getElementById('forecast-upload-button');
-    const forecastUploadInput = document.getElementById('forecast-file-input');
-    forecastUploadButton?.addEventListener('click', () => forecastUploadInput?.click());
-    forecastUploadInput?.addEventListener('change', async () => {
-      const file = forecastUploadInput.files?.[0];
-      if (!file) return;
-      try {
-        await this.publishForecastFile(file);
-      } finally {
-        forecastUploadInput.value = '';
       }
     });
 
