@@ -1771,8 +1771,7 @@ html[data-theme="dark"] .ambient-orb {
   pointer-events: auto;
 }
 .map-pin::before {
-  --pin-ring: 0 0 0 2px rgba(8, 16, 14, 0.92), 0 4px 12px rgba(0, 0, 0, 0.6);
-  --pin-glow: transparent;
+  --pin-ring: 0 0 0 1px rgba(8, 16, 14, 0.7), 0 2px 6px rgba(0, 0, 0, 0.45);
   content: '';
   position: absolute;
   bottom: 3px;
@@ -1782,7 +1781,7 @@ html[data-theme="dark"] .ambient-orb {
   border: 2px solid #fffdf6;
   border-radius: 50% 50% 50% 0;
   transform: translateX(-50%) rotate(-45deg);
-  box-shadow: var(--pin-ring), 0 0 14px var(--pin-glow);
+  box-shadow: var(--pin-ring);
   transition: var(--transition-base);
 }
 .map-pin::after {
@@ -1793,21 +1792,17 @@ html[data-theme="dark"] .ambient-orb {
   transform: translateX(-50%);
   width: 9px;
   height: 4px;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.5);
   border-radius: 50%;
   filter: blur(2px);
 }
-.map-pin:hover { transform: translate(-50%, -108%) scale(1.18); z-index: 10; }
-.map-pin:hover::before { --pin-ring: 0 0 0 2px rgba(8, 16, 14, 0.96), 0 7px 18px rgba(0, 0, 0, 0.7); }
-.map-pin.safe::before { background: var(--safe); --pin-glow: var(--safe-glow); }
-.map-pin.caution::before { background: var(--caution); --pin-glow: var(--caution-glow); }
-.map-pin.danger::before { background: var(--danger); --pin-glow: var(--danger-glow); }
-.map-pin.extreme::before { background: var(--extreme); --pin-glow: var(--extreme-glow); animation: pin-pulse 1.5s ease-in-out infinite; }
-.map-pin.nodata::before { background: var(--text-muted); --pin-glow: rgba(255, 255, 255, 0.35); }
-@keyframes pin-pulse {
-  0%, 100% { box-shadow: var(--pin-ring), 0 0 14px var(--extreme-glow); }
-  50% { box-shadow: var(--pin-ring), 0 0 28px var(--extreme-glow); }
-}
+.map-pin:hover { transform: translate(-50%, -106%) scale(1.08); z-index: 10; }
+.map-pin:hover::before { --pin-ring: 0 0 0 1px rgba(8, 16, 14, 0.85), 0 3px 8px rgba(0, 0, 0, 0.55); }
+.map-pin.safe::before { background: var(--safe); }
+.map-pin.caution::before { background: var(--caution); }
+.map-pin.danger::before { background: var(--danger); }
+.map-pin.extreme::before { background: var(--extreme); }
+.map-pin.nodata::before { background: var(--text-muted); }
 
 .map-pin-tooltip {
   position: absolute;
@@ -4441,7 +4436,7 @@ html[data-color-mode="automatic"][data-active-tab="hotlines"] {
   transform: translate(-50%, -50%);
   border: 1.5px solid #fffdf6;
   border-radius: 50%;
-  box-shadow: 0 0 0 1.5px rgba(8, 16, 14, 0.9), 0 2px 5px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 0 1px rgba(8, 16, 14, 0.72), 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 .dashboard-map-pin.safe { background: var(--safe); }
 .dashboard-map-pin.caution { background: var(--caution); }
@@ -4814,8 +4809,7 @@ html[data-color-mode="automatic"][data-active-tab="hotlines"] {
     -webkit-backdrop-filter: blur(12px) saturate(1.15);
   }
 
-  .status-icon,
-  .map-pin.extreme::before {
+  .status-icon {
     animation: none;
   }
 }
