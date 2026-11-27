@@ -304,13 +304,14 @@ def generate() -> None:
     ranked = [
         (name, metric)
         for name, metric in metrics.items()
-        if metric["samples"] >= MIN_HOLDOUTS and metric["rmse"] is not None
+        if metric["rmse"] is not None
     ]
     best_model = (
         sorted(ranked, key=lambda item: (item[1]["rmse"], item[1]["mae"]))[0][0]
         if ranked
         else "xgboost-style"
     )
+    provisional = metrics[best_model]["samples"] < MIN_HOLDOUTS
 
     x_train = train_rows[FEATURES].to_numpy(dtype=float)
     y_train = train_rows["target"].to_numpy(dtype=float)
@@ -339,6 +340,17 @@ def generate() -> None:
         }
         for _, row in full.tail(HORIZON_STEPS).iterrows()
     ]
+
+    notes = [
+        "Real scikit-learn RandomForestRegressor, xgboost.XGBRegressor, and lightgbm.LGBMRegressor models.",
+        "Validation uses non-overlapping 60-minute school-hour holdouts from sequential future days.",
+        "The selected model has the lowest validated RMSE.",
+    ]
+    if provisional:
+        notes.append(
+            f"Fewer than {MIN_HOLDOUTS} holdout samples are available, so this forecast is provisional."
+        )
+    notes.append("Sensor calibration is not verified by this forecast.")
 
     payload = {
         "schemaVersion": 1,
@@ -371,12 +383,7 @@ def generate() -> None:
         "bestModel": best_model,
         "metrics": metrics,
         "trainingSamples": len(train_rows),
-        "notes": [
-            "Real scikit-learn RandomForestRegressor, xgboost.XGBRegressor, and lightgbm.LGBMRegressor models.",
-            "Validation uses non-overlapping 60-minute school-hour holdouts from sequential future days.",
-            "The selected model has the lowest validated RMSE; provisional selection is XGBoost-style trees.",
-            "Sensor calibration is not verified by this forecast.",
-        ],
+        "notes": notes,
     }
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)

@@ -436,9 +436,20 @@ test('publishes a real Python 60-minute forecast job', () => {
   }
 
   const publishedForecast = JSON.parse(fs.readFileSync(path.join(root, 'forecast.json'), 'utf8'));
-  assert.equal(publishedForecast.status, 'pending');
   assert.equal(publishedForecast.horizonMinutes, 60);
-  assert.equal(publishedForecast.generatedAt, null);
+  if (publishedForecast.status === 'pending') {
+    assert.equal(publishedForecast.generatedAt, null);
+  } else {
+    assert.equal(publishedForecast.status, 'ready');
+    assert.match(publishedForecast.generatedAt, /^\d{4}-\d{2}-\d{2}T/);
+    assert.ok(publishedForecast.bestModel);
+    const rankedModels = Object.entries(publishedForecast.metrics)
+      .filter(([, metric]) => Number.isFinite(metric.rmse))
+      .sort((a, b) => a[1].rmse - b[1].rmse);
+    if (rankedModels.length) {
+      assert.equal(publishedForecast.bestModel, rankedModels[0][0]);
+    }
+  }
 
   const requirements = fs.readFileSync(path.join(root, 'requirements-forecast.txt'), 'utf8');
   for (const dependency of [
@@ -457,6 +468,8 @@ test('publishes a real Python 60-minute forecast job', () => {
   assert.match(python, /from lightgbm import LGBMRegressor/);
   assert.match(python, /HORIZON_MINUTES = 60/);
   assert.match(python, /lowest validated RMSE/i);
+  assert.doesNotMatch(python, /metric\["samples"\] >= MIN_HOLDOUTS/);
+  assert.match(python, /Fewer than \{MIN_HOLDOUTS\} holdout samples are available, so this forecast is provisional\./);
   assert.doesNotMatch(python, /send_sms|twilio|semaphore/i);
 
   const workflow = fs.readFileSync(
@@ -496,10 +509,11 @@ test('publishes a real Python 60-minute forecast job', () => {
   const i18nContext = { window: {} };
   vm.runInNewContext(fs.readFileSync(path.join(root, 'locales.js'), 'utf8'), i18nContext);
   const dictionaries = i18nContext.window.SCHOOLHEAT_I18N.translations;
+  const pendingMessage = 'The scheduled Python forecast has not run yet. A real 60-minute forecast using Random Forest, XGBoost, and LightGBM will appear after the GitHub Actions workflow completes.';
   for (const language of ['tl', 'ceb', 'war']) {
     assert.ok(dictionaries[language]['Forecast not generated'], `${language} needs the pending forecast title`);
     assert.ok(
-      dictionaries[language][publishedForecast.message],
+      dictionaries[language][pendingMessage],
       `${language} needs the pending forecast message`
     );
   }
