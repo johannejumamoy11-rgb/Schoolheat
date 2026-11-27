@@ -870,6 +870,8 @@ button { touch-action: manipulation; }
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
 }
 .recent-chip {
   padding: 5px 12px;
@@ -881,6 +883,9 @@ button { touch-action: manipulation; }
   cursor: pointer;
   transition: var(--transition-fast);
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .recent-chip:hover {
   background: rgba(59,130,246,0.1);
@@ -6273,11 +6278,11 @@ body::after {
 }
 
 #tab-monitor .monitor-gauge-status {
-  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
   line-height: 1.1;
-  padding: 10px 24px;
+  padding: 8px 18px;
   border: 1px solid transparent;
-  border-radius: 14px;
+  border-radius: 12px;
   letter-spacing: -0.02em;
 }
 
@@ -6301,7 +6306,7 @@ body::after {
 @media (min-width: 820px) {
   #tab-monitor .monitor-gauge-card {
     display: grid;
-    grid-template-columns: minmax(300px, 0.95fr) minmax(280px, 1.05fr);
+    grid-template-columns: minmax(280px, 0.85fr) minmax(280px, 1.15fr);
     grid-template-areas:
       "header header"
       "gauge details"
@@ -6318,7 +6323,7 @@ body::after {
     width: 100%;
     max-width: none;
     height: auto;
-    min-height: 300px;
+    min-height: 280px;
     margin: 0;
     align-self: stretch;
   }
@@ -6329,7 +6334,7 @@ body::after {
     flex-direction: column;
     justify-content: space-between;
     gap: 12px;
-    min-height: 300px;
+    min-height: 280px;
   }
 
   #tab-monitor .monitor-classification {
@@ -6346,7 +6351,7 @@ body::after {
   }
 
   #tab-monitor .monitor-scale {
-    padding: 15px;
+    padding: 13px;
   }
 
   #tab-monitor .device-integrity-note {
@@ -6354,13 +6359,13 @@ body::after {
     margin: 0;
   }
 
-  #tab-monitor .monitor-gauge-value { font-size: 3.1rem; }
+  #tab-monitor .monitor-gauge-value { font-size: 2.8rem; }
 }
 
 @media (min-width: 1100px) {
-  #tab-monitor .monitor-gauge-wrap { min-height: 330px; }
-  #tab-monitor .monitor-gauge-details { min-height: 330px; }
-  #tab-monitor .monitor-gauge-value { font-size: 3.4rem; }
-  #tab-monitor .monitor-classification { gap: 14px; }
-  #tab-monitor .monitor-range-key span { padding: 9px 5px; font-size: 0.78rem; }
+  #tab-monitor .monitor-gauge-wrap { min-height: 300px; }
+  #tab-monitor .monitor-gauge-details { min-height: 300px; }
+  #tab-monitor .monitor-gauge-value { font-size: 3rem; }
+  #tab-monitor .monitor-classification { gap: 12px; }
+  #tab-monitor .monitor-range-key span { padding: 8px 5px; font-size: 0.74rem; }
 }
