@@ -25,7 +25,7 @@ Ipinapakita ng top bar ang pangalang SchoolHeat, ang kasalukuyang petsa/orasan, 
 | **Emergency Hotlines (Mga Emergency Hotline)** | Gabay sa emergency call at mga numero na nabe-verify o naghihintay ng verification. |
 | **About (Tungkol)** | Layunin, mga DepEd 4H band, daloy ng trabaho, FAQ, at Ask SchoolHeat. |
 
-Mga keyboard shortcut: pindutin ang `1`–`8` para lumipat ng tab, ang `N` para buksan ang Monitor ng Sensor at i-focus ang field na lokasyon, ang `C` para magkalkula, at ang `D` para simulan/ihinto ang auto-read.
+Mga keyboard shortcut: pindutin ang `1`–`8` para lumipat ng tab, ang `N` para buksan ang Monitor ng Sensor at i-focus ang field na lokasyon, ang `C` para magkalkula, at ang `D` para simulan/ihinto ang auto-read. Pindutin ang `Enter` sa field ng temperatura o halumigmig upang i-save ang pagbasa.
 
 ## 3. Pag-record ng pagbasa
 

@@ -25,7 +25,7 @@ An bar ha ibabaw nagpapakita han ngaran han SchoolHeat, han buhi nga petsa/orasa
 | **Emergency Hotlines (Mga Hotline han Emerhensya)** | Mga giya para ha emergency call ngan mga numero nga nakumpirma o naghihulat hin pagkumpirma. |
 | **About (Mahitungod)** | Katuyoan, mga banda han DepEd 4H, dalagan han trabaho, FAQ, ngan **Ask SchoolHeat (Pangutana ha SchoolHeat)**. |
 
-Keyboard shortcuts: pindota an `1`–`8` para magbalhin hin tab, an `N` para maablihan an Monitor ngan ma-focus an field han lokasyon, an `C` para magkwenta, ngan an `D` para magtikang/hunongon an auto-read.
+Keyboard shortcuts: pindota an `1`–`8` para magbalhin hin tab, an `N` para maablihan an Monitor ngan ma-focus an field han lokasyon, an `C` para magkwenta, ngan an `D` para magtikang/hunongon an auto-read. Pindota an `Enter` ha field han temperatura o humidity agud matipig an pagbasa.
 
 ## 3. Pagrekord hin pagbasa
 

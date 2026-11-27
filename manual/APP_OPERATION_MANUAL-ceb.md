@@ -43,7 +43,8 @@ usa ka chip sa kabag-ohan nga nagsugod sa **NO DATA** ug sa ulahi nagpakita sa
 
 Mga shortcut sa keyboard: pindota ang `1`–`8` aron mobalhin og tab, `N` aron
 maablihan ang Monitor sa Sensor ug ma-focus ang field sa lokasyon, `C` aron
-kuwentahon, ug `D` aron masugdan/mapahunong ang awtomatikong pagbasa.
+kuwentahon, ug `D` aron masugdan/mapahunong ang awtomatikong pagbasa. Pindota ang
+`Enter` sa field sa temperatura o humidity aron matipig ang pagbasa.
 
 ## 3. Pagrekord sa pagbasa
 

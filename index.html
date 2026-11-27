@@ -573,15 +573,16 @@
       </div>
 
       <div class="glass-card input-card">
+        <p class="monitor-steps" id="monitor-steps">1. Choose a location · 2. Enter temperature and humidity · 3. Save or sync</p>
         <div class="input-group location-picker-field">
           <label for="location-select">Location</label>
           <div class="location-picker-row">
             <select id="location-select" class="input-select">
               <option value="" disabled selected>Choose location...</option>
             </select>
-            <button type="button" class="btn-secondary btn-sm" id="choose-location-on-map">Choose on map</button>
+            <button type="button" class="btn-secondary btn-sm" id="choose-location-on-map" data-no-translate>Choose on map</button>
           </div>
-          <p class="location-picker-hint">Tap a campus pin to set the sensor location. Use the list above for study classrooms.</p>
+          <p class="location-picker-hint" id="location-picker-hint">Tap a campus pin to set the sensor location. Use the list above for study classrooms.</p>
         </div>
 
         <div class="recent-locations" id="recent-locations" style="display:none;">
@@ -599,6 +600,7 @@
             <input type="number" id="humidity-input" class="input-field" placeholder="e.g. 75" step="0.1" min="0" max="100">
           </div>
         </div>
+        <p class="input-hint" id="input-values-hint">Type the numbers from your sensor here. The heat index updates as you type.</p>
 
         <div class="preview-card" id="preview-card" style="display:none;">
           <div class="preview-header">
@@ -609,7 +611,7 @@
             <div class="preview-bar" id="preview-bar"></div>
           </div>
           <div class="preview-value" id="preview-value">— °C</div>
-          <div class="preview-formula">Steadman-Rothfusz Formula</div>
+          <div class="preview-formula">Heat index estimate</div>
         </div>
 
         <div class="input-actions">
@@ -627,6 +629,7 @@
           </button>
         </div>
         <p class="sensor-connection-note" id="wifi-sync-status" aria-live="polite">Wi-Fi sync requires the laptop bridge. Or use Sync via Bluetooth to connect directly to the ESP32 and import its saved readings.</p>
+        <p class="form-status" id="monitor-form-status" role="status" aria-live="polite" data-no-translate hidden></p>
 
         <div class="auto-read-overlay" id="auto-read-overlay">
           <div class="sensor-animation">

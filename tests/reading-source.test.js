@@ -616,7 +616,17 @@ test('shows one flat campus map with user-marked pins', () => {
   assert.doesNotMatch(style, /pin-pulse|--pin-glow/);
   assert.match(style, /\.dashboard-map-pin\s*\{[^}]*width: 8px;[^}]*height: 8px;/);
   assert.match(index, /id="choose-location-on-map"/);
+  assert.match(index, /id="location-picker-hint"/);
   assert.match(index, /id="map-pick-banner"/);
+  assert.match(script, /updateLocationPickerUI\(\)/);
+  assert.match(script, /syncSelectedMapPin\(\)/);
+  assert.match(script, /classList\.toggle\('selected', Boolean\(loc\)/);
+  assert.match(style, /\.map-pin\.selected::before \{ outline: 2px solid var\(--accent-blue\);/);
+  assert.match(style, /\.sr-only\s*\{[^}]*position: absolute;[^}]*clip: rect\(0, 0, 0, 0\)/);
+  assert.match(style, /@media \(pointer: coarse\), \(max-width: 760px\)/);
+  assert.match(index, /id="monitor-steps"/);
+  assert.match(index, /id="input-values-hint"/);
+  assert.match(index, /id="monitor-form-status"[^>]*hidden/);
   assert.match(script, /openMapLocationPicker\(\)/);
   assert.match(script, /finishMapLocationPicker\(loc\)/);
   assert.match(script, /if \(this\.mapLocationPickMode && loc\)[\s\S]*?this\.finishMapLocationPicker\(loc\)/);
@@ -644,6 +654,34 @@ test('shows one flat campus map with user-marked pins', () => {
     'Flat campus image · pins follow the marked building positions.'
   ]) {
     assert.match(locales, new RegExp(`'${label}':`));
+  }
+});
+
+test('uses plain monitor guidance and inline feedback in every language', () => {
+  const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
+  const guidanceKeys = [
+    '1. Choose a location · 2. Enter temperature and humidity · 3. Save or sync',
+    'Type the numbers from your sensor here. The heat index updates as you type.',
+    'Heat index estimate',
+    'Choose a location first.',
+    'Enter a temperature from 0 to 60°C.',
+    'Enter humidity from 0 to 100%.',
+    'Temperature must be from 0 to 60°C.',
+    'Humidity must be from 0 to 100%.',
+    'Saved. You can add another reading.'
+  ];
+  for (const key of guidanceKeys) {
+    assert.equal(locales.split(`'${key}':`).length - 1, 3, `${key} is translated into tl, ceb, and war`);
+  }
+  assert.match(script, /setMonitorFormStatus\(messageKey, type = 'info'\)/);
+  assert.match(script, /this\.setMonitorFormStatus\('Choose a location first\.', 'warning'\)/);
+  assert.match(script, /this\.setMonitorFormStatus\('Saved\. You can add another reading\.', 'success'\)/);
+  assert.match(script, /event\.key !== 'Enter'/);
+  assert.match(script, /this\.clearMonitorFormStatus\(\);\s*this\.updatePreview\(\)/);
+  assert.match(script, /this\.updateLocationPickerUI\(\);\s*this\.applyMonitorFormStatus\(\)/);
+  for (const language of ['en', 'tl', 'ceb', 'war']) {
+    const manual = fs.readFileSync(path.join(__dirname, '..', `manual/APP_OPERATION_MANUAL-${language}.md`), 'utf8');
+    assert.match(manual, /`Enter`/);
   }
 });
 
@@ -729,7 +767,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v123/);
+  assert.match(serviceWorker, /schoolheat-v125/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -827,7 +865,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v123/);
+  assert.match(serviceWorker, /schoolheat-v125/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);

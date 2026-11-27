@@ -508,6 +508,7 @@ class SchoolHeatApp {
     this.distributionChartLoaded = false;
     this.mapZoom = 1;
     this.mapLocationPickMode = false;
+    this.monitorFormStatusKey = null;
     this.lastDeviceStatus = null;
     this._resizeHandler = null;
     this.autoReadActive = false;
@@ -909,15 +910,35 @@ class SchoolHeatApp {
       studyGroup.appendChild(option);
     });
     select.appendChild(studyGroup);
+    this.updateLocationPickerUI();
   }
 
   bindEvents() {
     const tempInput = document.getElementById('temp-input');
     const humInput = document.getElementById('humidity-input');
-    if (tempInput) tempInput.addEventListener('input', () => this.updatePreview());
-    if (humInput) humInput.addEventListener('input', () => this.updatePreview());
+    const handleMonitorInput = () => {
+      this.clearMonitorFormStatus();
+      this.updatePreview();
+    };
+    const handleMonitorEnter = event => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      this.calculate();
+    };
+    if (tempInput) {
+      tempInput.addEventListener('input', handleMonitorInput);
+      tempInput.addEventListener('keydown', handleMonitorEnter);
+    }
+    if (humInput) {
+      humInput.addEventListener('input', handleMonitorInput);
+      humInput.addEventListener('keydown', handleMonitorEnter);
+    }
     document.getElementById('choose-location-on-map')?.addEventListener('click', () => this.openMapLocationPicker());
     document.getElementById('map-pick-cancel')?.addEventListener('click', () => this.cancelMapLocationPicker());
+    document.getElementById('location-select')?.addEventListener('change', () => {
+      this.clearMonitorFormStatus();
+      this.updateLocationPickerUI();
+    });
     document.getElementById('history-list')?.addEventListener('click', event => {
       const pageButton = event.target.closest('[data-history-page]');
       if (pageButton) {
@@ -1373,16 +1394,36 @@ class SchoolHeatApp {
 
   calculate() {
     const loc = document.getElementById('location-select')?.value;
-    const temp = parseFloat(document.getElementById('temp-input')?.value);
-    const hum = parseFloat(document.getElementById('humidity-input')?.value);
-    if (!loc || isNaN(temp) || isNaN(hum)) {
-      this.toast('Please fill in all fields', 'warning');
+    const tempInput = document.getElementById('temp-input');
+    const humInput = document.getElementById('humidity-input');
+    const temp = parseFloat(tempInput?.value);
+    const hum = parseFloat(humInput?.value);
+    if (!loc) {
+      this.setMonitorFormStatus('Choose a location first.', 'warning');
+      document.getElementById('choose-location-on-map')?.focus();
       return;
     }
-    if (temp < 0 || temp > 60 || hum < 0 || hum > 100) {
-      this.toast('Temperature or humidity out of range', 'error');
+    if (isNaN(temp)) {
+      this.setMonitorFormStatus('Enter a temperature from 0 to 60°C.', 'warning');
+      tempInput?.focus();
       return;
     }
+    if (isNaN(hum)) {
+      this.setMonitorFormStatus('Enter humidity from 0 to 100%.', 'warning');
+      humInput?.focus();
+      return;
+    }
+    if (temp < 0 || temp > 60) {
+      this.setMonitorFormStatus('Temperature must be from 0 to 60°C.', 'warning');
+      tempInput?.focus();
+      return;
+    }
+    if (hum < 0 || hum > 100) {
+      this.setMonitorFormStatus('Humidity must be from 0 to 100%.', 'warning');
+      humInput?.focus();
+      return;
+    }
+    this.clearMonitorFormStatus();
     const calibratedTemp = temp + this.settings.tempOffset;
     const calibratedHum = Math.max(0, Math.min(100, hum + this.settings.humidityOffset));
     const hi = this.calculateHeatIndex(calibratedTemp, calibratedHum);
@@ -1407,12 +1448,15 @@ class SchoolHeatApp {
     this.renderMap();
     this.checkAlerts();
     this.toast(`Saved: ${loc} — ${hi.toFixed(1)}°C (${STATUS_LABELS[status]})`, 'success');
+    this.setMonitorFormStatus('Saved. You can add another reading.', 'success');
     if (this.currentTab === 'forecast') this.drawForecastChart();
-    document.getElementById('temp-input').value = '';
-    document.getElementById('humidity-input').value = '';
-    document.getElementById('preview-card').style.display = 'none';
+    if (tempInput) tempInput.value = '';
+    if (humInput) humInput.value = '';
+    const previewCard = document.getElementById('preview-card');
+    if (previewCard) previewCard.style.display = 'none';
     this.updateRecentLocations();
     this.updateMonitorGauge();
+    tempInput?.focus();
   }
 
   updateRecentLocations() {
@@ -1441,8 +1485,49 @@ class SchoolHeatApp {
     const select = document.getElementById('location-select');
     if (select) {
       select.value = loc;
+      this.clearMonitorFormStatus();
+      this.updateLocationPickerUI();
       if (showToast) this.toast(`Selected: ${loc}`, 'info');
     }
+  }
+
+  setMonitorFormStatus(messageKey, type = 'info') {
+    const status = document.getElementById('monitor-form-status');
+    if (!status) return;
+    this.monitorFormStatusKey = messageKey;
+    status.textContent = this.translateText(messageKey);
+    status.className = `form-status ${type}`;
+    status.hidden = false;
+  }
+
+  clearMonitorFormStatus() {
+    const status = document.getElementById('monitor-form-status');
+    if (!status) return;
+    this.monitorFormStatusKey = null;
+    status.textContent = '';
+    status.className = 'form-status';
+    status.hidden = true;
+  }
+
+  applyMonitorFormStatus() {
+    if (!this.monitorFormStatusKey) return;
+    const status = document.getElementById('monitor-form-status');
+    if (status) status.textContent = this.translateText(this.monitorFormStatusKey);
+  }
+
+  updateLocationPickerUI() {
+    const select = document.getElementById('location-select');
+    if (!select) return;
+    const button = document.getElementById('choose-location-on-map');
+    if (button) button.textContent = this.translateText(select.value ? 'Change on map' : 'Choose on map');
+    this.syncSelectedMapPin();
+  }
+
+  syncSelectedMapPin() {
+    const loc = document.getElementById('location-select')?.value;
+    document.querySelectorAll('#map-pins .map-pin').forEach(pin => {
+      pin.classList.toggle('selected', Boolean(loc) && pin.dataset.loc === loc);
+    });
   }
 
   openMapLocationPicker() {
@@ -4916,6 +5001,7 @@ class SchoolHeatApp {
       }).join('');
       bindPins(pinsContainer);
       this.syncMapPins();
+      this.syncSelectedMapPin();
     }
   }
 
@@ -5089,6 +5175,8 @@ class SchoolHeatApp {
     const root = document.getElementById('app');
     if (!root) return;
     this.translateNode(root);
+    this.updateLocationPickerUI();
+    this.applyMonitorFormStatus();
     this.updateManualLinks();
     this.updateLocalContactFormMode();
     this.renderLocalContacts();

@@ -750,6 +750,47 @@ html[data-theme="dark"] .ambient-orb {
   gap: 10px;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.monitor-steps {
+  margin: 0 0 14px;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+.input-hint {
+  margin: 6px 0 14px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+.form-status {
+  margin: 10px 0 0;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+.form-status[hidden] { display: none; }
+.form-status.success { color: var(--safe); border-color: rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.1); }
+.form-status.warning { color: var(--caution); border-color: rgba(245, 158, 11, 0.35); background: rgba(245, 158, 11, 0.1); }
+.form-status.error { color: var(--danger); border-color: rgba(239, 68, 68, 0.35); background: rgba(239, 68, 68, 0.1); }
+
+button { touch-action: manipulation; }
+
 .input-select, .input-field, .cal-input {
   width: 100%;
   padding: 13px 14px;
@@ -787,6 +828,7 @@ html[data-theme="dark"] .ambient-orb {
   min-width: 0;
 }
 .location-picker-row .btn-secondary {
+  min-width: 116px;
   white-space: nowrap;
 }
 .location-picker-hint {
@@ -794,6 +836,19 @@ html[data-theme="dark"] .ambient-orb {
   color: var(--text-muted);
   font-size: 0.72rem;
   line-height: 1.4;
+}
+@media (max-width: 520px) {
+  .location-picker-row { flex-direction: column; }
+  .location-picker-row .btn-secondary { width: 100%; }
+  .input-row { grid-template-columns: 1fr; }
+}
+
+@media (pointer: coarse), (max-width: 760px) {
+  .input-select, .input-field, .cal-input { min-height: 46px; }
+  .input-actions button,
+  .location-picker-row button,
+  .map-pick-banner button,
+  .recent-chip { min-height: 44px; }
 }
 
 /* Recent Locations */
@@ -1638,6 +1693,7 @@ html[data-theme="dark"] .ambient-orb {
 
 .map-pick-banner {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
@@ -1840,6 +1896,7 @@ html[data-theme="dark"] .ambient-orb {
 .map-pin.danger::before { background: var(--danger); }
 .map-pin.extreme::before { background: var(--extreme); }
 .map-pin.nodata::before { background: var(--text-muted); }
+.map-pin.selected::before { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
 
 .map-pin-tooltip {
   position: absolute;

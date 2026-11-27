@@ -39,7 +39,8 @@ while Wi-Fi auto-read is running, and a freshness chip that starts at
 | **About** | Purpose, DepEd 4H bands, workflow, FAQ, and Ask SchoolHeat. |
 
 Keyboard shortcuts: press `1`–`8` to switch tabs, `N` to open Monitor and focus
-the location field, `C` to calculate, and `D` to start/stop auto-read.
+the location field, `C` to calculate, and `D` to start/stop auto-read. Press
+`Enter` in a temperature or humidity field to save the reading.
 
 ## 3. Record a reading
 
