@@ -495,6 +495,46 @@ test('keeps history to one page, hides ordinary source labels, and filters all r
   assert.match(list.innerHTML, /DEMO DATA/);
 });
 
+test('draws a heat-index graph and peak for each saved location in history', () => {
+  const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
+  const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
+  assert.match(index, /id="location-trend-grid"/);
+  assert.match(index, /Heat Index by Location/);
+  assert.match(script, /renderLocationTrends\(\)/);
+  assert.match(script, /this\.renderLocationTrends\(\);/);
+  assert.match(style, /Location Heat Index Graphs/);
+  for (const key of [
+    'Heat Index by Location',
+    'Highest heat index',
+    'Highest first. Each graph uses saved readings; the marked point is the highest heat index.',
+    'No saved readings yet'
+  ]) {
+    assert.equal(locales.split(`'${key}':`).length - 1, 3, `${key} is translated into tl, ceb, and war`);
+  }
+
+  const grid = { innerHTML: '' };
+  context.document = {
+    getElementById: id => id === 'location-trend-grid' ? grid : null
+  };
+  app.readings = [
+    { location: 'Room A', status: 'safe', heatIndex: 28, timestamp: '2026-11-27T01:00:00Z' },
+    { location: 'Room A', status: 'danger', heatIndex: 39, timestamp: '2026-11-27T02:00:00Z' },
+    { location: 'Room B', status: 'caution', heatIndex: 31, timestamp: '2026-11-27T01:30:00Z' },
+    { location: '', status: 'safe', heatIndex: 50, timestamp: '2026-11-27T03:00:00Z' }
+  ];
+  app.escapeHTML = text => String(text);
+  app.translateText = text => text;
+  app.renderLocationTrends();
+
+  assert.equal((grid.innerHTML.match(/class="location-trend-item"/g) || []).length, 2);
+  assert.ok(grid.innerHTML.indexOf('Room A') < grid.innerHTML.indexOf('Room B'), 'highest location is first');
+  assert.match(grid.innerHTML, /39\.0°C/);
+  assert.match(grid.innerHTML, /31\.0°C/);
+  assert.doesNotMatch(grid.innerHTML, /50\.0°C/);
+  assert.match(grid.innerHTML, /<polyline/);
+  assert.match(grid.innerHTML, /<circle/);
+});
+
 test('counts mapped pins and saved location names separately in the dashboard summary', () => {
   const coverageAttributes = {};
   const coverageFill = { style: {} };
@@ -814,7 +854,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v132/);
+  assert.match(serviceWorker, /schoolheat-v133/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -912,7 +952,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v132/);
+  assert.match(serviceWorker, /schoolheat-v133/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);

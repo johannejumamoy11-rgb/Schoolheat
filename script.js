@@ -3562,6 +3562,7 @@ class SchoolHeatApp {
       `).join('')}${pagination}`;
     }
 
+    this.renderLocationTrends();
     if (updateCharts) {
       this.drawDistributionChart();
       if (this.currentTab === 'history') {
@@ -3569,6 +3570,78 @@ class SchoolHeatApp {
         this.drawTrendChart();
       }
     }
+  }
+
+  renderLocationTrends() {
+    const grid = document.getElementById('location-trend-grid');
+    if (!grid) return;
+
+    const groups = new Map();
+    for (const reading of this.readings) {
+      const location = String(reading.location || '').trim();
+      const value = Number(reading.heatIndex);
+      const time = new Date(reading.timestamp).getTime();
+      if (!location || !Number.isFinite(value) || !Number.isFinite(time)) continue;
+      const savedStatus = String(reading.status || '');
+      const status = STATUS_LABELS[savedStatus] ? savedStatus : this.getStatus(value);
+      if (!groups.has(location)) groups.set(location, []);
+      groups.get(location).push({ time, value, status });
+    }
+
+    const summaries = Array.from(groups, ([location, entries]) => {
+      const ordered = entries.slice().sort((a, b) => a.time - b.time);
+      const peak = ordered.reduce((best, entry) => (!best || entry.value > best.value ? entry : best), null);
+      return { location, entries: ordered, peak };
+    }).sort((a, b) => b.peak.value - a.peak.value);
+
+    if (!summaries.length) {
+      grid.innerHTML = `<p class="location-trend-empty">${this.translateText('No saved readings yet')}</p>`;
+      return;
+    }
+
+    let minVal = 20;
+    let maxVal = 45;
+    summaries.forEach(summary => summary.entries.forEach(entry => {
+      minVal = Math.min(minVal, entry.value);
+      maxVal = Math.max(maxVal, entry.value);
+    }));
+    const span = maxVal - minVal || 1;
+    const width = 180;
+    const height = 48;
+    const padding = 4;
+    const plotHeight = height - padding * 2;
+
+    grid.innerHTML = summaries.map(summary => {
+      const points = summary.entries.map((entry, index) => ({
+        x: summary.entries.length === 1 ? width / 2 : (index / (summary.entries.length - 1)) * width,
+        y: padding + plotHeight - ((entry.value - minVal) / span) * plotHeight
+      }));
+      const peakPoint = points[summary.entries.indexOf(summary.peak)];
+      const line = points.map(point => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
+      const color = getStatusColor(summary.peak.status);
+      const safeLocation = this.escapeHTML(summary.location);
+      const statusLabel = this.translateText(STATUS_LABELS[summary.peak.status]);
+      const peakLabel = this.translateText('Highest heat index');
+      const aria = this.escapeHTML(`${summary.location}: heat index trend. ${peakLabel} ${summary.peak.value.toFixed(1)}°C, ${statusLabel}.`);
+      return `
+        <article class="location-trend-item" aria-label="${aria}">
+          <div class="location-trend-top">
+            <div class="location-trend-name" title="${safeLocation}">${safeLocation}</div>
+            <div class="location-trend-value ${summary.peak.status}">
+              <span>${peakLabel}</span>
+              <strong>${summary.peak.value.toFixed(1)}°C</strong>
+            </div>
+          </div>
+          <svg class="location-trend-spark" viewBox="0 0 ${width} ${height}" aria-hidden="true" preserveAspectRatio="none">
+            <title>${aria}</title>
+            <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            <circle cx="${peakPoint.x.toFixed(1)}" cy="${peakPoint.y.toFixed(1)}" r="4" fill="${color}" stroke="${this.escapeHTML(getDesignToken('--bg-card', '#ffffff'))}" stroke-width="1.5"></circle>
+          </svg>
+          <div class="location-trend-foot">
+            <span class="location-trend-status ${summary.peak.status}">${statusLabel}</span>
+          </div>
+        </article>`;
+    }).join('');
   }
 
   getLocalDateKey(value) {
