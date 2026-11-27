@@ -493,6 +493,9 @@ test('publishes a real Python 60-minute forecast job', () => {
   assert.match(python, /from xgboost import XGBRegressor/);
   assert.match(python, /from lightgbm import LGBMRegressor/);
   assert.match(python, /HORIZON_MINUTES = 60/);
+  assert.match(python, /VALIDATION_DAYS = 4/);
+  assert.match(python, /all_dates\[-VALIDATION_DAYS:\]/);
+  assert.doesNotMatch(python, /all_dates\[8:\]/);
   assert.match(python, /lowest validated RMSE/i);
   assert.doesNotMatch(python, /metric\["samples"\] >= MIN_HOLDOUTS/);
   assert.match(python, /Fewer than \{MIN_HOLDOUTS\} holdout samples are available, so this forecast is provisional\./);

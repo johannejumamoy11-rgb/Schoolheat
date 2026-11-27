@@ -39,6 +39,8 @@ HORIZON_STEPS = HORIZON_MINUTES // INTERVAL_MINUTES
 SCHOOL_START_MINUTE = 7 * 60
 SCHOOL_END_MINUTE = 17 * 60
 MIN_HOLDOUTS = 10
+VALIDATION_DAYS = 4
+MIN_TRAINING_DAYS = 3
 RANDOM_SEED = 42
 
 REQUIRED_COLUMNS = [
@@ -243,10 +245,14 @@ def compute_metrics(items: list[dict]) -> dict:
 def evaluate(train_rows: pd.DataFrame, models: dict) -> dict:
     errors = {name: [] for name in models}
     all_dates = sorted(train_rows["school_date"].unique())
-    if len(all_dates) >= 9:
-        test_dates = all_dates[8:]
+    if len(all_dates) > MIN_TRAINING_DAYS:
+        test_dates = [
+            date
+            for date in all_dates[-VALIDATION_DAYS:]
+            if len([earlier for earlier in all_dates if earlier < date]) >= MIN_TRAINING_DAYS
+        ]
     else:
-        test_dates = all_dates[max(3, len(all_dates) // 2) :]
+        test_dates = all_dates[1:]
 
     for test_date in test_dates:
         train = train_rows[train_rows["school_date"] < test_date]
