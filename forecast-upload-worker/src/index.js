@@ -13,7 +13,6 @@ const GITHUB_REPO = "johannejumamoy11-rgb/Schoolheat";
 const GITHUB_BRANCH = "main";
 const DATA_PATH = "data/schoolheat_readings.csv";
 const SOURCE_PATH = "data/schoolheat_forecast_source.json";
-const WORKFLOW_FILE = "generate-forecast.yml";
 const RATE_LIMIT_MS = 5 * 60 * 1000;
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
 const MAX_ROWS = 20000;
@@ -362,19 +361,6 @@ async function putFile(env, path, content, sha, message) {
   }
 }
 
-async function queueForecastWorkflow(env) {
-  const response = await githubFetch(
-    env,
-    `/repos/${GITHUB_REPO}/actions/workflows/${WORKFLOW_FILE}/dispatches`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ref: GITHUB_BRANCH })
-    }
-  );
-  if (!response.ok) throw new Error(`The forecast workflow could not be queued (HTTP ${response.status}).`);
-}
-
 function sourceMetadata(normalized) {
   const location = normalized.location || "3 Storey, 15 Classroom, DepEd SS Building";
   return {
@@ -400,21 +386,12 @@ async function commitForecastData(env, normalized) {
       "Update forecast source label from uploaded CSV"
     );
   }
-  let workflowQueued = true;
-  let workflowError = "";
-  try {
-    await queueForecastWorkflow(env);
-  } catch (error) {
-    workflowQueued = false;
-    workflowError = error.message;
-  }
   return {
     ok: true,
     rows: normalized.rows,
     location: normalized.location || null,
     deviceId: normalized.deviceId,
-    workflowQueued,
-    workflowError
+    forecastQueued: true
   };
 }
 
@@ -493,9 +470,7 @@ async function handleUpload(request, env) {
     const result = await commitForecastData(env, normalized);
     const response = jsonResponse(origin, 202, {
       ...result,
-      message: result.workflowQueued
-        ? "CSV saved. The 60-minute forecast is regenerating."
-        : "CSV saved, but the forecast workflow could not be queued."
+      message: "CSV saved. The 60-minute forecast is regenerating."
     });
     await completeRateLimit(env, uid, requestId, response);
     return response;

@@ -1195,12 +1195,13 @@ class SchoolHeatApp {
       this.forecastComparisonCache = null;
       this.scheduleDashboardForecastRender?.();
       const rows = Number.isFinite(result.rows) ? `${result.rows} rows` : 'the new source data';
-      setStatus(result.workflowQueued
+      const queued = result.forecastQueued !== false;
+      setStatus(queued
         ? `Saved ${rows}. The 60-minute forecast is regenerating.`
-        : `Saved ${rows}, but the forecast workflow could not be queued. Please retry.`);
-      this.toast(result.workflowQueued
+        : `Saved ${rows}, but the forecast regeneration could not be queued. Please retry.`);
+      this.toast(queued
         ? 'CSV saved. The live forecast will update after the Python job finishes.'
-        : 'CSV saved, but the forecast regeneration could not be queued.', result.workflowQueued ? 'success' : 'warning');
+        : 'CSV saved, but the forecast regeneration could not be queued.', queued ? 'success' : 'warning');
     } catch (error) {
       console.error('Could not publish SchoolHeat forecast data:', error);
       setStatus(error.message || 'The forecast CSV could not be uploaded.');
