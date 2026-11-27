@@ -604,17 +604,18 @@ test('shows what each overview classification means and explains it on hover or 
   );
   assert.deepEqual(
     [...index.matchAll(/<div class="status-meaning">([^<]+)<\/div>/g)].map(match => match[1]),
-    ['Routine monitoring', 'Increase precautions', 'Rest and cool down', 'Stop heat exposure']
+    ['Continue', 'Ease-in', 'Check-in', 'Stop']
   );
   assert.deepEqual(
     [...index.matchAll(/<div class="status-tooltip" role="tooltip" id="tooltip-[a-z]+">([^<]+)<\/div>/g)].map(match => match[1]),
     [
-      'Hayo means the heat index is below 27°C. Conditions are normal; keep water available and continue regular checks.',
-      'Hinay means the heat index is 27–32°C. Heat is building; slow strenuous activity and add water breaks.',
-      'Hinga means the heat index is 33–41°C. Rest in a cooler space and follow the school heat-response procedure.',
-      'Hinto means the heat index is 42°C or higher. Stop heat exposure, move to a cooler space, and follow the school emergency plan.'
+      'Hayo (Continue): Continue in-person classroom learning. In heat, scheduled hydration breaks and cooler-hour outdoor activities.',
+      'Hinay (Ease-in): Ease into structured distance learning. In heat, shorten face-to-face hours or use hybrid/home-based schedules.',
+      'Hinga (Check-in): Check-ins and light distance learning. In heat, suspend face-to-face classes and reduce academic demands.',
+      'Hinto (Stop): All forms of learning are suspended. In heat, stop face-to-face and home-based activities; safety checks come first.'
     ]
   );
+  assert.match(index, /<p class="status-source">From DepEd Order No\. 014, s\. 2026 and DepEd Memorandum No\. 64, s\. 2026\. Hover or focus a card for details\.<\/p>/);
   assert.doesNotMatch(index, /classification-dialog|classification-hint/);
   assert.doesNotMatch(script, /CLASSIFICATION_DETAILS|setupClassificationCards|showClassificationDialog/);
   assert.match(style, /\.status-meaning/);
@@ -622,18 +623,26 @@ test('shows what each overview classification means and explains it on hover or 
   assert.match(style, /\.status-card:hover \.status-tooltip/);
   assert.match(style, /\.status-card:focus \.status-tooltip/);
   assert.match(style, /\.status-card:focus-within \.status-tooltip/);
+  assert.match(style, /cursor: help;/);
+  assert.match(style, /border-color: var\(--status-accent\);/);
+  assert.match(style, /html\[data-theme\] #tab-dashboard \.status-card:hover/);
+  assert.match(style, /\.status-card:hover \.status-meaning/);
+  assert.match(style, /border: 1px solid var\(--status-accent\);/);
+  assert.match(style, /border-right: 1px solid var\(--status-accent\);/);
+  assert.match(style, /\.status-source/);
   assert.match(style, /@media \(max-height: 650px\)/);
   assert.match(style, /top: calc\(100% \+ 6px\)/);
   assert.match(style, /#tab-dashboard > \.status-grid \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
   for (const key of [
-    'Routine monitoring',
-    'Increase precautions',
-    'Rest and cool down',
-    'Stop heat exposure',
-    'Hayo means the heat index is below 27°C. Conditions are normal; keep water available and continue regular checks.',
-    'Hinay means the heat index is 27–32°C. Heat is building; slow strenuous activity and add water breaks.',
-    'Hinga means the heat index is 33–41°C. Rest in a cooler space and follow the school heat-response procedure.',
-    'Hinto means the heat index is 42°C or higher. Stop heat exposure, move to a cooler space, and follow the school emergency plan.'
+    'Continue',
+    'Ease-in',
+    'Check-in',
+    'Stop',
+    'Hayo (Continue): Continue in-person classroom learning. In heat, scheduled hydration breaks and cooler-hour outdoor activities.',
+    'Hinay (Ease-in): Ease into structured distance learning. In heat, shorten face-to-face hours or use hybrid/home-based schedules.',
+    'Hinga (Check-in): Check-ins and light distance learning. In heat, suspend face-to-face classes and reduce academic demands.',
+    'Hinto (Stop): All forms of learning are suspended. In heat, stop face-to-face and home-based activities; safety checks come first.',
+    'From DepEd Order No. 014, s. 2026 and DepEd Memorandum No. 64, s. 2026. Hover or focus a card for details.'
   ]) {
     assert.equal(locales.split(`'${key}':`).length - 1, 3, `${key} is translated into tl, ceb, and war`);
   }
@@ -987,7 +996,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v140/);
+  assert.match(serviceWorker, /schoolheat-v141/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -1085,7 +1094,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v140/);
+  assert.match(serviceWorker, /schoolheat-v141/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
