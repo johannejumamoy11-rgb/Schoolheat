@@ -558,6 +558,7 @@ class SchoolHeatApp {
     this.renderMap();
     this.setupForecastObserver();
     this.setupTrendObserver();
+    this.setupLocationTrendEvents();
     this.setupDistributionObserver();
     this.setupPullToRefresh();
     this.setupMapZoomControls();
@@ -3597,7 +3598,7 @@ class SchoolHeatApp {
       const savedStatus = String(reading.status || '');
       const status = STATUS_LABELS[savedStatus] ? savedStatus : this.getStatus(value);
       if (!groups.has(location)) groups.set(location, []);
-      groups.get(location).push({ time, value, status });
+      groups.get(location).push({ time, value, status, timestamp: reading.timestamp });
     }
 
     const summaries = Array.from(groups, ([location, entries]) => {
@@ -3618,22 +3619,18 @@ class SchoolHeatApp {
       maxVal = Math.max(maxVal, entry.value);
     }));
     const span = maxVal - minVal || 1;
-    const width = 180;
-    const height = 48;
-    const padding = 4;
-    const plotHeight = height - padding * 2;
 
     grid.innerHTML = summaries.map(summary => {
-      const slot = width / summary.entries.length;
-      const barWidth = summary.entries.length === 1 ? 24 : Math.max(3, slot - 2);
-      const baseline = height - padding;
-      const bars = summary.entries.map((entry, index) => {
-        const x = index * slot + (slot - barWidth) / 2;
-        const top = padding + plotHeight - ((entry.value - minVal) / span) * plotHeight;
-        const barHeight = Math.max(1, baseline - top);
+      const bars = summary.entries.map(entry => {
+        const barHeight = Math.max(3, ((entry.value - minVal) / span) * 100);
         const isPeak = entry === summary.peak;
-        const color = getStatusColor(entry.status);
-        return `<rect class="location-trend-bar${isPeak ? ' peak' : ''}" x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barHeight.toFixed(1)}" rx="1" fill="${color}"></rect>`;
+        const statusLabel = this.translateText(STATUS_LABELS[entry.status]);
+        const label = `${this.formatTime(entry.timestamp)} · ${entry.value.toFixed(1)}°C · ${statusLabel}`;
+        const safeLabel = this.escapeHTML(label);
+        return `
+          <button type="button" class="location-trend-bar-button" data-label="${safeLabel}" aria-label="${safeLabel}" aria-pressed="false">
+            <span class="location-trend-bar ${entry.status}${isPeak ? ' peak' : ''}" style="height:${barHeight.toFixed(1)}%"></span>
+          </button>`;
       }).join('');
       const safeLocation = this.escapeHTML(summary.location);
       const statusLabel = this.translateText(STATUS_LABELS[summary.peak.status]);
@@ -3648,16 +3645,40 @@ class SchoolHeatApp {
               <strong>${summary.peak.value.toFixed(1)}°C</strong>
             </div>
           </div>
-          <svg class="location-trend-bars" viewBox="0 0 ${width} ${height}" aria-hidden="true" preserveAspectRatio="none">
-            <title>${aria}</title>
-            <line class="location-trend-baseline" x1="0" y1="${baseline}" x2="${width}" y2="${baseline}"></line>
-            ${bars}
-          </svg>
+          <div class="location-trend-bars" role="group" aria-label="${aria}">${bars}</div>
+          <div class="location-trend-detail" aria-live="polite" hidden></div>
           <div class="location-trend-foot">
             <span class="location-trend-status ${summary.peak.status}">${statusLabel}</span>
           </div>
         </article>`;
     }).join('');
+  }
+
+  setupLocationTrendEvents() {
+    const grid = document.getElementById('location-trend-grid');
+    if (!grid || this.locationTrendEventsBound) return;
+    this.locationTrendEventsBound = true;
+    grid.addEventListener('click', event => {
+      const button = event.target.closest?.('.location-trend-bar-button');
+      if (!button) return;
+      const card = button.closest('.location-trend-item');
+      const detail = card?.querySelector('.location-trend-detail');
+      if (!detail) return;
+      const wasActive = button.classList.contains('active');
+      card.querySelectorAll('.location-trend-bar-button').forEach(item => {
+        item.classList.remove('active');
+        item.setAttribute('aria-pressed', 'false');
+      });
+      if (wasActive) {
+        detail.textContent = '';
+        detail.hidden = true;
+        return;
+      }
+      button.classList.add('active');
+      button.setAttribute('aria-pressed', 'true');
+      detail.textContent = button.dataset.label || '';
+      detail.hidden = false;
+    });
   }
 
   getLocalDateKey(value) {

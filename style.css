@@ -1248,14 +1248,52 @@ button { touch-action: manipulation; }
 .location-trend-value.danger { color: var(--status-danger); }
 .location-trend-value.extreme { color: var(--status-extreme); }
 .location-trend-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 48px;
+  margin: 10px 0 4px;
+  padding-bottom: 1px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.location-trend-bar-button {
+  flex: 1 0 18px;
+  min-width: 18px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: flex-end;
+  cursor: pointer;
+}
+.location-trend-bar {
   display: block;
   width: 100%;
-  height: 48px;
-  margin: 10px 0 8px;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  opacity: 0.55;
 }
-.location-trend-baseline { stroke: var(--border); stroke-width: 1; }
-.location-trend-bar { fill-opacity: 0.45; }
-.location-trend-bar.peak { fill-opacity: 1; stroke: var(--text-primary); stroke-width: 1; }
+.location-trend-bar.safe { background: var(--status-safe); }
+.location-trend-bar.caution { background: var(--status-caution); }
+.location-trend-bar.danger { background: var(--status-danger); }
+.location-trend-bar.extreme { background: var(--status-extreme); }
+.location-trend-bar.peak { opacity: 1; }
+.location-trend-bar-button.active .location-trend-bar {
+  opacity: 1;
+  outline: 2px solid var(--text-primary);
+  outline-offset: -1px;
+}
+.location-trend-detail {
+  margin-top: 6px;
+  min-height: 16px;
+  font-size: 0.68rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+.location-trend-detail[hidden] { display: none; }
 .location-trend-foot { display: flex; justify-content: flex-end; }
 .location-trend-status {
   padding: 2px 8px;
