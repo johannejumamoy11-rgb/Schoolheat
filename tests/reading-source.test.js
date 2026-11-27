@@ -495,18 +495,18 @@ test('keeps history to one page, hides ordinary source labels, and filters all r
   assert.match(list.innerHTML, /DEMO DATA/);
 });
 
-test('draws a heat-index graph and peak for each saved location in history', () => {
+test('draws heat-index bar graphs and peak for each saved location in history', () => {
   const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
   const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
   assert.match(index, /id="location-trend-grid"/);
   assert.match(index, /Heat Index by Location/);
   assert.match(script, /renderLocationTrends\(\)/);
   assert.match(script, /this\.renderLocationTrends\(\);/);
-  assert.match(style, /Location Heat Index Graphs/);
+  assert.match(style, /Location Heat Index Bar Graphs/);
   for (const key of [
     'Heat Index by Location',
     'Highest heat index',
-    'Highest first. Each graph uses saved readings; the marked point is the highest heat index.',
+    'Highest first. Each graph uses saved readings; the tallest bar is the highest heat index.',
     'No saved readings yet'
   ]) {
     assert.equal(locales.split(`'${key}':`).length - 1, 3, `${key} is translated into tl, ceb, and war`);
@@ -531,8 +531,40 @@ test('draws a heat-index graph and peak for each saved location in history', () 
   assert.match(grid.innerHTML, /39\.0°C/);
   assert.match(grid.innerHTML, /31\.0°C/);
   assert.doesNotMatch(grid.innerHTML, /50\.0°C/);
-  assert.match(grid.innerHTML, /<polyline/);
-  assert.match(grid.innerHTML, /<circle/);
+  assert.equal((grid.innerHTML.match(/<rect class="location-trend-bar/g) || []).length, 3);
+  assert.equal((grid.innerHTML.match(/class="location-trend-bar peak"/g) || []).length, 2);
+  assert.match(grid.innerHTML, /<line class="location-trend-baseline"/);
+  assert.doesNotMatch(grid.innerHTML, /<polyline/);
+  assert.doesNotMatch(grid.innerHTML, /<circle/);
+});
+
+test('caps impossible heat-index values and keeps demo readings realistic', () => {
+  assert.match(script, /const cappedHeatIndexC = Math\.min\(54, heatIndexC\);/);
+  assert.match(script, /if \(readingsChanged\) localStorage\.setItem\('sh_readings'/);
+  assert.match(script, /const temp = 26 \+ Math\.random\(\) \* 7 \+ \(hour - 12\) \* 0\.2;/);
+  assert.match(script, /const hum = 45 \+ Math\.random\(\) \* 30;/);
+
+  const demoApp = Object.create(context.SchoolHeatAppForTest.prototype);
+  assert.equal(demoApp.calculateHeatIndex(41, 90), 54);
+  assert.ok(demoApp.calculateHeatIndex(30, 65) < 40);
+
+  demoApp.readings = [];
+  demoApp.currentTab = 'dashboard';
+  demoApp.updateDashboard = () => {};
+  demoApp.renderHistory = () => {};
+  demoApp.renderMap = () => {};
+  demoApp.saveReadings = () => {};
+  const originalRandom = Math.random;
+  Math.random = () => 0.999;
+  try {
+    demoApp.generateDemoData(true);
+  } finally {
+    Math.random = originalRandom;
+  }
+  assert.ok(demoApp.readings.length > 0);
+  assert.ok(demoApp.readings.every(reading => reading.heatIndex <= 50));
+  assert.ok(demoApp.readings.every(reading => reading.temperature <= 34));
+  assert.ok(demoApp.readings.every(reading => reading.humidity <= 75));
 });
 
 test('counts mapped pins and saved location names separately in the dashboard summary', () => {
@@ -854,7 +886,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v133/);
+  assert.match(serviceWorker, /schoolheat-v134/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -952,7 +984,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v133/);
+  assert.match(serviceWorker, /schoolheat-v134/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);

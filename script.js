@@ -458,6 +458,15 @@ class SchoolHeatApp {
     try {
       const storedReadings = JSON.parse(localStorage.getItem('sh_readings') || '[]');
       this.readings = Array.isArray(storedReadings) ? storedReadings : [];
+      let readingsChanged = false;
+      this.readings.forEach(reading => {
+        const heatIndex = Number(reading?.heatIndex);
+        if (!Number.isFinite(heatIndex) || heatIndex <= 54) return;
+        reading.heatIndex = 54;
+        reading.status = this.getStatus(54);
+        readingsChanged = true;
+      });
+      if (readingsChanged) localStorage.setItem('sh_readings', JSON.stringify(this.readings));
     } catch (error) {
       this.readings = [];
       localStorage.removeItem('sh_readings');
@@ -1349,7 +1358,10 @@ class SchoolHeatApp {
     }
 
     const heatIndexC = (heatIndexF - 32) * 5 / 9;
-    return Math.max(T, heatIndexC);
+    // The NWS regression is not valid beyond its chart range; cap the feels-like value
+    // at the extreme-danger ceiling instead of showing impossible 90°C+ readings.
+    const cappedHeatIndexC = Math.min(54, heatIndexC);
+    return Math.max(T, cappedHeatIndexC);
   }
 
   getStatus(hi) {
@@ -3612,17 +3624,21 @@ class SchoolHeatApp {
     const plotHeight = height - padding * 2;
 
     grid.innerHTML = summaries.map(summary => {
-      const points = summary.entries.map((entry, index) => ({
-        x: summary.entries.length === 1 ? width / 2 : (index / (summary.entries.length - 1)) * width,
-        y: padding + plotHeight - ((entry.value - minVal) / span) * plotHeight
-      }));
-      const peakPoint = points[summary.entries.indexOf(summary.peak)];
-      const line = points.map(point => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
-      const color = getStatusColor(summary.peak.status);
+      const slot = width / summary.entries.length;
+      const barWidth = summary.entries.length === 1 ? 24 : Math.max(3, slot - 2);
+      const baseline = height - padding;
+      const bars = summary.entries.map((entry, index) => {
+        const x = index * slot + (slot - barWidth) / 2;
+        const top = padding + plotHeight - ((entry.value - minVal) / span) * plotHeight;
+        const barHeight = Math.max(1, baseline - top);
+        const isPeak = entry === summary.peak;
+        const color = getStatusColor(entry.status);
+        return `<rect class="location-trend-bar${isPeak ? ' peak' : ''}" x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barHeight.toFixed(1)}" rx="1" fill="${color}"></rect>`;
+      }).join('');
       const safeLocation = this.escapeHTML(summary.location);
       const statusLabel = this.translateText(STATUS_LABELS[summary.peak.status]);
       const peakLabel = this.translateText('Highest heat index');
-      const aria = this.escapeHTML(`${summary.location}: heat index trend. ${peakLabel} ${summary.peak.value.toFixed(1)}°C, ${statusLabel}.`);
+      const aria = this.escapeHTML(`${summary.location}: heat index bar graph. ${peakLabel} ${summary.peak.value.toFixed(1)}°C, ${statusLabel}.`);
       return `
         <article class="location-trend-item" aria-label="${aria}">
           <div class="location-trend-top">
@@ -3632,10 +3648,10 @@ class SchoolHeatApp {
               <strong>${summary.peak.value.toFixed(1)}°C</strong>
             </div>
           </div>
-          <svg class="location-trend-spark" viewBox="0 0 ${width} ${height}" aria-hidden="true" preserveAspectRatio="none">
+          <svg class="location-trend-bars" viewBox="0 0 ${width} ${height}" aria-hidden="true" preserveAspectRatio="none">
             <title>${aria}</title>
-            <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
-            <circle cx="${peakPoint.x.toFixed(1)}" cy="${peakPoint.y.toFixed(1)}" r="4" fill="${color}" stroke="${this.escapeHTML(getDesignToken('--bg-card', '#ffffff'))}" stroke-width="1.5"></circle>
+            <line class="location-trend-baseline" x1="0" y1="${baseline}" x2="${width}" y2="${baseline}"></line>
+            ${bars}
           </svg>
           <div class="location-trend-foot">
             <span class="location-trend-status ${summary.peak.status}">${statusLabel}</span>
@@ -5317,8 +5333,8 @@ class SchoolHeatApp {
         const minute = isToday && hour === now.getHours()
           ? Math.floor(Math.random() * (now.getMinutes() + 1))
           : Math.floor(Math.random() * 60);
-        const temp = 26 + Math.random() * 14 + (hour - 12) * 0.3;
-        const hum = 50 + Math.random() * 40;
+        const temp = 26 + Math.random() * 7 + (hour - 12) * 0.2;
+        const hum = 45 + Math.random() * 30;
         const ts = new Date(dayBase);
         ts.setHours(hour, minute);
         const hi = this.calculateHeatIndex(temp, hum);
