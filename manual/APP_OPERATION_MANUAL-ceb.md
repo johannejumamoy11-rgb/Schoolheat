@@ -50,11 +50,13 @@ kuwentahon, ug `D` aron masugdan/mapahunong ang awtomatikong pagbasa.
 ### 3.1 Pagpili og lokasyon
 
 1. Adto sa **Monitor sa Sensor**.
-2. Sa **Lokasyon**, pagpili og site sa campus gikan sa lista. Ang lista naglakip
-   sa 29 ka naka-map nga site ug **Einstein Classroom**, **Newton Classroom**, ug
-   **Locke Classroom** ubos sa **Mga Classroom sa Pagtuon**.
-3. Mahimo usab nimo i-tap ang usa sa mga chip nga **Katulahi:** alang sa imong
-   katapusang limang lokasyon.
+2. I-klik ang **Pilia sa mapa**. Ablihan sa app ang mapa sa campus; i-tap ang usa
+   ka pin aron itakda ang lokasyon sa sensor ug mobalik dinhi. Tanan nga 29 ka
+   naka-map nga site adunay pin.
+3. Para sa **Einstein Classroom**, **Newton Classroom**, ug **Locke Classroom**,
+   gamita ang lista nga **Lokasyon** ubos sa **Mga Classroom sa Pagtuon**. Mahimo
+   usab nimo i-tap ang usa sa mga chip nga **Katulahi:** alang sa imong katapusang
+   limang lokasyon.
 
 ### 3.2 Pagsulod sa pagbasa nga manual
 
@@ -100,7 +102,7 @@ pagtakda og talagsaong `DEVICE_NAME` sa matag board.
 2. Ipabilin ang `start-local-bridge.ps1` nga nagdagan sa bukas nga PowerShell
    window sa maong laptop. Ang bridge nag-bind sa localhost ug modawat lamang sa
    GitHub Pages origin niining proyekta.
-3. Sa **Monitor sa Sensor**, pilia ang **Lokasyon** sa sensor.
+3. Sa **Monitor sa Sensor**, pilia ang lokasyon sa sensor sa mapa o sa listahan nga **Lokasyon**.
 4. I-click ang **Auto-Read ESP32 (Wi-Fi) (Awtomatikong Basaha ang ESP32
    (Wi-Fi))**. Ang buton mahimong **Stop ESP32 Auto-Read (Wi-Fi) (Hunonga ang
    Awtomatikong Pagbasa sa ESP32 (Wi-Fi))** ug ang header magpakita sa **AUTO**.
@@ -114,7 +116,7 @@ pagtakda og talagsaong `DEVICE_NAME` sa matag board.
 
 1. Gamita ang HTTPS app sa desktop Edge o Chrome nga adunay suporta sa Web
    Bluetooth.
-2. Sa **Monitor sa Sensor**, pilia una ang **Lokasyon**.
+2. Sa **Monitor sa Sensor**, pilia una ang lokasyon sa mapa o sa listahan nga **Lokasyon**.
 3. I-click ang **Sync via Bluetooth (I-sync pinaagi sa Bluetooth)** ug pilia ang
    gi-assign nga ngalan sa device sa permission prompt sa browser.
 4. Ipabilin ang laptop sa sulod sa Bluetooth range hangtod matapos ang pag-sync.

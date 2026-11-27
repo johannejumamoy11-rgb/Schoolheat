@@ -32,8 +32,8 @@ Keyboard shortcuts: pindota an `1`–`8` para magbalhin hin tab, an `N` para maa
 ### 3.1 Pili-a an lokasyon
 
 1. Adto ha **Monitor han Sensor**.
-2. Ha **Location (Lokasyon)**, pumili hin lugar ha campus tikang ha lista. An lista may-ada 29 nga naka-map nga lugar pati an **Einstein Classroom**, **Newton Classroom**, ngan **Locke Classroom** ha ilarom han **Study classrooms (Mga Classroom ha Pagar-adal)**.
-3. Pwede ka liwat mopindota hin usa han mga chip nga **Recent: (Ha Urhi:)** para han imo katapusan nga lima nga lokasyon.
+2. I-klik an **Pilia ha mapa**. Ablihan han app an mapa han campus; pindota an usa ka pin agud itakda an lokasyon han sensor ngan bumalik dinhi. Ngatanan nga 29 nga naka-map nga lugar may-ada pin.
+3. Para han **Einstein Classroom**, **Newton Classroom**, ngan **Locke Classroom**, gamita an lista nga **Location (Lokasyon)** ha ilarom han **Study classrooms (Mga Classroom ha Pagar-adal)**. Pwede ka liwat mopindota hin usa han mga chip nga **Recent: (Ha Urhi:)** para han imo katapusan nga lima nga lokasyon.
 
 ### 3.2 Igsulod an pagbasa ha kamot
 
@@ -65,7 +65,7 @@ An ESP32 nakuha hin sample kada lima ka minuto tikang ha pag-on, diri tikang ha 
 
 1. I-on an natalaga nga ESP32 ngan paapila an laptop ha naka-configure nga ngaran han Wi-Fi niini. Normal la an pahibalo nga “No internet”.
 2. Padayon nga ipadalagan an `start-local-bridge.ps1` ha bukas nga PowerShell window ha mao nga laptop. An bridge nagbi-bind ha localhost ngan tinatanggap la an GitHub Pages origin han mao nga proyekto.
-3. Ha **Monitor han Sensor**, pilia an **Lokasyon** han sensor.
+3. Ha **Monitor han Sensor**, pilia an lokasyon han sensor ha mapa o ha lista nga **Lokasyon**.
 4. Pindota an **Auto-Read ESP32 (Wi-Fi) (Awtomatiko nga Pagbasa han ESP32 pinaagi han Wi-Fi)**. Nababag-o an buton ngadto ha **Stop ESP32 Auto-Read (Wi-Fi) (Hunonga an Awtomatiko nga Pagbasa han ESP32 pinaagi han Wi-Fi)** ngan an header nagpapakita hin **AUTO**.
 5. An app nagpapangutana ha bridge, nagse-set han orasan ha siyahan nga pagdalagan, nanghahangad hin usa nga sample dayon, ngan nag-i-import hin mga bag-o nga natipig nga pagbasa kada 20 segundo.
 6. Pindota an **Hunonga an Awtomatiko nga Pagbasa han ESP32 pinaagi han Wi-Fi** kon tapos na. Nagpapatulod an ESP32 pag-log samtang naka-on.
@@ -73,7 +73,7 @@ An ESP32 nakuha hin sample kada lima ka minuto tikang ha pag-on, diri tikang ha 
 ### 4.2 Bluetooth sync (waray bridge)
 
 1. Gamita an HTTPS app ha desktop Edge o Chrome nga may suporta ha Web Bluetooth.
-2. Ha **Monitor han Sensor**, pilia anay an **Lokasyon**.
+2. Ha **Monitor han Sensor**, pilia anay an lokasyon ha mapa o ha lista nga **Lokasyon**.
 3. Pindota an **Sync via Bluetooth (Sync pinaagi han Bluetooth)** ngan pilia an natalaga nga ngaran han device ha prompt han permiso han browser.
 4. Tipigi an laptop ha sakop han Bluetooth hasta matapos an sync. An app nagse-set han orasan/lokasyon kon kinahanglan ngan nag-i-import hin mga natipig nga rekord, ginlalaktawan an mga duplicate nga aada na ha mao nga browser.
 5. An Bluetooth sync nagbabalhin la hin natipig nga datos; diri ini **nga** nagpapatikang hin bag-o nga sample. An Bluetooth diri protektado hin password, salit gamita la ini ha ginsasalian nga palibot.

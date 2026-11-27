@@ -32,8 +32,8 @@ Mga keyboard shortcut: pindutin ang `1`–`8` para lumipat ng tab, ang `N` para 
 ### 3.1 Pumili ng lokasyon
 
 1. Pumunta sa **Monitor ng Sensor**.
-2. Sa **Location (Lokasyon)**, pumili ng site sa kampus mula sa listahan. Kasama sa listahan ang 29 na naka-map na site pati ang **Einstein Classroom**, **Newton Classroom**, at **Locke Classroom** sa ilalim ng **Study classrooms (Mga Silid-aralan para sa Pag-aaral)**.
-3. Maaari ring i-tap ang isa sa mga chip na **Recent: (Kamakailan:)** para sa huling limang lokasyon mo.
+2. I-click ang **Pumili sa mapa**. Buksan ng app ang mapa ng kampus; i-tap ang isang pin upang itakda ang lokasyon ng sensor at bumalik dito. Lahat ng 29 na naka-map na site ay may pin.
+3. Para sa **Einstein Classroom**, **Newton Classroom**, at **Locke Classroom**, gamitin ang listahang **Location (Lokasyon)** sa ilalim ng **Study classrooms (Mga Silid-aralan para sa Pag-aaral)**. Maaari ring i-tap ang isa sa mga chip na **Recent: (Kamakailan:)** para sa huling limang lokasyon mo.
 
 ### 3.2 Maglagay ng pagbasa nang manual
 
@@ -65,7 +65,7 @@ Kumukuha ng sample ang ESP32 tuwing limang minuto mula sa pag-on ng kuryente, hi
 
 1. I-on ang itinalagang ESP32 at ikonekta ang laptop sa naka-configure nitong pangalan ng Wi-Fi. Inaasahan ang babalang “No internet”.
 2. Panatilihing tumatakbo ang `start-local-bridge.ps1` sa isang bukas na PowerShell window sa laptop na iyon. Nakatali ang bridge sa localhost at tinatanggap lamang ang GitHub Pages origin ng proyektong ito.
-3. Sa **Monitor ng Sensor**, piliin ang **Lokasyon** ng sensor.
+3. Sa **Monitor ng Sensor**, pumili ng lokasyon ng sensor sa mapa o sa listahang **Lokasyon**.
 4. I-click ang **Auto-Read ESP32 (Wi-Fi) (Awtomatikong Pagbasa sa ESP32 sa Wi-Fi)**. Nagiging **Stop ESP32 Auto-Read (Wi-Fi) (Ihinto ang Awtomatikong Pagbasa sa ESP32 sa Wi-Fi)** ang button at ipinapakita ng header ang **AUTO**.
 5. Ine-poll ng app ang bridge, itinatakda ang orasan sa unang pagtakbo, humihingi ng isang agarang sample, at nag-i-import ng mga bagong naka-save na pagbasa tuwing 20 segundo.
 6. I-click ang **Ihinto ang Awtomatikong Pagbasa sa ESP32 sa Wi-Fi** kapag tapos na. Patuloy pa ring nagtatala ang ESP32 habang naka-on.
@@ -73,7 +73,7 @@ Kumukuha ng sample ang ESP32 tuwing limang minuto mula sa pag-on ng kuryente, hi
 ### 4.2 Bluetooth sync (walang bridge)
 
 1. Gamitin ang HTTPS app sa desktop Edge o Chrome na may suporta sa Web Bluetooth.
-2. Sa **Monitor ng Sensor**, piliin muna ang **Lokasyon**.
+2. Sa **Monitor ng Sensor**, pumili muna ng lokasyon sa mapa o sa listahang **Lokasyon**.
 3. I-click ang **Sync via Bluetooth (I-sync gamit ang Bluetooth)** at piliin ang itinalagang pangalan ng device sa permission prompt ng browser.
 4. Panatilihin ang laptop sa loob ng Bluetooth range hanggang matapos ang sync. Itinatakda ng app ang orasan/lokasyon kung kinakailangan at nag-i-import ng mga naka-save na tala, nilalaktawan ang mga duplicate na nasa browser na ito.
 5. Ang Bluetooth sync ay naglilipat lamang ng naka-imbak na data; hindi nito **pinapalitaw** ang bagong sample. Hindi protektado ng password ang Bluetooth, kaya gamitin ito sa pinagkatiwalaang kapaligiran lamang.

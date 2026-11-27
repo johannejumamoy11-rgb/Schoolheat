@@ -46,10 +46,11 @@ the location field, `C` to calculate, and `D` to start/stop auto-read.
 ### 3.1 Choose a location
 
 1. Go to **Sensor Monitor**.
-2. In **Location**, choose a campus site from the list. The list includes 29
-   mapped sites plus **Einstein Classroom**, **Newton Classroom**, and
-   **Locke Classroom** under **Study classrooms**.
-3. You can also tap one of the **Recent:** chips for your last five locations.
+2. Click **Choose on map**. The app opens the campus map; tap a pin to set the
+   sensor location and return here. All 29 mapped campus sites are pinned.
+3. For **Einstein Classroom**, **Newton Classroom**, and **Locke Classroom**,
+   use the **Location** list under **Study classrooms**. You can also tap one
+   of the **Recent:** chips for your last five locations.
 
 ### 3.2 Enter a manual reading
 
@@ -92,7 +93,7 @@ separate by its chip ID, so set a unique `DEVICE_NAME` on every board.
 2. Keep `start-local-bridge.ps1` running in an open PowerShell window on that
    laptop. The bridge binds to localhost and accepts only this project's
    GitHub Pages origin.
-3. In **Sensor Monitor**, select the sensor **Location**.
+3. In **Sensor Monitor**, choose the sensor location on the map or from the **Location** list.
 4. Click **Auto-Read ESP32 (Wi-Fi)**. The button changes to **Stop ESP32
    Auto-Read (Wi-Fi)** and the header shows **AUTO**.
 5. The app polls the bridge, sets the clock on first run, requests one
@@ -103,7 +104,7 @@ separate by its chip ID, so set a unique `DEVICE_NAME` on every board.
 ### 4.2 Bluetooth sync (no bridge)
 
 1. Use the HTTPS app in desktop Edge or Chrome with Web Bluetooth support.
-2. In **Sensor Monitor**, select the **Location** first.
+2. In **Sensor Monitor**, choose the location on the map or from the **Location** list first.
 3. Click **Sync via Bluetooth** and choose the assigned device name in the
    browser permission prompt.
 4. Keep the laptop within Bluetooth range until the sync finishes. The app

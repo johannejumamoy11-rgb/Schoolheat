@@ -507,6 +507,7 @@ class SchoolHeatApp {
     this.trendActiveIndex = null;
     this.distributionChartLoaded = false;
     this.mapZoom = 1;
+    this.mapLocationPickMode = false;
     this.lastDeviceStatus = null;
     this._resizeHandler = null;
     this.autoReadActive = false;
@@ -915,6 +916,8 @@ class SchoolHeatApp {
     const humInput = document.getElementById('humidity-input');
     if (tempInput) tempInput.addEventListener('input', () => this.updatePreview());
     if (humInput) humInput.addEventListener('input', () => this.updatePreview());
+    document.getElementById('choose-location-on-map')?.addEventListener('click', () => this.openMapLocationPicker());
+    document.getElementById('map-pick-cancel')?.addEventListener('click', () => this.cancelMapLocationPicker());
     document.getElementById('history-list')?.addEventListener('click', event => {
       const pageButton = event.target.closest('[data-history-page]');
       if (pageButton) {
@@ -1440,6 +1443,38 @@ class SchoolHeatApp {
       select.value = loc;
       if (showToast) this.toast(`Selected: ${loc}`, 'info');
     }
+  }
+
+  openMapLocationPicker() {
+    this.mapLocationPickMode = true;
+    this.switchTab('map');
+    this.syncMapLocationPickerUI();
+  }
+
+  syncMapLocationPickerUI() {
+    const banner = document.getElementById('map-pick-banner');
+    if (!banner) return;
+    if (this.mapLocationPickMode) banner.removeAttribute('hidden');
+    else banner.setAttribute('hidden', '');
+    document.getElementById('map-wrap')?.classList.toggle('map-picking', this.mapLocationPickMode);
+  }
+
+  clearMapLocationPicker() {
+    this.mapLocationPickMode = false;
+    this.syncMapLocationPickerUI();
+  }
+
+  cancelMapLocationPicker(returnToMonitor = true) {
+    this.clearMapLocationPicker();
+    if (returnToMonitor) this.switchTab('monitor');
+  }
+
+  finishMapLocationPicker(loc) {
+    this.selectLocation(loc, false);
+    this.clearMapLocationPicker();
+    this.switchTab('monitor');
+    this.toast(`Selected: ${loc}`, 'info');
+    document.getElementById('temp-input')?.focus();
   }
 
   checkAlerts() {
@@ -4885,6 +4920,11 @@ class SchoolHeatApp {
   }
 
   togglePinTooltip(pinEl) {
+    const loc = pinEl.dataset.loc;
+    if (this.mapLocationPickMode && loc) {
+      this.finishMapLocationPicker(loc);
+      return;
+    }
     document.querySelectorAll('.map-pin.active').forEach(p => {
       if (p !== pinEl) {
         p.classList.remove('active');
@@ -4893,7 +4933,7 @@ class SchoolHeatApp {
     });
     pinEl.classList.toggle('active');
     pinEl.setAttribute('aria-expanded', String(pinEl.classList.contains('active')));
-    this.selectLocation(pinEl.dataset.loc, false);
+    this.selectLocation(loc, false);
   }
 
   syncMapPins() {
@@ -5274,6 +5314,7 @@ class SchoolHeatApp {
 
   switchTab(tabId, scrollToTop = true) {
     if (!document.getElementById('tab-' + tabId)) return;
+    if (this.mapLocationPickMode && tabId !== 'map') this.clearMapLocationPicker();
     this.currentTab = tabId;
     document.documentElement.setAttribute('data-active-tab', tabId);
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));

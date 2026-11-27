@@ -615,6 +615,12 @@ test('shows one flat campus map with user-marked pins', () => {
   assert.match(style, /box-shadow: var\(--pin-ring\);/);
   assert.doesNotMatch(style, /pin-pulse|--pin-glow/);
   assert.match(style, /\.dashboard-map-pin\s*\{[^}]*width: 8px;[^}]*height: 8px;/);
+  assert.match(index, /id="choose-location-on-map"/);
+  assert.match(index, /id="map-pick-banner"/);
+  assert.match(script, /openMapLocationPicker\(\)/);
+  assert.match(script, /finishMapLocationPicker\(loc\)/);
+  assert.match(script, /if \(this\.mapLocationPickMode && loc\)[\s\S]*?this\.finishMapLocationPicker\(loc\)/);
+  assert.match(script, /if \(this\.mapLocationPickMode && tabId !== 'map'\) this\.clearMapLocationPicker\(\)/);
   assert.doesNotMatch(style, /\.campus-reference-tilt|rotateX\(var\(--campus-rx/);
   assert.doesNotMatch(style, /\.map-fallback|\.svg-map/);
   assert.match(script, /const CAMPUS_IMAGE_PINS = \[/);
@@ -723,7 +729,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v122/);
+  assert.match(serviceWorker, /schoolheat-v123/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -821,7 +827,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v122/);
+  assert.match(serviceWorker, /schoolheat-v123/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);

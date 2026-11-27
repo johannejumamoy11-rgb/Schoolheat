@@ -573,11 +573,15 @@
       </div>
 
       <div class="glass-card input-card">
-        <div class="input-group">
+        <div class="input-group location-picker-field">
           <label for="location-select">Location</label>
-          <select id="location-select" class="input-select">
-            <option value="" disabled selected>Choose location...</option>
-          </select>
+          <div class="location-picker-row">
+            <select id="location-select" class="input-select">
+              <option value="" disabled selected>Choose location...</option>
+            </select>
+            <button type="button" class="btn-secondary btn-sm" id="choose-location-on-map">Choose on map</button>
+          </div>
+          <p class="location-picker-hint">Tap a campus pin to set the sensor location. Use the list above for study classrooms.</p>
         </div>
 
         <div class="recent-locations" id="recent-locations" style="display:none;">
@@ -792,6 +796,14 @@
       <div class="panel-header">
         <h2 class="panel-title">Campus Hazard Map</h2>
         <p class="panel-subtitle">Tap a mapped campus site to view heat status. The three study classrooms are selectable in Monitor but are not pinned without verified map coordinates.</p>
+      </div>
+
+      <div class="map-pick-banner" id="map-pick-banner" role="status" hidden>
+        <div>
+          <strong>Choose a location on the map</strong>
+          <span>Tap a campus pin to set the sensor location.</span>
+        </div>
+        <button type="button" class="btn-secondary btn-sm" id="map-pick-cancel">Cancel</button>
       </div>
 
       <div class="glass-card map-card campus-map-card">
