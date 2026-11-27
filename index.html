@@ -545,34 +545,36 @@
             <div class="monitor-gauge-unit">°C Heat Index</div>
           </div>
         </div>
-        <div class="monitor-classification">
-          <span class="monitor-classification-label">DepEd 4H classification</span>
-          <div class="monitor-gauge-status nodata" id="monitor-gauge-status" aria-live="polite">No Data</div>
-          <div class="gauge-range-key monitor-range-key" aria-label="DepEd 4H heat-index range">
-            <span class="safe">Hayo</span><span class="caution">Hinay</span><span class="danger">Hinga</span><span class="extreme">Hinto</span>
+        <div class="monitor-gauge-details">
+          <div class="monitor-classification">
+            <span class="monitor-classification-label">DepEd 4H classification</span>
+            <div class="monitor-gauge-status nodata" id="monitor-gauge-status" aria-live="polite">No Data</div>
+            <div class="gauge-range-key monitor-range-key" aria-label="DepEd 4H heat-index range">
+              <span class="safe">Hayo</span><span class="caution">Hinay</span><span class="danger">Hinga</span><span class="extreme">Hinto</span>
+            </div>
+          </div>
+          <div class="monitor-scales">
+            <div class="monitor-scale">
+              <div class="scale-info">
+                <span class="scale-name">Temperature</span>
+                <span class="scale-num" id="scale-temp-val">-- °C</span>
+              </div>
+              <div class="scale-track">
+                <div class="scale-fill temp" id="scale-temp-bar" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="monitor-scale">
+              <div class="scale-info">
+                <span class="scale-name">Humidity</span>
+                <span class="scale-num" id="scale-hum-val">-- %</span>
+              </div>
+              <div class="scale-track">
+                <div class="scale-fill hum" id="scale-hum-bar" style="width:0%"></div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="monitor-scales">
-          <div class="monitor-scale">
-            <div class="scale-info">
-              <span class="scale-name">Temperature</span>
-              <span class="scale-num" id="scale-temp-val">-- °C</span>
-            </div>
-            <div class="scale-track">
-              <div class="scale-fill temp" id="scale-temp-bar" style="width:0%"></div>
-            </div>
-          </div>
-          <div class="monitor-scale">
-            <div class="scale-info">
-              <span class="scale-name">Humidity</span>
-              <span class="scale-num" id="scale-hum-val">-- %</span>
-            </div>
-            <div class="scale-track">
-              <div class="scale-fill hum" id="scale-hum-bar" style="width:0%"></div>
-            </div>
-          </div>
-          <p class="device-integrity-note">Reading freshness describes saved data only. It does not confirm that an ESP32 is currently connected; use the sync controls below to check the device.</p>
-        </div>
+        <p class="device-integrity-note">Reading freshness describes saved data only. It does not confirm that an ESP32 is currently connected; use the sync controls below to check the device.</p>
       </div>
 
       <div class="glass-card input-card">

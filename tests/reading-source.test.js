@@ -76,15 +76,19 @@ test('makes the heat-index gauge the visual focus on dashboard and monitor', () 
   assert.match(script, /ctx\.lineWidth = lineWidth \* 0\.55;[\s\S]{0,80}ctx\.globalAlpha = 0\.4;/);
 });
 
-test('uses the wide monitor card to pair a large gauge with a prominent classification', () => {
+test('uses the wide monitor card to pair a large gauge with a filled classification column', () => {
   const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
   const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
+  assert.match(index, /class="monitor-gauge-details"/);
   assert.match(index, /class="monitor-classification"/);
   assert.match(index, /id="monitor-gauge-status" aria-live="polite"/);
   assert.match(style, /MONITOR GAUGE & CLASSIFICATION FOCUS/);
   assert.match(style, /#tab-monitor \.monitor-gauge-status\s*\{[^}]*font-size: clamp\(1\.9rem, 4vw, 2\.8rem\)/);
   assert.match(style, /@media \(min-width: 820px\) \{[\s\S]*?#tab-monitor \.monitor-gauge-card\s*\{[^}]*grid-template-areas:/);
-  assert.match(style, /"gauge classification"/);
+  assert.match(style, /"gauge details"/);
+  assert.match(style, /"note note"/);
+  assert.match(style, /#tab-monitor \.monitor-gauge-details\s*\{[^}]*justify-content: space-between/);
+  assert.match(style, /#tab-monitor \.monitor-scales\s*\{[^}]*flex-direction: column/);
   assert.match(script, /if \(this\.currentTab === 'monitor'\) \{\s*this\.updateMonitorGauge\(\);\s*\}/);
   assert.equal(locales.split(`'DepEd 4H classification':`).length - 1, 3);
 });
@@ -803,7 +807,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v130/);
+  assert.match(serviceWorker, /schoolheat-v131/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -901,7 +905,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v130/);
+  assert.match(serviceWorker, /schoolheat-v131/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
