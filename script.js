@@ -817,6 +817,12 @@ class SchoolHeatApp {
         this.drawTrendChart();
         this.drawDistributionChart();
       }
+      if (this.currentTab === 'monitor') {
+        this.updateMonitorGauge();
+      }
+      if (this.currentTab === 'dashboard') {
+        this.drawGauge(this.readings[0]?.heatIndex || 0);
+      }
     };
     window.addEventListener('resize', this._resizeHandler);
   }
