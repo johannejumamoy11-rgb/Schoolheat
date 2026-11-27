@@ -238,7 +238,7 @@
         <span id="dashboard-location-summary">Counts use the latest saved reading at each location, including demo data; they are not simultaneous campus coverage.</span>
       </div>
       <div class="status-grid" aria-label="Latest saved readings grouped by DepEd 4H classification">
-        <div class="status-card safe" data-status="safe">
+        <div class="status-card safe" data-status="safe" tabindex="0" aria-describedby="tooltip-safe">
           <div class="status-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           </div>
@@ -246,8 +246,9 @@
           <div class="status-label">Hayo</div>
           <div class="status-range">&lt; 27°C</div>
           <div class="status-meaning">Routine monitoring</div>
+          <div class="status-tooltip" role="tooltip" id="tooltip-safe">Hayo means the heat index is below 27°C. Conditions are normal; keep water available and continue regular checks.</div>
         </div>
-        <div class="status-card caution" data-status="caution">
+        <div class="status-card caution" data-status="caution" tabindex="0" aria-describedby="tooltip-caution">
           <div class="status-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           </div>
@@ -255,8 +256,9 @@
           <div class="status-label">Hinay</div>
           <div class="status-range">27–32°C</div>
           <div class="status-meaning">Increase precautions</div>
+          <div class="status-tooltip" role="tooltip" id="tooltip-caution">Hinay means the heat index is 27–32°C. Heat is building; slow strenuous activity and add water breaks.</div>
         </div>
-        <div class="status-card danger" data-status="danger">
+        <div class="status-card danger" data-status="danger" tabindex="0" aria-describedby="tooltip-danger">
           <div class="status-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           </div>
@@ -264,8 +266,9 @@
           <div class="status-label">Hinga</div>
           <div class="status-range">33–41°C</div>
           <div class="status-meaning">Rest and cool down</div>
+          <div class="status-tooltip" role="tooltip" id="tooltip-danger">Hinga means the heat index is 33–41°C. Rest in a cooler space and follow the school heat-response procedure.</div>
         </div>
-        <div class="status-card extreme" data-status="extreme">
+        <div class="status-card extreme" data-status="extreme" tabindex="0" aria-describedby="tooltip-extreme">
           <div class="status-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           </div>
@@ -273,6 +276,7 @@
           <div class="status-label">Hinto</div>
           <div class="status-range">42°C and above</div>
           <div class="status-meaning">Stop heat exposure</div>
+          <div class="status-tooltip" role="tooltip" id="tooltip-extreme">Hinto means the heat index is 42°C or higher. Stop heat exposure, move to a cooler space, and follow the school emergency plan.</div>
         </div>
       </div>
       <section class="campus-coverage-card" aria-labelledby="campus-coverage-title">

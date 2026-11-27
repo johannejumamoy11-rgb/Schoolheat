@@ -428,7 +428,7 @@ html[data-theme="dark"] .ambient-orb {
   text-align: center;
   transition: all var(--transition-base);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
 .status-card::before {
@@ -521,11 +521,59 @@ html[data-theme="dark"] .ambient-orb {
   font-weight: 600;
   line-height: 1.3;
 }
+.status-card:hover,
+.status-card:focus {
+  z-index: 5;
+}
+.status-card:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+.status-tooltip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  padding: 10px 11px;
+  border: 1px solid var(--border-hover);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-md);
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: left;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity var(--transition-base), transform var(--transition-base);
+}
+.status-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 1px solid var(--border-hover);
+  border-bottom: 1px solid var(--border-hover);
+  background: var(--bg-card);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.status-card:hover .status-tooltip,
+.status-card:focus .status-tooltip,
+.status-card:focus-within .status-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 @media (max-width: 520px) {
   #tab-dashboard > .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .status-card { min-height: 0; padding: 14px 10px; }
   .status-meaning { font-size: 0.68rem; }
+  .status-tooltip { font-size: 0.68rem; }
 }
 
 /* ============================================
