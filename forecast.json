@@ -2,155 +2,155 @@
   "schemaVersion": 1,
   "status": "ready",
   "horizonMinutes": 60,
-  "generatedAt": "2026-11-27T14:55:25Z",
+  "generatedAt": "2026-11-27T20:23:29Z",
   "sourceFile": "data/schoolheat_readings.csv",
   "dataStart": "2026-11-03T07:30:00+08:00",
-  "dataEnd": "2026-11-25T07:00:00+08:00",
+  "dataEnd": "2026-11-20T15:35:00+08:00",
   "deviceId": "1",
   "location": "3 Storey, 15 Classroom, DepEd SS Building",
-  "locationNote": "Row-by-row averages from the supplied CSV; device_id 1 is a series key, not a physical classroom device, and it is not mapped to a campus map pin.",
+  "locationNote": "Row-by-row averages from the uploaded CSV; device_id is a series key, not a physical classroom device, and it is not mapped to a campus map pin.",
   "devices": [
     {
       "deviceId": "1",
-      "label": "DepEd SS Building row-by-row averages",
-      "readings": 6337
+      "label": "3 Storey, 15 Classroom, DepEd SS Building row-by-row averages",
+      "readings": 5000
     }
   ],
   "current": {
-    "minute": 29926020,
-    "date": "2026-11-25T07:00:00+08:00",
-    "value": 20.88,
-    "temperature": 22.79,
-    "humidity": 93.81
+    "minute": 29919335,
+    "date": "2026-11-20T15:35:00+08:00",
+    "value": 39.0,
+    "temperature": 32.0,
+    "humidity": 66.0
   },
   "forecast": [
     {
-      "date": "2026-11-25T08:00:00+08:00",
-      "value": 22.95,
-      "status": "safe"
+      "date": "2026-11-20T16:35:00+08:00",
+      "value": 38.12,
+      "status": "danger"
     }
   ],
   "history": [
     {
-      "minute": 29925960,
-      "date": "2026-11-25T06:00:00+08:00",
-      "value": 20.15
+      "minute": 29919275,
+      "date": "2026-11-20T14:35:00+08:00",
+      "value": 40.97
     },
     {
-      "minute": 29925965,
-      "date": "2026-11-25T06:05:00+08:00",
-      "value": 20.15
+      "minute": 29919280,
+      "date": "2026-11-20T14:40:00+08:00",
+      "value": 40.71
     },
     {
-      "minute": 29925970,
-      "date": "2026-11-25T06:10:00+08:00",
-      "value": 20.12
+      "minute": 29919285,
+      "date": "2026-11-20T14:45:00+08:00",
+      "value": 40.66
     },
     {
-      "minute": 29925975,
-      "date": "2026-11-25T06:15:00+08:00",
-      "value": 20.12
+      "minute": 29919290,
+      "date": "2026-11-20T14:50:00+08:00",
+      "value": 40.51
     },
     {
-      "minute": 29925980,
-      "date": "2026-11-25T06:20:00+08:00",
-      "value": 20.16
+      "minute": 29919295,
+      "date": "2026-11-20T14:55:00+08:00",
+      "value": 40.28
     },
     {
-      "minute": 29925985,
-      "date": "2026-11-25T06:25:00+08:00",
-      "value": 20.22
+      "minute": 29919300,
+      "date": "2026-11-20T15:00:00+08:00",
+      "value": 40.09
     },
     {
-      "minute": 29925990,
-      "date": "2026-11-25T06:30:00+08:00",
-      "value": 20.29
+      "minute": 29919305,
+      "date": "2026-11-20T15:05:00+08:00",
+      "value": 39.86
     },
     {
-      "minute": 29925995,
-      "date": "2026-11-25T06:35:00+08:00",
-      "value": 20.35
+      "minute": 29919310,
+      "date": "2026-11-20T15:10:00+08:00",
+      "value": 39.69
     },
     {
-      "minute": 29926000,
-      "date": "2026-11-25T06:40:00+08:00",
-      "value": 20.5
+      "minute": 29919315,
+      "date": "2026-11-20T15:15:00+08:00",
+      "value": 39.51
     },
     {
-      "minute": 29926005,
-      "date": "2026-11-25T06:45:00+08:00",
-      "value": 20.62
+      "minute": 29919320,
+      "date": "2026-11-20T15:20:00+08:00",
+      "value": 39.27
     },
     {
-      "minute": 29926010,
-      "date": "2026-11-25T06:50:00+08:00",
-      "value": 20.76
+      "minute": 29919325,
+      "date": "2026-11-20T15:25:00+08:00",
+      "value": 39.16
     },
     {
-      "minute": 29926015,
-      "date": "2026-11-25T06:55:00+08:00",
-      "value": 20.84
+      "minute": 29919330,
+      "date": "2026-11-20T15:30:00+08:00",
+      "value": 39.12
     },
     {
-      "minute": 29926020,
-      "date": "2026-11-25T07:00:00+08:00",
-      "value": 20.88
+      "minute": 29919335,
+      "date": "2026-11-20T15:35:00+08:00",
+      "value": 39.0
     }
   ],
   "models": {
     "random-forest": {
-      "value": 23.19,
-      "status": "safe"
+      "value": 38.14,
+      "status": "danger"
     },
     "xgboost-style": {
-      "value": 22.97,
-      "status": "safe"
+      "value": 38.12,
+      "status": "danger"
     },
     "lightgbm-style": {
-      "value": 22.95,
-      "status": "safe"
+      "value": 38.16,
+      "status": "danger"
     }
   },
-  "bestModel": "lightgbm-style",
+  "bestModel": "xgboost-style",
   "metrics": {
     "random-forest": {
-      "mae": 0.6038,
-      "rmse": 0.7669,
-      "mape": 1.892,
-      "r2": 0.9644,
-      "samples": 40,
-      "hazardMisses": 1,
-      "hazardSamples": 13,
-      "hazardMissRate": 0.0769,
-      "evaluationStart": "2026-11-21T07:00:00+08:00",
-      "evaluationEnd": "2026-11-24T16:00:00+08:00"
+      "mae": 0.956,
+      "rmse": 1.4203,
+      "mape": 2.9278,
+      "r2": 0.9269,
+      "samples": 38,
+      "hazardMisses": 0,
+      "hazardSamples": 25,
+      "hazardMissRate": 0.0,
+      "evaluationStart": "2026-11-17T07:00:00+08:00",
+      "evaluationEnd": "2026-11-20T14:00:00+08:00"
     },
     "xgboost-style": {
-      "mae": 0.6348,
-      "rmse": 0.7685,
-      "mape": 1.974,
-      "r2": 0.9642,
-      "samples": 40,
-      "hazardMisses": 1,
-      "hazardSamples": 13,
-      "hazardMissRate": 0.0769,
-      "evaluationStart": "2026-11-21T07:00:00+08:00",
-      "evaluationEnd": "2026-11-24T16:00:00+08:00"
+      "mae": 0.9096,
+      "rmse": 1.3157,
+      "mape": 2.8041,
+      "r2": 0.9373,
+      "samples": 38,
+      "hazardMisses": 0,
+      "hazardSamples": 25,
+      "hazardMissRate": 0.0,
+      "evaluationStart": "2026-11-17T07:00:00+08:00",
+      "evaluationEnd": "2026-11-20T14:00:00+08:00"
     },
     "lightgbm-style": {
-      "mae": 0.6218,
-      "rmse": 0.7647,
-      "mape": 1.943,
-      "r2": 0.9646,
-      "samples": 40,
-      "hazardMisses": 1,
-      "hazardSamples": 13,
-      "hazardMissRate": 0.0769,
-      "evaluationStart": "2026-11-21T07:00:00+08:00",
-      "evaluationEnd": "2026-11-24T16:00:00+08:00"
+      "mae": 1.0528,
+      "rmse": 1.5647,
+      "mape": 3.2661,
+      "r2": 0.9113,
+      "samples": 38,
+      "hazardMisses": 0,
+      "hazardSamples": 25,
+      "hazardMissRate": 0.0,
+      "evaluationStart": "2026-11-17T07:00:00+08:00",
+      "evaluationEnd": "2026-11-20T14:00:00+08:00"
     }
   },
-  "trainingSamples": 2392,
+  "trainingSamples": 1939,
   "notes": [
     "Real scikit-learn RandomForestRegressor, xgboost.XGBRegressor, and lightgbm.LGBMRegressor models.",
     "Validation uses non-overlapping 60-minute school-hour holdouts from sequential calendar days.",
