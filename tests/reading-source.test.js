@@ -543,7 +543,7 @@ test('publishes a real Python 60-minute forecast job', () => {
     'utf8'
   );
   assert.match(workflow, /workflow_dispatch:/);
-  assert.match(workflow, /branches:\s*\n\s*- forecast-python-60min-test/);
+  assert.doesNotMatch(workflow, /branches:\s*\n\s*- forecast-python-60min-test/);
   assert.match(workflow, /github\.event_name != 'push' \|\| github\.actor != 'github-actions\[bot\]'/);
   assert.match(workflow, /cron: '17 2 \* \* \*'/);
   assert.match(workflow, /python-version: '3\.11'/);

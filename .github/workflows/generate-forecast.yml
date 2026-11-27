@@ -1,9 +1,6 @@
 name: Generate 60-minute Python forecast
 
 on:
-  push:
-    branches:
-      - forecast-python-60min-test
   schedule:
     - cron: '17 2 * * *'
   workflow_dispatch:
