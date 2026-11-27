@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "ready",
   "horizonMinutes": 60,
-  "generatedAt": "2026-11-27T14:40:48Z",
+  "generatedAt": "2026-11-27T14:55:25Z",
   "sourceFile": "data/schoolheat_readings.csv",
   "dataStart": "2026-11-03T07:30:00+08:00",
   "dataEnd": "2026-11-25T07:00:00+08:00",
@@ -32,59 +32,64 @@
   ],
   "history": [
     {
-      "minute": 29925070,
-      "date": "2026-11-24T15:10:00+08:00",
-      "value": 31.45
+      "minute": 29925960,
+      "date": "2026-11-25T06:00:00+08:00",
+      "value": 20.15
     },
     {
-      "minute": 29925075,
-      "date": "2026-11-24T15:15:00+08:00",
-      "value": 31.41
+      "minute": 29925965,
+      "date": "2026-11-25T06:05:00+08:00",
+      "value": 20.15
     },
     {
-      "minute": 29925080,
-      "date": "2026-11-24T15:20:00+08:00",
-      "value": 31.23
+      "minute": 29925970,
+      "date": "2026-11-25T06:10:00+08:00",
+      "value": 20.12
     },
     {
-      "minute": 29925085,
-      "date": "2026-11-24T15:25:00+08:00",
-      "value": 31.09
+      "minute": 29925975,
+      "date": "2026-11-25T06:15:00+08:00",
+      "value": 20.12
     },
     {
-      "minute": 29925090,
-      "date": "2026-11-24T15:30:00+08:00",
-      "value": 30.96
+      "minute": 29925980,
+      "date": "2026-11-25T06:20:00+08:00",
+      "value": 20.16
     },
     {
-      "minute": 29925095,
-      "date": "2026-11-24T15:35:00+08:00",
-      "value": 30.92
+      "minute": 29925985,
+      "date": "2026-11-25T06:25:00+08:00",
+      "value": 20.22
     },
     {
-      "minute": 29925100,
-      "date": "2026-11-24T15:40:00+08:00",
-      "value": 30.95
+      "minute": 29925990,
+      "date": "2026-11-25T06:30:00+08:00",
+      "value": 20.29
     },
     {
-      "minute": 29925105,
-      "date": "2026-11-24T15:45:00+08:00",
-      "value": 31.12
+      "minute": 29925995,
+      "date": "2026-11-25T06:35:00+08:00",
+      "value": 20.35
     },
     {
-      "minute": 29925110,
-      "date": "2026-11-24T15:50:00+08:00",
-      "value": 31.27
+      "minute": 29926000,
+      "date": "2026-11-25T06:40:00+08:00",
+      "value": 20.5
     },
     {
-      "minute": 29925115,
-      "date": "2026-11-24T15:55:00+08:00",
-      "value": 31.29
+      "minute": 29926005,
+      "date": "2026-11-25T06:45:00+08:00",
+      "value": 20.62
     },
     {
-      "minute": 29925120,
-      "date": "2026-11-24T16:00:00+08:00",
-      "value": 31.34
+      "minute": 29926010,
+      "date": "2026-11-25T06:50:00+08:00",
+      "value": 20.76
+    },
+    {
+      "minute": 29926015,
+      "date": "2026-11-25T06:55:00+08:00",
+      "value": 20.84
     },
     {
       "minute": 29926020,
@@ -148,8 +153,8 @@
   "trainingSamples": 2392,
   "notes": [
     "Real scikit-learn RandomForestRegressor, xgboost.XGBRegressor, and lightgbm.LGBMRegressor models.",
-    "Validation uses non-overlapping 60-minute school-hour holdouts from sequential future days.",
-    "The selected model has the lowest validated RMSE.",
+    "Validation uses non-overlapping 60-minute school-hour holdouts from sequential calendar days.",
+    "The selected model has the lowest equal-weight combined RMSE and MAPE rank.",
     "Sensor calibration is not verified by this forecast."
   ]
 }
