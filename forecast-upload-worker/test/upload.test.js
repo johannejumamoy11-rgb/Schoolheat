@@ -63,3 +63,8 @@ test("does not require sign-in, an access code, or a rate limit", () => {
   assert.doesNotMatch(workerSource, /FORECAST_UPLOAD_CODE|FORECAST_UPLOADER_UIDS|X-Forecast-Upload-Code/);
   assert.doesNotMatch(workerSource, /X-Firebase-AppCheck|Idempotency-Key|ForecastUploadRateLimiter/);
 });
+
+test("commits source metadata before the CSV that starts the forecast job", () => {
+  const commitForecastData = workerSource.match(/async function commitForecastData[\s\S]*?\n}\n/)?.[0] || "";
+  assert.ok(commitForecastData.indexOf("SOURCE_PATH") < commitForecastData.indexOf("DATA_PATH"));
+});

@@ -281,8 +281,6 @@ function sourceMetadata(normalized) {
 }
 
 async function commitForecastData(env, normalized) {
-  const csvSha = await getFileSha(env, DATA_PATH);
-  await putFile(env, DATA_PATH, normalized.csv, csvSha, "Update forecast data from uploaded CSV");
   if (normalized.location) {
     const sourceSha = await getFileSha(env, SOURCE_PATH);
     await putFile(
@@ -293,6 +291,8 @@ async function commitForecastData(env, normalized) {
       "Update forecast source label from uploaded CSV"
     );
   }
+  const csvSha = await getFileSha(env, DATA_PATH);
+  await putFile(env, DATA_PATH, normalized.csv, csvSha, "Update forecast data from uploaded CSV");
   return {
     ok: true,
     rows: normalized.rows,
