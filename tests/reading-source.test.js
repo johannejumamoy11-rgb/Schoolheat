@@ -607,7 +607,7 @@ test('shows what each overview classification means and explains it on hover or 
     ['Continue', 'Ease-in', 'Check-in', 'Stop']
   );
   assert.deepEqual(
-    [...index.matchAll(/<div class="status-tooltip" role="tooltip" id="tooltip-[a-z]+">([^<]+)<\/div>/g)].map(match => match[1]),
+    [...index.matchAll(/<div class="status-tooltip" role="tooltip" id="tooltip-[a-z]+">\s*<span class="status-tooltip-detail">([^<]+)<\/span>\s*<span class="status-tooltip-source">([^<]+)<\/span>\s*<\/div>/g)].map(match => match[1]),
     [
       'Hayo (Continue): Continue in-person classroom learning. In heat, scheduled hydration breaks and cooler-hour outdoor activities.',
       'Hinay (Ease-in): Ease into structured distance learning. In heat, shorten face-to-face hours or use hybrid/home-based schedules.',
@@ -615,15 +615,12 @@ test('shows what each overview classification means and explains it on hover or 
       'Hinto (Stop): All forms of learning are suspended. In heat, stop face-to-face and home-based activities; safety checks come first.'
     ]
   );
-  assert.match(index, /<p class="status-source">From DepEd Order No\. 014, s\. 2026 and DepEd Memorandum No\. 64, s\. 2026\. Hover or focus a card for details\.<\/p>/);
-  assert.match(index, /<section class="memorandum-card" aria-labelledby="memorandum-title">/);
-  assert.match(index, /DM No\. 064, s\. 2026 — Anticipatory Action, Preparedness, and Protective Measures for the 2026–2027 Super El Niño\./);
-  assert.match(index, /href="https:\/\/www\.deped\.gov\.ph\/wp-content\/uploads\/DM_s2026_064r\.pdf" target="_blank" rel="noopener noreferrer">Open memorandum PDF<\/a>/);
-  assert.match(index, /<section class="memorandum-card" aria-labelledby="order-title">/);
-  assert.match(index, /DO No\. 014, s\. 2026 — Guidelines on Learning Continuity in Emergencies\./);
-  assert.match(index, /<p class="status-source">The four 4H level names come from this order\.<\/p>/);
-  assert.match(index, /href="https:\/\/www\.deped\.gov\.ph\/wp-content\/uploads\/DO_s2026_014r\.pdf" target="_blank" rel="noopener noreferrer">Open order PDF<\/a>/);
-  assert.doesNotMatch(index, /Open 4H order PDF/);
+  assert.deepEqual(
+    [...index.matchAll(/<span class="status-tooltip-source">([^<]+)<\/span>/g)].map(match => match[1]),
+    Array(4).fill('DepEd basis: DO No. 014, s. 2026 · DM No. 064, s. 2026')
+  );
+  assert.match(index, /<p class="status-source">Sources: DO No\. 014, s\. 2026 \(4H levels\) and DM No\. 064, s\. 2026 \(heat actions\)\. Hover or focus a card for details\.<\/p>/);
+  assert.doesNotMatch(index, /memorandum-card|DM_s2026_064r\.pdf|DO_s2026_014r\.pdf/);
   assert.doesNotMatch(index, /classification-dialog|classification-hint/);
   assert.doesNotMatch(script, /CLASSIFICATION_DETAILS|setupClassificationCards|showClassificationDialog/);
   assert.match(style, /\.status-meaning/);
@@ -638,9 +635,10 @@ test('shows what each overview classification means and explains it on hover or 
   assert.match(style, /border: 1px solid var\(--status-accent\);/);
   assert.match(style, /border-right: 1px solid var\(--status-accent\);/);
   assert.match(style, /\.status-source/);
-  assert.match(style, /\.memorandum-card/);
-  assert.match(style, /\.memorandum-links/);
+  assert.match(style, /\.status-tooltip-detail/);
+  assert.match(style, /\.status-tooltip-source/);
   assert.match(style, /@media \(max-height: 650px\)/);
+  assert.match(style, /@media \(max-height: 650px\) and \(min-width: 761px\)/);
   assert.match(style, /top: calc\(100% \+ 6px\)/);
   assert.match(style, /#tab-dashboard > \.status-grid \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
   for (const key of [
@@ -652,15 +650,8 @@ test('shows what each overview classification means and explains it on hover or 
     'Hinay (Ease-in): Ease into structured distance learning. In heat, shorten face-to-face hours or use hybrid/home-based schedules.',
     'Hinga (Check-in): Check-ins and light distance learning. In heat, suspend face-to-face classes and reduce academic demands.',
     'Hinto (Stop): All forms of learning are suspended. In heat, stop face-to-face and home-based activities; safety checks come first.',
-    'From DepEd Order No. 014, s. 2026 and DepEd Memorandum No. 64, s. 2026. Hover or focus a card for details.',
-    'SOURCE · DEPED 4H',
-    'DepEd memorandum',
-    'DM No. 064, s. 2026 — Anticipatory Action, Preparedness, and Protective Measures for the 2026–2027 Super El Niño.',
-    'Open memorandum PDF',
-    'DepEd order',
-    'DO No. 014, s. 2026 — Guidelines on Learning Continuity in Emergencies.',
-    'The four 4H level names come from this order.',
-    'Open order PDF'
+    'Sources: DO No. 014, s. 2026 (4H levels) and DM No. 064, s. 2026 (heat actions). Hover or focus a card for details.',
+    'DepEd basis: DO No. 014, s. 2026 · DM No. 064, s. 2026'
   ]) {
     assert.equal(locales.split(`'${key}':`).length - 1, 3, `${key} is translated into tl, ceb, and war`);
   }
@@ -1014,7 +1005,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v143/);
+  assert.match(serviceWorker, /schoolheat-v144/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -1112,7 +1103,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v143/);
+  assert.match(serviceWorker, /schoolheat-v144/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
