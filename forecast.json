@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "ready",
   "horizonMinutes": 60,
-  "generatedAt": "2026-11-27T14:19:54Z",
+  "generatedAt": "2026-11-27T14:24:21Z",
   "sourceFile": "data/schoolheat_readings.csv",
   "dataStart": "2026-11-03T07:30:00+08:00",
   "dataEnd": "2026-11-11T16:00:00+08:00",
@@ -36,7 +36,7 @@
   "forecast": [
     {
       "date": "2026-11-11T17:00:00+08:00",
-      "value": 37.42,
+      "value": 35.47,
       "status": "danger"
     }
   ],
@@ -116,7 +116,7 @@
       "status": "danger"
     }
   },
-  "bestModel": "xgboost-style",
+  "bestModel": "random-forest",
   "metrics": {
     "random-forest": {
       "mae": 1.8679,
@@ -159,7 +159,8 @@
   "notes": [
     "Real scikit-learn RandomForestRegressor, xgboost.XGBRegressor, and lightgbm.LGBMRegressor models.",
     "Validation uses non-overlapping 60-minute school-hour holdouts from sequential future days.",
-    "The selected model has the lowest validated RMSE; provisional selection is XGBoost-style trees.",
+    "The selected model has the lowest validated RMSE.",
+    "Fewer than 10 holdout samples are available, so this forecast is provisional.",
     "Sensor calibration is not verified by this forecast."
   ]
 }
