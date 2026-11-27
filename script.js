@@ -509,6 +509,8 @@ class SchoolHeatApp {
     this.historyFilterTimer = null;
     this.forecastChartLoaded = false;
     this.forecastComparisonCache = null;
+    this.forecastRefreshTimer = null;
+    this.forecastRefreshToken = 0;
     this.dashboardForecastObserver = null;
     this.dashboardForecastRenderScheduled = false;
     this.dashboardForecastVisibilityHandler = null;
@@ -1163,6 +1165,62 @@ class SchoolHeatApp {
     return `${lines.join('\n')}\n`;
   }
 
+  stopForecastRefreshPolling() {
+    if (this.forecastRefreshTimer) {
+      clearTimeout(this.forecastRefreshTimer);
+      this.forecastRefreshTimer = null;
+    }
+    this.forecastRefreshToken = (this.forecastRefreshToken || 0) + 1;
+  }
+
+  startForecastRefreshPolling(previousGeneratedAt) {
+    this.stopForecastRefreshPolling();
+    const token = this.forecastRefreshToken;
+    const deadline = Date.now() + 8 * 60 * 1000;
+    const previousTime = previousGeneratedAt instanceof Date
+      ? previousGeneratedAt.getTime()
+      : new Date(previousGeneratedAt || 0).getTime();
+    const setStatus = message => {
+      const status = document.getElementById('forecast-upload-status');
+      if (status) status.textContent = message;
+    };
+
+    const check = async () => {
+      if (token !== this.forecastRefreshToken) return;
+      try {
+        const fresh = await this.fetchPublishedForecast();
+        if (token !== this.forecastRefreshToken) return;
+        const generatedTime = fresh?.generatedAt instanceof Date
+          ? fresh.generatedAt.getTime()
+          : new Date(fresh?.generatedAt || 0).getTime();
+        const isNew = Number.isFinite(generatedTime) &&
+          (!Number.isFinite(previousTime) || generatedTime > previousTime || generatedTime !== previousTime);
+        if (fresh && isNew) {
+          this.publishedForecastCache = { at: Date.now(), value: fresh };
+          this.forecastComparisonCache = null;
+          this.forecastChartLoaded = false;
+          this.scheduleDashboardForecastRender();
+          if (this.currentTab === 'forecast') this.drawForecastChart();
+          setStatus('New 60-minute forecast published and loaded automatically.');
+          this.toast('The live forecast updated automatically.', 'success');
+          this.forecastRefreshTimer = null;
+          return;
+        }
+      } catch {
+        // A failed poll is normal while the Python job is still running.
+      }
+      if (token !== this.forecastRefreshToken) return;
+      if (Date.now() >= deadline) {
+        this.forecastRefreshTimer = null;
+        setStatus('The forecast is still running on GitHub. Refresh the app later to check it.');
+        return;
+      }
+      this.forecastRefreshTimer = setTimeout(check, 15000);
+    };
+
+    this.forecastRefreshTimer = setTimeout(check, 10000);
+  }
+
   async publishForecastCsv(csvText) {
     const status = document.getElementById('forecast-upload-status');
     const setStatus = message => {
@@ -1196,11 +1254,15 @@ class SchoolHeatApp {
       throw new Error(result.error || `Upload failed (HTTP ${response.status}).`);
     }
 
+    const previousForecast = this.publishedForecastCache?.value ||
+      await this.fetchPublishedForecast().catch(() => null);
+    const previousGeneratedAt = previousForecast?.generatedAt || null;
     this.publishedForecastCache = null;
     this.forecastComparisonCache = null;
     this.scheduleDashboardForecastRender?.();
     const rows = Number.isFinite(result.rows) ? `${result.rows} rows` : 'the new readings';
-    setStatus(`Saved ${rows}. The 60-minute forecast is regenerating.`);
+    setStatus(`Saved ${rows}. Checking for the new 60-minute forecast automatically…`);
+    this.startForecastRefreshPolling(previousGeneratedAt);
     return result;
   }
 
@@ -1229,8 +1291,8 @@ class SchoolHeatApp {
       const historyNote = imported.duplicate
         ? 'Readings were already in History'
         : `History updated with ${imported.imported.length} reading(s)`;
-      setStatus(`${historyNote}. Live forecast regenerating from ${rows}.${skipped}`);
-      this.toast('History and live forecast updated. The forecast will refresh when the Python job finishes.', 'success');
+      setStatus(`${historyNote}. Checking for the new forecast from ${rows} automatically…${skipped}`);
+      this.toast('History updated. The live forecast will refresh automatically when it is ready.', 'success');
     } catch (error) {
       console.error('Could not upload SchoolHeat data file:', error);
       setStatus(error.message || 'The data file could not be uploaded.');

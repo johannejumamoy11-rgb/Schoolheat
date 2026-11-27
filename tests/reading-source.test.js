@@ -37,6 +37,9 @@ test('one data-file action updates History and the live forecast without user ch
   assert.match(script, /await this\.uploadDataFile\(file\)/);
   assert.match(script, /buildForecastCsvFromReadings/);
   assert.match(script, /async publishForecastCsv\(csvText\)/);
+  assert.match(script, /startForecastRefreshPolling\(previousGeneratedAt\)/);
+  assert.match(script, /fetchPublishedForecast\(\)/);
+  assert.match(script, /forecastRefreshTimer = setTimeout/);
   const publishMethod = script.match(/async publishForecastCsv\(csvText\) \{[\s\S]*?\n  \}\n/)?.[0] || '';
   assert.doesNotMatch(publishMethod, /getAlertService|X-Firebase-AppCheck|X-Forecast-Upload-Code/);
   assert.doesNotMatch(index, /access code|Firebase sign-in/);
@@ -77,6 +80,39 @@ test('builds a validated six-column forecast CSV from imported readings', () => 
   assert.equal(lines.length, 3);
   assert.match(lines[1], /^2026-11-03,07:00:00,1,"3 Storey, 15 Classroom, DepEd SS Building",29\.933,77\.767,36\.843$/);
   assert.match(lines[2], /^2026-11-03,07:05:00,1,"3 Storey, 15 Classroom, DepEd SS Building",30\.133,75\.833,36\.917$/);
+});
+
+test('auto-refreshes the published forecast after an upload', async () => {
+  const callbacks = [];
+  context.setTimeout = callback => {
+    callbacks.push(callback);
+    return callbacks.length;
+  };
+  context.clearTimeout = () => {};
+  const status = { textContent: '' };
+  context.document = {
+    getElementById: id => id === 'forecast-upload-status' ? status : null
+  };
+  const poller = Object.create(context.SchoolHeatAppForTest.prototype);
+  const fresh = { generatedAt: new Date('2026-11-28T10:05:00Z'), value: 22.9 };
+  const previous = new Date('2026-11-28T10:00:00Z');
+  poller.publishedForecastCache = { at: Date.now(), value: { generatedAt: previous } };
+  poller.forecastComparisonCache = { key: 'old' };
+  poller.currentTab = 'dashboard';
+  let rendered = false;
+  poller.scheduleDashboardForecastRender = () => { rendered = true; };
+  poller.toast = () => {};
+  poller.fetchPublishedForecast = async () => fresh;
+
+  poller.startForecastRefreshPolling(previous);
+  assert.equal(callbacks.length, 1);
+  await callbacks[0]();
+
+  assert.equal(status.textContent, 'New 60-minute forecast published and loaded automatically.');
+  assert.equal(poller.publishedForecastCache.value, fresh);
+  assert.equal(poller.forecastComparisonCache, null);
+  assert.equal(rendered, true);
+  assert.equal(poller.forecastRefreshTimer, null);
 });
 
 test('local CSV import parses the supplied averages format', () => {
@@ -1320,7 +1356,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v149/);
+  assert.match(serviceWorker, /schoolheat-v150/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -1418,7 +1454,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v149/);
+  assert.match(serviceWorker, /schoolheat-v150/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);

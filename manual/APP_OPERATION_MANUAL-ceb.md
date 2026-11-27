@@ -203,8 +203,9 @@ limitasyon sa limang minuto ug mahimong mogamit og usa ka credit.
   og CSV o XLSX ngadto sa `sh_readings` niining browser, gihimo ang balidong
   mga rows ngadto sa six-column forecast CSV, ug gipadala kini sa upload Worker.
   Walay code o sign-in ang pangayoon; usa ka pagpili sa file awtomatikong
-  mag-update sa History ug sa na-publish nga forecast. Bisan kinsa nga may app
-  makapuli sa na-publish nga forecast. Ang GitHub token anaa lamang sa upload
+  mag-update sa History dayon. Ang app magsusi sa bag-ong forecast ug
+  awtomatikong mag-update kini kon tapos na ang Python job. Bisan kinsa nga may
+  app makapuli sa na-publish nga forecast. Ang GitHub token anaa lamang sa upload
   Worker. Ang demo readings dili gayud i-upload.
 - Ang **Export CSV (I-export ang CSV)** naglakip og kolumn nga **Demo Data (Data
   sa Demo)**. Ang **Export JSON (I-export ang JSON)** nagtipig og

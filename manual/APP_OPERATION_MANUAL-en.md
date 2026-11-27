@@ -175,10 +175,10 @@ five-minute limit and may use one credit.
 - **Choose data file** now does both jobs: it imports a CSV or XLSX into this
   browser's `sh_readings`, converts the valid imported rows to the six-column
   forecast CSV, and sends that CSV to the upload Worker. No code or sign-in is
-  asked; one file selection updates History and the published forecast
-  automatically. Anyone with the app can replace the published forecast. The
-  GitHub token is stored only on the upload Worker. Demo readings are never
-  uploaded.
+  asked; one file selection updates History immediately. The app then checks for
+  the new forecast and updates it automatically when the Python job finishes.
+  Anyone with the app can replace the published forecast. The GitHub token is
+  stored only on the upload Worker. Demo readings are never uploaded.
 - **Export CSV** includes a **Demo Data** column. **Export JSON** saves
   `schoolheat_readings.json`.
 
