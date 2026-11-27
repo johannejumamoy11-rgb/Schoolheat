@@ -456,7 +456,8 @@ test('publishes a real Python 60-minute forecast job', () => {
     'requirements-forecast.txt',
     'scripts/generate_forecast.py',
     '.github/workflows/generate-forecast.yml',
-    'data/schoolheat_readings.csv'
+    'data/schoolheat_readings.csv',
+    'data/schoolheat_forecast_source.json'
   ]) {
     assert.ok(fs.existsSync(path.join(root, file)), `${file} should exist`);
   }
@@ -493,6 +494,10 @@ test('publishes a real Python 60-minute forecast job', () => {
   assert.match(python, /from xgboost import XGBRegressor/);
   assert.match(python, /from lightgbm import LGBMRegressor/);
   assert.match(python, /HORIZON_MINUTES = 60/);
+  assert.match(python, /out\["minute_of_day"\] >= SCHOOL_START_MINUTE/);
+  assert.match(python, /SOURCE_METADATA/);
+  assert.match(python, /load_source_metadata\(\)/);
+  assert.match(python, /metadata\.get\("locationNote"\)/);
   assert.match(python, /VALIDATION_DAYS = 4/);
   assert.match(python, /all_dates\[-VALIDATION_DAYS:\]/);
   assert.doesNotMatch(python, /all_dates\[8:\]/);
@@ -521,6 +526,15 @@ test('publishes a real Python 60-minute forecast job', () => {
     csvHeader,
     'date,timestamp,device_id,temperature_c,relative_humidity_pct,heat_index_c'
   );
+  const csvRows = fs.readFileSync(path.join(root, 'data', 'schoolheat_readings.csv'), 'utf8')
+    .trim()
+    .split(/\r?\n/);
+  assert.ok(csvRows[csvRows.length - 1].startsWith('2026-11-25,'));
+  const sourceMetadata = JSON.parse(
+    fs.readFileSync(path.join(root, 'data', 'schoolheat_forecast_source.json'), 'utf8')
+  );
+  assert.equal(sourceMetadata.location, '3 Storey, 15 Classroom, DepEd SS Building');
+  assert.match(sourceMetadata.locationNote, /series key/i);
 
   assert.deepEqual([...context.ForecastCandidatesForTest], [
     'random-forest', 'xgboost-style', 'lightgbm-style'

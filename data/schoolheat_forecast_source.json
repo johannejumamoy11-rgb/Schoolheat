@@ -1,0 +1,8 @@
+{
+  "deviceId": "1",
+  "deviceLabels": {
+    "1": "DepEd SS Building row-by-row averages"
+  },
+  "location": "3 Storey, 15 Classroom, DepEd SS Building",
+  "locationNote": "Row-by-row averages from the supplied CSV; device_id 1 is a series key, not a physical classroom device, and it is not mapped to a campus map pin."
+}

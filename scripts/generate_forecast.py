@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Generate SchoolHeat's 60-minute forecast with real Python tree models.
 
-The job reads the six-column classroom CSV, validates it without inventing
-values, builds lagged heat-index features, and evaluates Random Forest,
-XGBoost, and LightGBM on non-overlapping 60-minute walk-forward holdouts.
-The lowest validated RMSE model is used for the published prediction.
+The job reads the six-column series CSV and its optional source metadata,
+validates them without inventing values, builds lagged heat-index features,
+and evaluates Random Forest, XGBoost, and LightGBM on non-overlapping
+60-minute walk-forward holdouts. The lowest validated RMSE model is used for
+the published prediction.
 
 Outputs forecast.json for GitHub Pages. This script never sends SMS, never
 changes sensor firmware, and never deploys anything by itself.
@@ -30,6 +31,12 @@ except ImportError:  # pragma: no cover - Python 3.9+ always has zoneinfo
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = Path(os.environ.get("FORECAST_SOURCE", str(ROOT / "data" / "schoolheat_readings.csv")))
+SOURCE_METADATA = Path(
+    os.environ.get(
+        "FORECAST_SOURCE_METADATA",
+        str(ROOT / "data" / "schoolheat_forecast_source.json"),
+    )
+)
 OUTPUT = Path(os.environ.get("FORECAST_OUTPUT", str(ROOT / "forecast.json")))
 LOCAL_TZ = ZoneInfo("Asia/Manila") if ZoneInfo else None
 
@@ -66,6 +73,18 @@ FEATURES = [
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def load_source_metadata() -> dict:
+    if not SOURCE_METADATA.is_file():
+        return {}
+    try:
+        metadata = json.loads(SOURCE_METADATA.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"Could not read source metadata: {error}") from error
+    if not isinstance(metadata, dict):
+        raise ValueError("Source metadata must be a JSON object.")
+    return metadata
 
 
 def write_pending(message: str) -> None:
@@ -153,17 +172,16 @@ def load_readings() -> pd.DataFrame:
     return raw.sort_values("datetime")
 
 
-def select_device(raw: pd.DataFrame) -> tuple[str, pd.DataFrame]:
+def select_device(raw: pd.DataFrame, metadata: dict | None = None) -> tuple[str, pd.DataFrame]:
     devices = sorted(value for value in raw["device_id"].unique() if value)
     if not devices:
         raise ValueError("No usable device_id values were found in the source CSV.")
-    requested = os.environ.get("FORECAST_DEVICE_ID", "").strip()
+    metadata = metadata or {}
+    requested = os.environ.get("FORECAST_DEVICE_ID", "").strip() or str(
+        metadata.get("deviceId", "")
+    ).strip()
     device_id = requested if requested in devices else devices[0]
     frame = raw[raw["device_id"] == device_id].copy()
-    minute_of_day = frame["datetime"].dt.hour * 60 + frame["datetime"].dt.minute
-    frame = frame[
-        (minute_of_day >= SCHOOL_START_MINUTE) & (minute_of_day <= SCHOOL_END_MINUTE)
-    ].copy()
     frame = frame.drop_duplicates("datetime", keep="last").sort_values("datetime")
     if len(frame) < 40:
         raise ValueError(f"Device {device_id} has too few school-hour readings to forecast.")
@@ -198,7 +216,10 @@ def build_feature_frame(frame: pd.DataFrame) -> pd.DataFrame:
     out["target"] = future_heat - out["heat_index"].to_numpy()
 
     out = out.dropna(subset=FEATURES).copy()
-    out = out[out["minute_of_day"] + HORIZON_MINUTES <= SCHOOL_END_MINUTE].copy()
+    out = out[
+        (out["minute_of_day"] >= SCHOOL_START_MINUTE)
+        & (out["minute_of_day"] + HORIZON_MINUTES <= SCHOOL_END_MINUTE)
+    ].copy()
     return out.reset_index(drop=True)
 
 
@@ -290,15 +311,23 @@ def json_date(value) -> str | None:
 
 def generate() -> None:
     raw = load_readings()
+    metadata = load_source_metadata()
+    device_labels = metadata.get("deviceLabels") or {}
     devices = [
         {
             "deviceId": device,
-            "label": f"Classroom device {device}",
+            "label": str(device_labels.get(device) or f"Classroom device {device}"),
             "readings": int((raw["device_id"] == device).sum()),
         }
         for device in sorted(raw["device_id"].unique())
     ]
-    device_id, frame = select_device(raw)
+    device_id, frame = select_device(raw, metadata)
+    location = str(
+        metadata.get("location") or device_labels.get(device_id) or f"Classroom device {device_id}"
+    )
+    location_note = str(
+        metadata.get("locationNote") or "Device ID from the source CSV; not mapped to a campus map pin."
+    )
     full = build_feature_frame(frame)
     train_rows = full.dropna(subset=["target", "future_heat"]).copy()
     if full.empty or train_rows.empty:
@@ -367,8 +396,8 @@ def generate() -> None:
         "dataStart": json_date(full.iloc[0]["date"]),
         "dataEnd": json_date(latest["date"]),
         "deviceId": device_id,
-        "location": f"Classroom device {device_id}",
-        "locationNote": "Device ID from the source CSV; not mapped to a campus map pin.",
+        "location": location,
+        "locationNote": location_note,
         "devices": devices,
         "current": {
             "minute": int(latest["minute"]),

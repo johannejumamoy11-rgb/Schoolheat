@@ -77,10 +77,11 @@ verified by the forecast.
 
 The source data is `data/schoolheat_readings.csv`, a six-column CSV with
 `date`, `timestamp`, `device_id`, `temperature_c`, `relative_humidity_pct`, and
-`heat_index_c`. The job uses the first sorted device ID by default; set the
-`FORECAST_DEVICE_ID` repository variable to choose another device. The device
-label is not mapped to a campus map pin because no verified device-to-pin
-mapping was supplied.
+`heat_index_c`. `data/schoolheat_forecast_source.json` supplies the human-readable
+series label and note; it does not add readings or map pins. The job uses the
+metadata's device ID by default, then the first sorted device ID; set the
+`FORECAST_DEVICE_ID` repository variable to override it. The label is not mapped
+to a campus map pin because no verified device-to-pin mapping was supplied.
 
 To regenerate locally, install `requirements-forecast.txt` and run
 `python scripts/generate_forecast.py`. The GitHub Actions workflow
