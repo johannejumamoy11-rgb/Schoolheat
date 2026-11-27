@@ -6102,3 +6102,58 @@ body::after {
     transform: none;
   }
 }
+
+/* ============================================
+   FULL-APP USABILITY FLOOR
+   ============================================ */
+
+.btn-text {
+  min-height: 40px;
+  padding: 8px 8px;
+}
+
+.local-contact-form-actions .btn-sm {
+  min-height: 40px;
+}
+
+.map-zoom-button,
+.map-zoom-reset,
+.btn-icon,
+.btn-sm,
+.history-delete-button,
+#history-search,
+#history-filter,
+#cal-temp,
+#cal-humidity,
+#local-contact-role,
+#local-contact-number {
+  min-height: 40px;
+}
+
+.dashboard-eyebrow,
+.dashboard-freshness,
+.dashboard-hero-meta span,
+.dashboard-section-kicker,
+.dashboard-metric-caption,
+.dashboard-reading-metric span,
+.dashboard-trust-grid span,
+.dashboard-preview-tag,
+.sensor-trust-metric span,
+.gauge-range-key span,
+.quality-badge,
+.history-time small,
+.history-meta,
+.forecast-badge,
+.hotlines-availability,
+.hotline-call-label,
+.hotlines-call-step > span,
+.about-eyebrow,
+.about-stat-kicker,
+.about-section-index,
+.about-card-kicker {
+  font-size: 0.7rem;
+}
+
+@media (pointer: coarse), (max-width: 760px) {
+  .btn-text { min-height: 44px; }
+}

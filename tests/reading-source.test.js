@@ -685,6 +685,16 @@ test('uses plain monitor guidance and inline feedback in every language', () => 
   }
 });
 
+test('keeps controls and labels readable across all tabs', () => {
+  const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
+  assert.match(style, /FULL-APP USABILITY FLOOR/);
+  assert.match(style, /\.btn-text\s*\{[^}]*min-height: 40px;/);
+  assert.match(style, /\.local-contact-form-actions \.btn-sm\s*\{[^}]*min-height: 40px;/);
+  assert.match(style, /#history-search,[^}]*#local-contact-number\s*\{[^}]*min-height: 40px;/);
+  assert.match(style, /\.dashboard-eyebrow,[^}]*\.dashboard-hero-meta span,[^}]*\.hotlines-call-step > span,[^}]*\.about-card-kicker\s*\{[^}]*font-size: 0\.7rem;/);
+  assert.match(style, /@media \(pointer: coarse\), \(max-width: 760px\) \{\s*\.btn-text \{ min-height: 44px; \}\s*\}/);
+});
+
 test('demo readings never receive future timestamps', () => {
   const previousTZ = process.env.TZ;
   process.env.TZ = 'Asia/Manila';
@@ -767,7 +777,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v125/);
+  assert.match(serviceWorker, /schoolheat-v128/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -865,7 +875,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v125/);
+  assert.match(serviceWorker, /schoolheat-v128/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
