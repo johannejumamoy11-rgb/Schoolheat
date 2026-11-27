@@ -619,7 +619,11 @@ test('shows what each overview classification means and explains it on hover or 
   assert.match(index, /<section class="memorandum-card" aria-labelledby="memorandum-title">/);
   assert.match(index, /DM No\. 064, s\. 2026 — Anticipatory Action, Preparedness, and Protective Measures for the 2026–2027 Super El Niño\./);
   assert.match(index, /href="https:\/\/www\.deped\.gov\.ph\/wp-content\/uploads\/DM_s2026_064r\.pdf" target="_blank" rel="noopener noreferrer">Open memorandum PDF<\/a>/);
-  assert.match(index, /href="https:\/\/www\.deped\.gov\.ph\/wp-content\/uploads\/DO_s2026_014r\.pdf" target="_blank" rel="noopener noreferrer">Open 4H order PDF<\/a>/);
+  assert.match(index, /<section class="memorandum-card" aria-labelledby="order-title">/);
+  assert.match(index, /DO No\. 014, s\. 2026 — Guidelines on Learning Continuity in Emergencies\./);
+  assert.match(index, /<p class="status-source">The four 4H level names come from this order\.<\/p>/);
+  assert.match(index, /href="https:\/\/www\.deped\.gov\.ph\/wp-content\/uploads\/DO_s2026_014r\.pdf" target="_blank" rel="noopener noreferrer">Open order PDF<\/a>/);
+  assert.doesNotMatch(index, /Open 4H order PDF/);
   assert.doesNotMatch(index, /classification-dialog|classification-hint/);
   assert.doesNotMatch(script, /CLASSIFICATION_DETAILS|setupClassificationCards|showClassificationDialog/);
   assert.match(style, /\.status-meaning/);
@@ -653,7 +657,10 @@ test('shows what each overview classification means and explains it on hover or 
     'DepEd memorandum',
     'DM No. 064, s. 2026 — Anticipatory Action, Preparedness, and Protective Measures for the 2026–2027 Super El Niño.',
     'Open memorandum PDF',
-    'Open 4H order PDF'
+    'DepEd order',
+    'DO No. 014, s. 2026 — Guidelines on Learning Continuity in Emergencies.',
+    'The four 4H level names come from this order.',
+    'Open order PDF'
   ]) {
     assert.equal(locales.split(`'${key}':`).length - 1, 3, `${key} is translated into tl, ceb, and war`);
   }
@@ -1007,7 +1014,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v142/);
+  assert.match(serviceWorker, /schoolheat-v143/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -1105,7 +1112,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v142/);
+  assert.match(serviceWorker, /schoolheat-v143/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
