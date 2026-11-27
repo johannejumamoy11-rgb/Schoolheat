@@ -575,6 +575,22 @@ html[data-theme="dark"] .ambient-orb {
   .status-meaning { font-size: 0.68rem; }
   .status-tooltip { font-size: 0.68rem; }
 }
+@media (max-height: 650px) {
+  .status-tooltip {
+    top: calc(100% + 6px);
+    bottom: auto;
+    padding: 8px 10px;
+    font-size: 0.66rem;
+  }
+  .status-tooltip::after {
+    top: auto;
+    bottom: 100%;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 1px solid var(--border-hover);
+    border-top: 1px solid var(--border-hover);
+  }
+}
 
 /* ============================================
   GAUGE

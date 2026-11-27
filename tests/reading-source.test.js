@@ -622,6 +622,8 @@ test('shows what each overview classification means and explains it on hover or 
   assert.match(style, /\.status-card:hover \.status-tooltip/);
   assert.match(style, /\.status-card:focus \.status-tooltip/);
   assert.match(style, /\.status-card:focus-within \.status-tooltip/);
+  assert.match(style, /@media \(max-height: 650px\)/);
+  assert.match(style, /top: calc\(100% \+ 6px\)/);
   assert.match(style, /#tab-dashboard > \.status-grid \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
   for (const key of [
     'Routine monitoring',
@@ -985,7 +987,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v139/);
+  assert.match(serviceWorker, /schoolheat-v140/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -1083,7 +1085,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v139/);
+  assert.match(serviceWorker, /schoolheat-v140/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
