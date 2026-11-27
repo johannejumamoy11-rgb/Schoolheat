@@ -6157,3 +6157,91 @@ body::after {
 @media (pointer: coarse), (max-width: 760px) {
   .btn-text { min-height: 44px; }
 }
+
+/* ============================================
+   GAUGE EMPHASIS
+   ============================================ */
+
+#tab-dashboard .dashboard-gauge-block {
+  flex-basis: 260px;
+}
+
+#tab-dashboard .reading-gauge-wrap,
+#tab-monitor .monitor-gauge-wrap {
+  border: 1px solid color-mix(in srgb, var(--accent-cyan) 42%, var(--border));
+  box-shadow:
+    0 16px 36px rgba(5, 20, 18, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 34px color-mix(in srgb, var(--accent-cyan) 18%, transparent);
+}
+
+#tab-dashboard .reading-gauge-wrap {
+  width: min(260px, 46vw);
+  min-width: 200px;
+  height: auto;
+  aspect-ratio: 1;
+  background:
+    radial-gradient(circle at 50% 55%, color-mix(in srgb, var(--accent-cyan) 18%, transparent) 0 46%, transparent 47%),
+    linear-gradient(145deg, color-mix(in srgb, var(--accent-cyan) 16%, var(--latest-reading-bg)), var(--latest-reading-bg));
+}
+
+#tab-dashboard .dashboard-gauge-caption {
+  margin-top: 10px;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+#tab-monitor .monitor-gauge-card {
+  border-top-width: 2px;
+  border-top-color: color-mix(in srgb, var(--accent-cyan) 62%, var(--border));
+}
+
+#tab-monitor .monitor-gauge-wrap {
+  max-width: 320px;
+  height: 220px;
+  margin: 12px auto 18px;
+  background:
+    radial-gradient(circle at 50% 55%, color-mix(in srgb, var(--accent-cyan) 18%, transparent) 0 46%, transparent 47%),
+    linear-gradient(145deg, color-mix(in srgb, var(--accent-cyan) 16%, var(--bg-card)), var(--bg-card));
+}
+
+#tab-dashboard .gauge-value {
+  font-size: clamp(2rem, 3.6vw, 2.8rem);
+  text-shadow: 0 2px 14px color-mix(in srgb, var(--accent-cyan) 40%, transparent);
+}
+
+#tab-monitor .monitor-gauge-value {
+  font-size: 2.6rem;
+  text-shadow: 0 2px 14px color-mix(in srgb, var(--accent-cyan) 40%, transparent);
+}
+
+.gauge-range-key {
+  max-width: 280px;
+  gap: 4px;
+}
+
+.gauge-range-key .safe {
+  background: color-mix(in srgb, var(--safe) 12%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--safe) 38%, var(--border));
+}
+
+.gauge-range-key .caution {
+  background: color-mix(in srgb, var(--caution) 12%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--caution) 38%, var(--border));
+}
+
+.gauge-range-key .danger {
+  background: color-mix(in srgb, var(--danger) 12%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--danger) 38%, var(--border));
+}
+
+.gauge-range-key .extreme {
+  background: color-mix(in srgb, var(--extreme) 12%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--extreme) 38%, var(--border));
+}
+
+@media (max-width: 760px) {
+  #tab-dashboard .reading-gauge-wrap { width: min(260px, 76vw); }
+  #tab-monitor .monitor-gauge-wrap { height: 200px; }
+  #tab-monitor .monitor-gauge-value { font-size: 2.35rem; }
+}

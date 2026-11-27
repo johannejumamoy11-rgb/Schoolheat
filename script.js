@@ -2892,9 +2892,9 @@ class SchoolHeatApp {
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, seg.start, seg.end);
       ctx.strokeStyle = seg.color;
-      ctx.lineWidth = lineWidth * 0.45;
+      ctx.lineWidth = lineWidth * 0.55;
       ctx.lineCap = 'round';
-      ctx.globalAlpha = 0.3;
+      ctx.globalAlpha = 0.4;
       ctx.stroke();
       ctx.globalAlpha = 1;
     });
@@ -3406,9 +3406,9 @@ class SchoolHeatApp {
         startAngle + (seg.end / maxVal) * sweep
       );
       ctx.strokeStyle = seg.color;
-      ctx.lineWidth = lineWidth * 0.5;
+      ctx.lineWidth = lineWidth * 0.58;
       ctx.lineCap = 'round';
-      ctx.globalAlpha = 0.2;
+      ctx.globalAlpha = 0.32;
       ctx.stroke();
       ctx.globalAlpha = 1;
     });

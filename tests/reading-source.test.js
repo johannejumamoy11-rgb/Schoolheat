@@ -63,6 +63,19 @@ test('shows the same labeled 4H gauge range on dashboard and monitor', () => {
   }
 });
 
+test('makes the heat-index gauge the visual focus on dashboard and monitor', () => {
+  const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
+  assert.match(style, /GAUGE EMPHASIS/);
+  assert.match(style, /#tab-dashboard \.dashboard-gauge-block\s*\{[^}]*flex-basis: 260px;/);
+  assert.match(style, /#tab-dashboard \.reading-gauge-wrap\s*\{[^}]*width: min\(260px, 46vw\);[^}]*var\(--latest-reading-bg\)/);
+  assert.match(style, /#tab-monitor \.monitor-gauge-wrap\s*\{[^}]*max-width: 320px;[^}]*var\(--bg-card\)/);
+  assert.match(style, /#tab-dashboard \.gauge-value\s*\{[^}]*font-size: clamp\(2rem, 3\.6vw, 2\.8rem\)/);
+  assert.match(style, /#tab-monitor \.monitor-gauge-value\s*\{[^}]*font-size: 2\.6rem/);
+  assert.match(style, /\.gauge-range-key \.safe\s*\{[^}]*background: color-mix/);
+  assert.match(script, /ctx\.lineWidth = lineWidth \* 0\.58;[\s\S]{0,80}ctx\.globalAlpha = 0\.32;/);
+  assert.match(script, /ctx\.lineWidth = lineWidth \* 0\.55;[\s\S]{0,80}ctx\.globalAlpha = 0\.4;/);
+});
+
 test('keeps the latest-reading card neutral instead of using the selected accent as a giant background', () => {
   assert.doesNotMatch(script, /setProperty\('--latest-reading-bg', accent\)/);
   assert.match(script, /theme === 'dark' \? '#1d5147' : '#1d5e54'/);
@@ -777,7 +790,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v128/);
+  assert.match(serviceWorker, /schoolheat-v129/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -875,7 +888,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v128/);
+  assert.match(serviceWorker, /schoolheat-v129/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
