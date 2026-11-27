@@ -237,40 +237,43 @@
         </div>
         <span id="dashboard-location-summary">Counts use the latest saved reading at each location, including demo data; they are not simultaneous campus coverage.</span>
       </div>
-      <p class="classification-hint">Tap a classification to read its guide.</p>
       <div class="status-grid" aria-label="Latest saved readings grouped by DepEd 4H classification">
-        <button type="button" class="status-card safe" data-status="safe" aria-label="Hayo: below 27 degrees heat index. Read the guide.">
+        <div class="status-card safe" data-status="safe">
           <div class="status-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           </div>
           <div class="status-count" data-target="0" id="count-safe">0</div>
           <div class="status-label">Hayo</div>
           <div class="status-range">&lt; 27°C</div>
-        </button>
-        <button type="button" class="status-card caution" data-status="caution" aria-label="Hinay: 27 to 32 degrees heat index. Read the guide.">
+          <div class="status-meaning">Routine monitoring</div>
+        </div>
+        <div class="status-card caution" data-status="caution">
           <div class="status-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           </div>
           <div class="status-count" data-target="0" id="count-caution">0</div>
           <div class="status-label">Hinay</div>
           <div class="status-range">27–32°C</div>
-        </button>
-        <button type="button" class="status-card danger" data-status="danger" aria-label="Hinga: 33 to 41 degrees heat index. Read the guide.">
+          <div class="status-meaning">Increase precautions</div>
+        </div>
+        <div class="status-card danger" data-status="danger">
           <div class="status-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           </div>
           <div class="status-count" data-target="0" id="count-danger">0</div>
           <div class="status-label">Hinga</div>
           <div class="status-range">33–41°C</div>
-        </button>
-        <button type="button" class="status-card extreme" data-status="extreme" aria-label="Hinto: 42 degrees heat index and above. Read the guide.">
+          <div class="status-meaning">Rest and cool down</div>
+        </div>
+        <div class="status-card extreme" data-status="extreme">
           <div class="status-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           </div>
           <div class="status-count" data-target="0" id="count-extreme">0</div>
           <div class="status-label">Hinto</div>
           <div class="status-range">42°C and above</div>
-        </button>
+          <div class="status-meaning">Stop heat exposure</div>
+        </div>
       </div>
       <section class="campus-coverage-card" aria-labelledby="campus-coverage-title">
         <div class="campus-coverage-copy">
@@ -1621,18 +1624,6 @@
     </button>
   </nav>
   <button class="nav-backdrop" id="nav-backdrop" type="button" aria-label="Close navigation" tabindex="-1" hidden></button>
-
-  <dialog class="classification-dialog" id="classification-dialog" aria-labelledby="classification-dialog-title">
-    <div class="classification-dialog-inner">
-      <button type="button" class="classification-dialog-close" id="classification-dialog-close" aria-label="Close">×</button>
-      <span class="classification-dialog-kicker">DepEd 4H classification</span>
-      <h3 id="classification-dialog-title">Hayo</h3>
-      <p class="classification-dialog-range" id="classification-dialog-range">&lt; 27°C</p>
-      <span class="classification-dialog-label" id="classification-dialog-label">What to do</span>
-      <p class="classification-dialog-detail" id="classification-dialog-detail"></p>
-      <p class="classification-dialog-note" id="classification-dialog-note">This guide uses heat index, not air temperature alone.</p>
-    </div>
-  </dialog>
 
   <footer class="app-footer">
     <div class="footer-text">

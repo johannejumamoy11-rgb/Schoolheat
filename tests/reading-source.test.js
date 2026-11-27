@@ -595,83 +595,26 @@ test('shows reading details when a location bar is tapped', () => {
   assert.ok(!classes.has('active'));
 });
 
-test('opens a DepEd 4H guide when an overview classification is tapped', () => {
+test('shows what each overview classification means without a click', () => {
   const style = fs.readFileSync(path.join(__dirname, '..', 'style.css'), 'utf8');
   const locales = fs.readFileSync(path.join(__dirname, '..', 'locales.js'), 'utf8');
-  assert.equal((index.match(/class="status-card [a-z]+" data-status="[a-z]+"/g) || []).length, 4);
-  assert.match(index, /class="classification-hint"/);
-  assert.match(index, /id="classification-dialog"/);
-  assert.match(script, /const CLASSIFICATION_DETAILS = \{/);
-  assert.match(script, /setupClassificationCards\(\)/);
-  assert.match(script, /showClassificationDialog\(status\)/);
-  assert.match(style, /\.status-card:focus-visible/);
-  assert.match(style, /\.classification-dialog::backdrop/);
+  assert.equal((index.match(/<div class="status-card [a-z]+" data-status="[a-z]+">/g) || []).length, 4);
+  assert.deepEqual(
+    [...index.matchAll(/<div class="status-meaning">([^<]+)<\/div>/g)].map(match => match[1]),
+    ['Routine monitoring', 'Increase precautions', 'Rest and cool down', 'Stop heat exposure']
+  );
+  assert.doesNotMatch(index, /classification-dialog|classification-hint/);
+  assert.doesNotMatch(script, /CLASSIFICATION_DETAILS|setupClassificationCards|showClassificationDialog/);
+  assert.match(style, /\.status-meaning/);
+  assert.match(style, /#tab-dashboard > \.status-grid \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
   for (const key of [
-    'Tap a classification to read its guide.',
-    'Hayo · Routine monitoring',
-    'Hinay · Increase precautions',
-    'Hinga · Rest and cool down',
-    'Hinto · Stop heat exposure',
-    'Keep water accessible and continue routine monitoring.',
-    'Encourage water breaks, improve airflow, and watch for rising heat.',
-    'Pause strenuous activities, move people to a cooler space, and follow your school heat-response procedure.',
-    'Stop heat-exposing activities, move people to a cooler space, and alert school staff. Follow the school emergency plan.',
-    'What to do',
-    'This guide uses heat index, not air temperature alone.',
-    'Close'
+    'Routine monitoring',
+    'Increase precautions',
+    'Rest and cool down',
+    'Stop heat exposure'
   ]) {
     assert.equal(locales.split(`'${key}':`).length - 1, 3, `${key} is translated into tl, ceb, and war`);
   }
-
-  let cardClick = null;
-  let closeClick = null;
-  let backdropClick = null;
-  const card = {
-    dataset: { status: 'danger' },
-    addEventListener: (type, handler) => { if (type === 'click') cardClick = handler; }
-  };
-  const dialog = {
-    dataset: {},
-    shown: 0,
-    closed: 0,
-    showModal() { this.shown += 1; },
-    close() { this.closed += 1; },
-    addEventListener: (type, handler) => { if (type === 'click') backdropClick = handler; }
-  };
-  const elements = {
-    'classification-dialog': dialog,
-    'classification-dialog-close': {
-      attributes: {},
-      addEventListener: (type, handler) => { if (type === 'click') closeClick = handler; },
-      setAttribute(name, value) { this.attributes[name] = value; }
-    },
-    'classification-dialog-title': { textContent: '' },
-    'classification-dialog-range': { textContent: '' },
-    'classification-dialog-detail': { textContent: '' },
-    'classification-dialog-label': { textContent: '' },
-    'classification-dialog-note': { textContent: '' }
-  };
-  context.document = {
-    querySelectorAll: selector => selector === '.status-card[data-status]' ? [card] : [],
-    getElementById: id => elements[id] || null
-  };
-  const dialogApp = Object.create(context.SchoolHeatAppForTest.prototype);
-  dialogApp.translateText = text => text;
-  dialogApp.setupClassificationCards();
-  cardClick();
-
-  assert.equal(dialog.dataset.status, 'danger');
-  assert.equal(elements['classification-dialog-title'].textContent, 'Hinga · Rest and cool down');
-  assert.equal(elements['classification-dialog-range'].textContent, '33–41°C');
-  assert.equal(elements['classification-dialog-detail'].textContent, 'Pause strenuous activities, move people to a cooler space, and follow your school heat-response procedure.');
-  assert.equal(elements['classification-dialog-label'].textContent, 'What to do');
-  assert.equal(elements['classification-dialog-note'].textContent, 'This guide uses heat index, not air temperature alone.');
-  assert.equal(elements['classification-dialog-close'].attributes['aria-label'], 'Close');
-  assert.equal(dialog.shown, 1);
-
-  closeClick();
-  backdropClick({ target: dialog });
-  assert.equal(dialog.closed, 2);
 });
 
 test('caps impossible heat-index values and keeps demo readings realistic', () => {
@@ -1022,7 +965,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v137/);
+  assert.match(serviceWorker, /schoolheat-v138/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -1120,7 +1063,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v137/);
+  assert.match(serviceWorker, /schoolheat-v138/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);

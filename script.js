@@ -98,29 +98,6 @@ const STATUS_LABELS = {
   nodata: 'No Data'
 };
 
-const CLASSIFICATION_DETAILS = {
-  safe: {
-    title: 'Hayo · Routine monitoring',
-    range: '< 27°C',
-    detail: 'Keep water accessible and continue routine monitoring.'
-  },
-  caution: {
-    title: 'Hinay · Increase precautions',
-    range: '27–32°C',
-    detail: 'Encourage water breaks, improve airflow, and watch for rising heat.'
-  },
-  danger: {
-    title: 'Hinga · Rest and cool down',
-    range: '33–41°C',
-    detail: 'Pause strenuous activities, move people to a cooler space, and follow your school heat-response procedure.'
-  },
-  extreme: {
-    title: 'Hinto · Stop heat exposure',
-    range: '42°C and above',
-    detail: 'Stop heat-exposing activities, move people to a cooler space, and alert school staff. Follow the school emergency plan.'
-  }
-};
-
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 
 function hexToRgb(hex) {
@@ -582,7 +559,6 @@ class SchoolHeatApp {
     this.setupForecastObserver();
     this.setupTrendObserver();
     this.setupLocationTrendEvents();
-    this.setupClassificationCards();
     this.setupDistributionObserver();
     this.setupPullToRefresh();
     this.setupMapZoomControls();
@@ -3710,41 +3686,6 @@ class SchoolHeatApp {
       detail.textContent = `${selectedLabel} ${button.dataset.label || ''}`.trim();
       detail.hidden = false;
     });
-  }
-
-  setupClassificationCards() {
-    const cards = document.querySelectorAll('.status-card[data-status]');
-    cards.forEach(card => {
-      card.addEventListener('click', () => this.showClassificationDialog(card.dataset.status));
-    });
-    const dialog = document.getElementById('classification-dialog');
-    const close = document.getElementById('classification-dialog-close');
-    if (!dialog || !close) return;
-    close.addEventListener('click', () => dialog.close());
-    dialog.addEventListener('click', event => {
-      if (event.target === dialog) dialog.close();
-    });
-  }
-
-  showClassificationDialog(status) {
-    const info = CLASSIFICATION_DETAILS[status];
-    const dialog = document.getElementById('classification-dialog');
-    if (!info || !dialog) return;
-    dialog.dataset.status = status;
-    const title = document.getElementById('classification-dialog-title');
-    const range = document.getElementById('classification-dialog-range');
-    const detail = document.getElementById('classification-dialog-detail');
-    const label = document.getElementById('classification-dialog-label');
-    const note = document.getElementById('classification-dialog-note');
-    const close = document.getElementById('classification-dialog-close');
-    if (title) title.textContent = this.translateText(info.title);
-    if (range) range.textContent = info.range;
-    if (detail) detail.textContent = this.translateText(info.detail);
-    if (label) label.textContent = this.translateText('What to do');
-    if (note) note.textContent = this.translateText('This guide uses heat index, not air temperature alone.');
-    if (close) close.setAttribute('aria-label', this.translateText('Close'));
-    if (typeof dialog.showModal === 'function') dialog.showModal();
-    else dialog.setAttribute('open', '');
   }
 
   getLocalDateKey(value) {
