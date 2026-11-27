@@ -31,7 +31,7 @@ firebase.messaging().onBackgroundMessage(payload => {
   console.warn('SchoolHeat push notifications require internet access:', error);
 }
 
-const CACHE_NAME = 'schoolheat-v144';
+const CACHE_NAME = 'schoolheat-v145';
 const ASSETS = [
   './',
   './index.html',
@@ -39,6 +39,7 @@ const ASSETS = [
   './locales.js',
   './script.js',
   './cloud_config.js',
+  './forecast.json',
   './manifest.json',
   './manual/index.html',
   './manual/APP_OPERATION_MANUAL-en.md',
@@ -84,7 +85,28 @@ self.addEventListener('notificationclick', event => {
 });
 
 self.addEventListener('fetch', e => {
-  if (new URL(e.request.url).origin !== self.location.origin) return;
+  const requestUrl = new URL(e.request.url);
+  if (requestUrl.origin !== self.location.origin) return;
+  if (requestUrl.pathname.endsWith('/forecast.json')) {
+    e.respondWith(
+      fetch(e.request, { cache: 'reload' }).then(response => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(requestUrl.href, copy));
+        }
+        return response;
+      }).catch(() => caches.match(requestUrl.href).then(cached => cached || new Response(
+        JSON.stringify({
+          schemaVersion: 1,
+          status: 'pending',
+          horizonMinutes: 60,
+          message: 'Offline: the published forecast could not be loaded.'
+        }),
+        { headers: { 'Content-Type': 'application/json' } }
+      )))
+    );
+    return;
+  }
   e.respondWith(
     caches.match(e.request).then(response => {
       if (response) return response;

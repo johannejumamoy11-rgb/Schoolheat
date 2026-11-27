@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "status": "pending",
+  "horizonMinutes": 60,
+  "generatedAt": null,
+  "message": "The scheduled Python forecast has not run yet. A real 60-minute forecast using Random Forest, XGBoost, and LightGBM will appear after the GitHub Actions workflow completes."
+}

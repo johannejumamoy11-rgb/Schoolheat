@@ -20,7 +20,7 @@ An bar ha ibabaw nagpapakita han ngaran han SchoolHeat, han buhi nga petsa/orasa
 | **Sensor Monitor (Monitor han Sensor)** | Igsulod an mga pagbasa ha kamot, i-sync an ESP32, ngan kinita an Sensor Trust. |
 | **Campus Map (Mapa han Campus)** | Kitaa an 29 nga naka-map nga campus pin ngan pindota an pin para makita an status hini. |
 | **History & Analytics (Kasaysayan ngan Analytics)** | Mangita, mag-filter, mag-chart, mag-export, ngan magdelado hin mga natipig nga pagbasa. |
-| **Forecast (Tagna)** | Paglantaw ha 30 minutos kon may-ada igo nga datos ha pareho nga lokasyon. |
+| **Forecast (Tagna)** | 60-minuto nga tagna nga ginhimo han nakaiskedyul nga Python job ngan na-publish komo `forecast.json`. |
 | **Settings (Mga Setting)** | Pinulongan, tema, pag-install, mga kontrol han alerto, calibration, ngan mga kagamitan para han datos. |
 | **Emergency Hotlines (Mga Hotline han Emerhensya)** | Mga giya para ha emergency call ngan mga numero nga nakumpirma o naghihulat hin pagkumpirma. |
 | **About (Mahitungod)** | Katuyoan, mga banda han DepEd 4H, dalagan han trabaho, FAQ, ngan **Ask SchoolHeat (Pangutana ha SchoolHeat)**. |
@@ -114,12 +114,12 @@ Gamita an test SMS la kon nagbe-verify hin bag-o nga setup. Nalakip ini ha lima 
 
 - Mangita pinaagi han lokasyon o status ngan mag-filter pinaagi han **All Status (Ngatanan nga Status) / Hayo / Hinay / Hinga / Hinto**.
 - An **Heat Index Trend (Trend han Heat Index)** nag-aabtos hin tap, drag, ngan arrow keys. An **Show Status Summary (Ipakita an Buod han Status)** nagbibigay hin breakdown.
-- **All Readings (Ngatanan nga Pagbasa)** nagpapakita hin 50 kada pahina. Gamita an trash button para deladohon an usa nga pagbasa tikang ha mao nga browser; diri ini pwede ibalik ngan nagbabag-o han input han tagna.
+- **All Readings (Ngatanan nga Pagbasa)** nagpapakita hin 50 kada pahina. Gamita an trash button para deladohon an usa nga pagbasa tikang ha mao nga browser; diri ini pwede ibalik. An na-publish nga Python forecast nagamit hin bulag nga CSV dataset ngan diri nagbabag-o.
 - An **Export CSV (I-export an CSV)** may-ada kolum nga **Demo Data (Datos Demo)**. An **Export JSON (I-export an JSON)** nagtitipig han `schoolheat_readings.json`.
 
 ### Tagna
 
-An **30-Minute Forecast (30-Minuto nga Tagna)** nangangahulagan hin diri mubsob ha 12 nga kompleto, diri-demo, pareho-lokasyon nga ehemplo (mga duha ka oras nga lima ka minuto nga pagbasa). An model comparison nangangahulagan hin diri mubsob ha 10 ka holdout. An mga demo reading gin-i-exclude, ngan an mga badge han accuracy nagpapabilin tubtob may-ada igo nga na-validate nga ehemplo.
+An **60-Minute Forecast (60-Minuto nga Tagna)** ginhimo han nakaiskedyul nga Python job tikang ha `data/schoolheat_readings.csv`, diri tikang ha mga natipig nga pagbasa ha mao nga browser. Ginhahambing ini an Random Forest, XGBoost, ngan LightGBM ha diri-nagkakalapsob nga 60-minuto nga holdout ngan ginpipili an pinakamababa nga validated RMSE. Tubtob ma-publish an `forecast.json`, masabi han app nga diri pa generated an forecast. Diri ginhahatag han forecast an pagkumpirma han calibration han sensor.
 
 ### Mapa han Campus
 
@@ -167,7 +167,7 @@ An **Mahitungod** nagpapahayag han katuyoan, mga banda han DepEd 4H, dalagan han
 | --- | --- |
 | Waray pagbasa katapos han auto-read | Naka-on an ESP32, tama an Wi-Fi, nagdadalagan an bridge, napili an lokasyon, ngan tugutan han bridge an browser origin. |
 | An pinakabag-o nga pagbasa nagpapakita hin **STALE** | An timestamp mas daan na ha 15 ka minuto. Mag-sync utro o igsulod an bag-o nga pagbasa. |
-| Diri magamit an Tagna | Kinahanglan hin diri mubsob ha 12 nga kompleto, diri-demo, pareho-lokasyon nga pagbasa ngan igo nga holdout. |
+| Diri magamit an Tagna | Kitaa kon na-publish an `forecast.json` ngan tapos na an nakaiskedyul nga Python job. |
 | Diri inaabot an SMS | Naka-enable an mga SMS Alert, balido an makakarawat, may-ada internet, aktibo an credits han provider ngan an aprubado nga sender, ngan diri nakansela an queue. |
 | Na-rate-limit an test SMS | Usa la nga SMS request kada lima ka minuto kada account; paghulat ngan magsulay utro ha kamot. |
 | Diri inaabot an phone push | Naka-enable an push ha nagpapadala ngan ha makakarawat, na-grant an permiso hin pahibalo, may-ada internet, ngan naka-deploy an Cloud Functions. |

@@ -36,7 +36,7 @@ usa ka chip sa kabag-ohan nga nagsugod sa **NO DATA** ug sa ulahi nagpakita sa
 | **Sensor Monitor (Monitor sa Sensor)** | Pagsulod sa mga pagbasa nga manual, pag-sync sa ESP32, ug pagsusi sa Sensor Trust. |
 | **Campus Map (Mapa sa Campus)** | Tan-awa ang 29 ka naka-map nga pin sa campus ug i-tap ang usa ka pin aron makita ang status niini. |
 | **History & Analytics (Kasaysayan ug Pagtuki)** | Pangita, i-filter, i-chart, i-export, ug tangtanga ang mga natipig nga pagbasa. |
-| **Forecast (Tagna)** | Tagna sa 30 minutos kung adunay igo nga datos sa samang lokasyon. |
+| **Forecast (Tagna)** | 60-minutos nga tagna nga gihimo sa nakaiskedyul nga Python job ug na-publish isip `forecast.json`. |
 | **Settings (Mga Setting)** | Pinulongan, tema, pag-install, mga kontrol sa alerto, kalibrasyon, ug mga himan sa datos. |
 | **Emergency Hotlines (Mga Hotline sa Emerhensya)** | Giya sa pagtawag sa emerhensya ug mga numero nga napamatud-an/naghulat og pagpamatuod. |
 | **About (Mahitungod)** | Katuyoan, mga band sa DepEd 4H, daloy sa trabaho, FAQ, ug Ask SchoolHeat. |
@@ -197,18 +197,21 @@ limitasyon sa limang minuto ug mahimong mogamit og usa ka credit.
   breakdown.
 - Ang **All Readings (Tanang Pagbasa)** nagpakita og 50 kada panid. Gamita ang
   trash button aron tangtangon ang usa ka pagbasa niining browser; dili kini
-  ma-undo ug mausab ang input sa tagna.
+  ma-undo. Ang na-publish nga Python forecast naggamit sa bulag nga CSV dataset
+  ug dili mausab.
 - Ang **Export CSV (I-export ang CSV)** naglakip og kolumn nga **Demo Data (Data
   sa Demo)**. Ang **Export JSON (I-export ang JSON)** nagtipig og
   `schoolheat_readings.json`.
 
 ### Tagna
 
-Ang **30-Minute Forecast (Tagna sa 30 Minutos)** nanginahanglan og labing menos
-12 ka kompleto, dili-demo, samang-lokasyon nga mga panig-ingnan (mga duha ka oras
-nga pagbasa matag limang minuto). Ang pagtandi sa modelo nanginahanglan og
-labing menos 10 ka holdout. Wala iapil ang mga demo reading, ug ang mga badge sa
-katukma magpabilin hangtod adunay igo nga na-validate nga mga panig-ingnan.
+Ang **60-Minute Forecast (Tagna sa 60 Minutos)** gihimo sa nakaiskedyul nga
+Python job gikan sa `data/schoolheat_readings.csv`, dili gikan sa mga natipig
+nga pagbasa niining browser. Gitandi niini ang Random Forest, XGBoost, ug
+LightGBM sa dili magkapatong nga 60-minutos nga holdout ug gipili ang
+pinakaubos nga validated RMSE. Hangtod ma-publish ang `forecast.json`, isulti sa
+app nga wala pa mahimo ang forecast. Dili mapamatud-an sa forecast ang
+calibration sa sensor.
 
 ### Mapa sa Campus
 
@@ -285,7 +288,7 @@ pamatasan. Wala kini magpadala og mga pangutana o pagbasa ngadto sa AI service.
 | --- | --- |
 | Walay pagbasa human sa awtomatikong pagbasa | ESP32 naka-on, husto ang Wi-Fi, nagdagan ang bridge, napili ang lokasyon, ug gitugotan sa bridge ang browser origin. |
 | Ang pinakaulahing pagbasa nagpakita og **STALE** | Ang timestamp mas daan na sa 15 ka minuto. I-sync pag-usab o isulod ang bag-ong pagbasa. |
-| Tagna dili magamit | Kinahanglan labing menos 12 ka kompleto, dili-demo, samang-lokasyon nga pagbasa ug igo nga holdout. |
+| Tagna dili magamit | Susiha kung na-publish ang `forecast.json` ug nahuman na ang nakaiskedyul nga Python job. |
 | SMS dili moabot | Naka-enable ang Mga Abiso sa SMS, balido ang tigdawat, adunay internet, aktibo ang credit ug aprobadong sender sa provider, ug wala ma-cancel ang queue. |
 | Test SMS gi-rate-limit | Usa lang ka SMS request matag limang minuto kada account; hulata ug i-retry nga manual. |
 | Push sa telepono dili moabot | Naka-enable ang push sa nagpadala ug tigdawat, gitugotan ang notification permission, adunay internet, ug na-deploy ang Cloud Functions. |

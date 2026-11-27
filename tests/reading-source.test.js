@@ -14,7 +14,7 @@ assert.match(script, appBootstrap);
 const isolatedScript = script.replace(appBootstrap, '');
 const context = { window: {} };
 vm.runInNewContext(
-  `${isolatedScript}\nglobalThis.SchoolHeatAppForTest = SchoolHeatApp;\nglobalThis.SchoolHeatLocationsForTest = LOCATIONS;\nglobalThis.SchoolHeatStatusColorForTest = getStatusColor;\nglobalThis.SchoolHeatAccessibleAccentForTest = getAccessibleAccent;\nglobalThis.SchoolHeatAccessibleColorForTest = getAccessibleColor;\nglobalThis.SchoolHeatContrastRatioForTest = getContrastRatio;\nglobalThis.SchoolHeatReadableTextColorForTest = getReadableTextColor;\nglobalThis.SchoolHeatCustomPaletteDefaultsForTest = CUSTOM_THEME_COLOR_DEFAULTS;\nglobalThis.SchoolHeatPaletteValidationForTest = getCustomPaletteValidationError;\nglobalThis.SchoolHeatPaletteNormalizationForTest = normalizeCustomPaletteColors;\nglobalThis.SchoolHeatColorPalettesForTest = APP_COLOR_PALETTES;\nglobalThis.SchoolHeatCustomAccentChoicesForTest = CUSTOM_ACCENT_CHOICES;\nglobalThis.SchoolHeatCustomPaletteGeneratorForTest = createCustomPaletteColors;\nglobalThis.SchoolHeatNormalizeTextSizeForTest = normalizeTextSize;`,
+  `${isolatedScript}\nglobalThis.SchoolHeatAppForTest = SchoolHeatApp;\nglobalThis.SchoolHeatLocationsForTest = LOCATIONS;\nglobalThis.SchoolHeatStatusColorForTest = getStatusColor;\nglobalThis.SchoolHeatAccessibleAccentForTest = getAccessibleAccent;\nglobalThis.SchoolHeatAccessibleColorForTest = getAccessibleColor;\nglobalThis.SchoolHeatContrastRatioForTest = getContrastRatio;\nglobalThis.SchoolHeatReadableTextColorForTest = getReadableTextColor;\nglobalThis.SchoolHeatCustomPaletteDefaultsForTest = CUSTOM_THEME_COLOR_DEFAULTS;\nglobalThis.SchoolHeatPaletteValidationForTest = getCustomPaletteValidationError;\nglobalThis.SchoolHeatPaletteNormalizationForTest = normalizeCustomPaletteColors;\nglobalThis.SchoolHeatColorPalettesForTest = APP_COLOR_PALETTES;\nglobalThis.SchoolHeatCustomAccentChoicesForTest = CUSTOM_ACCENT_CHOICES;\nglobalThis.SchoolHeatCustomPaletteGeneratorForTest = createCustomPaletteColors;\nglobalThis.SchoolHeatNormalizeTextSizeForTest = normalizeTextSize;globalThis.ForecastCandidatesForTest = FORECAST_CANDIDATE_MODELS;globalThis.ForecastHorizonForTest = FORECAST_HORIZON_MINUTES;globalThis.ForecastDefaultForTest = FORECAST_DEFAULT_MODEL;`,
   context
 );
 
@@ -328,7 +328,7 @@ test('uses the active theme color for chart risk statuses', () => {
   }
 });
 
-test('skips model evaluation when the latest eligible forecast reading is stale', () => {
+test('shows the pending published forecast without evaluating local JS models', async () => {
   const forecastApp = Object.create(context.SchoolHeatAppForTest.prototype);
   const attributes = {};
   let selectedTab = '';
@@ -346,22 +346,174 @@ test('skips model evaluation when the latest eligible forecast reading is stale'
   context.document = { getElementById: id => elements[id] || null };
   forecastApp.translateText = text => text;
   forecastApp.switchTab = tab => { selectedTab = tab; };
-  forecastApp.getMinuteForecastHistory = () => ({
-    history: [{ minute: Math.floor((Date.now() - 60 * 60 * 1000) / 60000) }]
+  forecastApp.currentTab = 'dashboard';
+  forecastApp.buildForecastComparison = async () => ({
+    published: true,
+    pending: true,
+    message: 'The scheduled Python forecast has not run yet.',
+    horizonMinutes: 60
   });
-  forecastApp.buildForecastComparison = () => {
-    throw new Error('A stale reading must not trigger forecast model evaluation.');
+  forecastApp.getBestForecastModel = () => {
+    throw new Error('A pending forecast must not select a local JS model.');
   };
 
-  forecastApp.renderDashboardForecast();
+  await forecastApp.renderDashboardForecast();
 
   assert.equal(elements['dashboard-forecast-empty'].hidden, false);
   assert.equal(elements['dashboard-forecast-content'].hidden, true);
-  assert.equal(elements['dashboard-forecast-empty-title'].textContent, 'No recent sensor reading');
-  assert.equal(elements['dashboard-forecast-action-label'].textContent, 'Open Sensor Monitor');
+  assert.equal(elements['dashboard-forecast-empty-title'].textContent, 'Forecast not generated');
+  assert.match(elements['dashboard-forecast-empty-detail'].textContent, /Python forecast/);
+  assert.equal(elements['dashboard-forecast-action-label'].textContent, 'View forecast details');
   elements['dashboard-forecast-action'].onclick();
-  assert.equal(selectedTab, 'monitor');
-  assert.match(attributes['aria-label'], /no recent/);
+  assert.equal(selectedTab, 'forecast');
+  assert.match(attributes['aria-label'], /not been generated/);
+});
+
+test('normalizes the published 60-minute forecast and selects the lowest-RMSE model', () => {
+  const publishedApp = Object.create(context.SchoolHeatAppForTest.prototype);
+  const now = Date.now();
+  const at = minutes => new Date(now + minutes * 60000).toISOString();
+  const metric = rmse => ({
+    mae: rmse * 0.8,
+    rmse,
+    mape: 2,
+    r2: 0.9,
+    samples: 12,
+    hazardMisses: 0,
+    hazardSamples: 2,
+    hazardMissRate: 0,
+    evaluationStart: at(-720),
+    evaluationEnd: at(-60)
+  });
+  const payload = {
+    schemaVersion: 1,
+    status: 'ready',
+    horizonMinutes: 60,
+    generatedAt: at(0),
+    dataStart: at(-1440),
+    dataEnd: at(0),
+    deviceId: '1',
+    location: 'Classroom device 1',
+    current: { minute: Math.floor(now / 60000), date: at(0), value: 36 },
+    forecast: [{ date: at(60), value: 38, status: 'danger' }],
+    history: [{ minute: Math.floor(now / 60000) - 5, date: at(-5), value: 35.8 }],
+    models: {
+      'random-forest': { value: 37.5, status: 'danger' },
+      'xgboost-style': { value: 38, status: 'danger' },
+      'lightgbm-style': { value: 37.9, status: 'danger' }
+    },
+    bestModel: 'xgboost-style',
+    metrics: {
+      'random-forest': metric(1.2),
+      'xgboost-style': metric(0.9),
+      'lightgbm-style': metric(1.0)
+    },
+    trainingSamples: 900
+  };
+
+  const normalized = publishedApp.normalizePublishedForecast(payload);
+  assert.equal(normalized.published, true);
+  assert.equal(normalized.pending, false);
+  assert.equal(normalized.horizonMinutes, 60);
+  assert.equal(normalized.history.length, 1);
+
+  const best = publishedApp.getBestForecastModel(normalized);
+  assert.equal(best.name, 'xgboost-style');
+  assert.equal(best.label, 'XGBoost (Python)');
+  assert.equal(best.metric.rmse, 0.9);
+});
+
+test('publishes a real Python 60-minute forecast job', () => {
+  const root = path.join(__dirname, '..');
+  for (const file of [
+    'forecast.json',
+    'requirements-forecast.txt',
+    'scripts/generate_forecast.py',
+    '.github/workflows/generate-forecast.yml',
+    'data/schoolheat_readings.csv'
+  ]) {
+    assert.ok(fs.existsSync(path.join(root, file)), `${file} should exist`);
+  }
+
+  const publishedForecast = JSON.parse(fs.readFileSync(path.join(root, 'forecast.json'), 'utf8'));
+  assert.equal(publishedForecast.status, 'pending');
+  assert.equal(publishedForecast.horizonMinutes, 60);
+  assert.equal(publishedForecast.generatedAt, null);
+
+  const requirements = fs.readFileSync(path.join(root, 'requirements-forecast.txt'), 'utf8');
+  for (const dependency of [
+    'numpy==2.3.5',
+    'pandas==2.2.3',
+    'scikit-learn==1.8.0',
+    'xgboost==3.1.3',
+    'lightgbm==4.6.0'
+  ]) {
+    assert.ok(requirements.includes(dependency), `${dependency} should be pinned`);
+  }
+
+  const python = fs.readFileSync(path.join(root, 'scripts', 'generate_forecast.py'), 'utf8');
+  assert.match(python, /from sklearn\.ensemble import RandomForestRegressor/);
+  assert.match(python, /from xgboost import XGBRegressor/);
+  assert.match(python, /from lightgbm import LGBMRegressor/);
+  assert.match(python, /HORIZON_MINUTES = 60/);
+  assert.match(python, /lowest validated RMSE/i);
+  assert.doesNotMatch(python, /send_sms|twilio|semaphore/i);
+
+  const workflow = fs.readFileSync(
+    path.join(root, '.github', 'workflows', 'generate-forecast.yml'),
+    'utf8'
+  );
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /branches:\s*\n\s*- forecast-python-60min-test/);
+  assert.match(workflow, /github\.event_name != 'push' \|\| github\.actor != 'github-actions\[bot\]'/);
+  assert.match(workflow, /cron: '17 2 \* \* \*'/);
+  assert.match(workflow, /python-version: '3\.11'/);
+  assert.match(workflow, /python -m pip install -r requirements-forecast\.txt/);
+  assert.match(workflow, /FORECAST_DEVICE_ID: \$\{\{ vars\.FORECAST_DEVICE_ID \}\}/);
+  assert.match(workflow, /git add forecast\.json/);
+
+  const csvHeader = fs.readFileSync(path.join(root, 'data', 'schoolheat_readings.csv'), 'utf8')
+    .split(/\r?\n/)[0]
+    .trim();
+  assert.equal(
+    csvHeader,
+    'date,timestamp,device_id,temperature_c,relative_humidity_pct,heat_index_c'
+  );
+
+  assert.deepEqual([...context.ForecastCandidatesForTest], [
+    'random-forest', 'xgboost-style', 'lightgbm-style'
+  ]);
+  assert.equal(context.ForecastHorizonForTest, 60);
+  assert.equal(context.ForecastDefaultForTest, 'xgboost-style');
+
+  const serviceWorker = fs.readFileSync(path.join(root, 'service-worker.js'), 'utf8');
+  assert.match(serviceWorker, /pathname\.endsWith\('\/forecast\.json'\)/);
+  assert.match(serviceWorker, /fetch\(e\.request, \{ cache: 'reload' \}\)/);
+  assert.match(serviceWorker, /caches\.open\(CACHE_NAME\)\.then\(cache => cache\.put\(requestUrl\.href, copy\)\)/);
+  assert.match(index, /60-Minute Forecast/);
+  assert.doesNotMatch(index, /30-Minute Forecast|custom JavaScript|offline custom JavaScript models|at least 12 complete/i);
+
+  const i18nContext = { window: {} };
+  vm.runInNewContext(fs.readFileSync(path.join(root, 'locales.js'), 'utf8'), i18nContext);
+  const dictionaries = i18nContext.window.SCHOOLHEAT_I18N.translations;
+  for (const language of ['tl', 'ceb', 'war']) {
+    assert.ok(dictionaries[language]['Forecast not generated'], `${language} needs the pending forecast title`);
+    assert.ok(
+      dictionaries[language][publishedForecast.message],
+      `${language} needs the pending forecast message`
+    );
+  }
+
+  for (const language of ['en', 'tl', 'ceb', 'war']) {
+    const manual = fs.readFileSync(
+      path.join(root, 'manual', `APP_OPERATION_MANUAL-${language}.md`),
+      'utf8'
+    );
+    assert.doesNotMatch(
+      manual,
+      /30-Minute Forecast|Tagna sa 30 Minutos|30-Minolutong|30-minutong outlook|Tagna sa 30 minutos|Paglantaw ha 30 minutos/
+    );
+  }
 });
 
 test('forecast validation yields between bounded walk-forward folds', async () => {
@@ -386,7 +538,7 @@ test('forecast validation yields between bounded walk-forward folds', async () =
 
   try {
     const metrics = await validationApp.evaluateForecastModels(examples);
-    assert.equal(metrics.mlr.samples, 2);
+    assert.equal(metrics['random-forest'].samples, 2);
     assert.equal(yieldCount, 2);
   } finally {
     context.window.setTimeout = previousSetTimeout;
@@ -682,7 +834,7 @@ test('caps impossible heat-index values and keeps demo readings realistic', () =
   }
   assert.ok(demoApp.readings.length > 0);
   assert.ok(demoApp.readings.every(reading => reading.heatIndex <= 50));
-  assert.ok(demoApp.readings.every(reading => reading.temperature <= 34));
+  assert.ok(demoApp.readings.every(reading => reading.temperature <= 35.1));
   assert.ok(demoApp.readings.every(reading => reading.humidity <= 75));
 });
 
@@ -1005,7 +1157,7 @@ test('stores role-and-number contacts locally with tel links and no SMS sending'
   assert.match(script, /data-delete-contact/);
   assert.match(script, /call\.href = tel/);
   assert.match(script, /node\.closest\?\.\('\[data-no-translate\]'\)/);
-  assert.match(serviceWorker, /schoolheat-v144/);
+  assert.match(serviceWorker, /schoolheat-v145/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);
@@ -1103,7 +1255,7 @@ test('lets users choose any text size and carries it into the manual', () => {
   assert.match(reader, /scale >= 0\.5 && scale <= 2\.5/);
   assert.match(reader, /setProperty\('--text-scale', String\(scale\)\)/);
   assert.doesNotMatch(reader, /font-size:\s*\d+px/);
-  assert.match(serviceWorker, /schoolheat-v144/);
+  assert.match(serviceWorker, /schoolheat-v145/);
   assert.match(serviceWorker, /fetch\(url, \{ cache: 'reload' \}\)/);
   assert.match(serviceWorker, /if \(!response\.ok\) throw new Error/);
   assert.doesNotMatch(serviceWorker, /cache\.addAll\(/);

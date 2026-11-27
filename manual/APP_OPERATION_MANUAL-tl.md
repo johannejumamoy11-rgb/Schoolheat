@@ -20,7 +20,7 @@ Ipinapakita ng top bar ang pangalang SchoolHeat, ang kasalukuyang petsa/orasan, 
 | **Sensor Monitor (Monitor ng Sensor)** | Maglagay ng pagbasa nang manual, i-sync ang ESP32, at suriin ang Sensor Trust. |
 | **Campus Map (Mapa ng Kampus)** | Tingnan ang 29 na naka-map na pin ng kampus at i-tap ang isang pin para sa status nito. |
 | **History & Analytics (Kasaysayan at Analytics)** | Hanapin, i-filter, gumawa ng tsart, i-export, at burahin ang mga naka-save na pagbasa. |
-| **Forecast (Pagtataya)** | 30-minutong outlook kapag sapat na ang datos mula sa iisang lokasyon. |
+| **Forecast (Pagtataya)** | 60-minutong outlook na ginawa ng nakaiskedyul na Python job at nai-publish bilang `forecast.json`. |
 | **Settings (Mga Setting)** | Wika, tema, pag-install, mga kontrol sa alerto, calibration, at mga kagamitan para sa datos. |
 | **Emergency Hotlines (Mga Emergency Hotline)** | Gabay sa emergency call at mga numero na nabe-verify o naghihintay ng verification. |
 | **About (Tungkol)** | Layunin, mga DepEd 4H band, daloy ng trabaho, FAQ, at Ask SchoolHeat. |
@@ -114,12 +114,12 @@ Gamitin ang test SMS kapag beripikasyon lamang ng bagong setup. Nabibilang ito s
 
 - Hanapin ayon sa lokasyon o status at i-filter gamit ang **All Status / Hayo / Hinay / Hinga / Hinto (Lahat ng Status / Hayo / Hinay / Hinga / Hinto)**.
 - Sinusuportahan ng **Heat Index Trend (Trend ng Heat Index)** ang tap, drag, at arrow keys. Nagbibigay ng breakdown ang **Show Status Summary (Ipakita ang Buod ng Status)**.
-- Ang **All Readings (Lahat ng Pagbasa)** ay nagpapakita ng 50 bawat pahina. Gamitin ang trash button para tanggalin ang isang pagbasa mula sa browser na ito; hindi ito maaaring i-undo at nagbabago ng input para sa forecast.
+- Ang **All Readings (Lahat ng Pagbasa)** ay nagpapakita ng 50 bawat pahina. Gamitin ang trash button para tanggalin ang isang pagbasa mula sa browser na ito; hindi ito maaaring i-undo. Ang nai-publish na Python forecast ay gumagamit ng hiwalay na CSV dataset at hindi nagbabago.
 - Kasama sa **Export CSV (I-export ang CSV)** ang isang column na **Demo Data (Data mula sa Demo)**. Ini-save ng **Export JSON (I-export ang JSON)** ang `schoolheat_readings.json`.
 
 ### Pagtataya
 
-Ang **30-Minute Forecast (30-Minolutong Pagtataya)** ay nangangailangan ng hindi bababa sa 12 kumpleto, hindi-demo, at iisang-lokasyon na halimbawa (humigit-kumulang dalawang oras ng limang-minutong pagbasa). Ang paghahambing ng modelo ay nangangailangan ng hindi bababa sa 10 holdout. Hindi kasama ang mga demo reading, at nananatili ang accuracy badges hangga't walang sapat na na-validate na halimbawa.
+Ang **60-Minute Forecast (60-Minolutong Pagtataya)** ay ginawa ng nakaiskedyul na Python job mula sa `data/schoolheat_readings.csv`, hindi mula sa mga naka-save na pagbasa sa browser na ito. Ihinahambing nito ang Random Forest, XGBoost, at LightGBM sa hindi magkakapatong na 60-minutong holdout at pinipili ang pinakamababang validated RMSE. Hangga't hindi naipapublish ang `forecast.json`, sasabihin ng app na hindi pa generated ang forecast. Hindi pinatutunayan ng forecast ang calibration ng sensor.
 
 ### Mapa ng Kampus
 
@@ -167,7 +167,7 @@ Ang **Tungkol** ay nagpapaliwanag ng layunin, mga DepEd 4H band, daloy ng trabah
 | --- | --- |
 | Walang pagbasa pagkatapos ng auto-read | ESP32 na naka-on, tamang Wi-Fi, tumatakbong bridge, napiling lokasyon, at pinapayagan ng bridge ang browser origin. |
 | Pinakabagong pagbasa ay nagpapakitang **STALE** | Mas luma na sa 15 minuto ang timestamp. Muling mag-sync o maglagay ng bagong pagbasa. |
-| Hindi available ang forecast | Kailangan ng hindi bababa sa 12 kumpleto, hindi-demo, iisang-lokasyon na pagbasa at sapat na holdout. |
+| Hindi available ang forecast | Tingnan kung nai-publish ang `forecast.json` at natapos na ang nakaiskedyul na Python job. |
 | Hindi dumadating ang SMS | Naka-enable ang Mga Alerto sa SMS, wasto ang tatanggap, may internet, aktibo ang credits at naaprubahang sender ng provider, at hindi nakansela ang queue. |
 | Na-rate-limit ang test SMS | Isang SMS request lamang tuwing limang minuto bawat account; maghintay at muling subukan nang manual. |
 | Hindi dumadating ang phone push | Naka-enable ang push sa nagpapadala at tumatanggap, naibigay ang notification permission, may internet, at na-deploy ang Cloud Functions. |

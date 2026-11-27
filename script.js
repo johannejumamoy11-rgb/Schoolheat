@@ -413,19 +413,18 @@ function createCustomPaletteColors(theme, selectedAccent, paletteStyle = 'balanc
 }
 
 const FORECAST_CANDIDATE_MODELS = [
-  'mlr',
   'random-forest',
   'xgboost-style',
-  'lightgbm-style',
-  'svr'
+  'lightgbm-style'
 ];
 
+const FORECAST_DEFAULT_MODEL = 'xgboost-style';
+const FORECAST_HORIZON_MINUTES = 60;
+
 const FORECAST_MODEL_LABELS = {
-  mlr: 'Multiple Linear Regression',
-  'random-forest': 'Random Forest (custom JS)',
-  'xgboost-style': 'XGBoost-style trees (custom JS)',
-  'lightgbm-style': 'LightGBM-style trees (custom JS)',
-  svr: 'Linear SVR (custom JS)',
+  'random-forest': 'Random Forest (Python)',
+  'xgboost-style': 'XGBoost (Python)',
+  'lightgbm-style': 'LightGBM (Python)',
   persistence: 'Persistence baseline'
 };
 
@@ -3210,40 +3209,41 @@ class SchoolHeatApp {
       if (actionLabel) actionLabel.textContent = this.translateText(label);
       if (action) action.onclick = () => this.switchTab(tab);
     };
-
-    const historyData = this.getMinuteForecastHistory();
-    const current = historyData.history[historyData.history.length - 1];
-    const now = Date.now();
-    if (current) {
-      const forecastAge = now - current.minute * 60000;
-      if (!Number.isFinite(forecastAge) ||
-        forecastAge > STALE_READING_AFTER_MS ||
-        forecastAge < -2 * 60000 ||
-        (current.minute + 30) * 60000 <= now) {
-        empty.hidden = false;
-        content.hidden = true;
-        if (emptyTitle) emptyTitle.textContent = this.translateText('No recent sensor reading');
-        if (emptyDetail) {
-          emptyDetail.textContent = this.translateText('The last real reading is too old. Sync the sensor for a new forecast.');
-        }
-        setAction('Open Sensor Monitor', 'monitor');
-        canvas.setAttribute('aria-label', 'A forecast is unavailable because there is no recent sensor reading.');
-        return;
-      }
-    }
-
-    const forecast = await this.buildForecastComparison(historyData);
-    if (this.currentTab !== 'dashboard') return;
-    const best = forecast ? this.getBestForecastModel(forecast) : null;
-    if (!forecast || !best?.result || !Number.isFinite(best.result.value)) {
+    const showEmpty = (title, detail, ariaLabel) => {
       empty.hidden = false;
       content.hidden = true;
-      if (emptyTitle) emptyTitle.textContent = this.translateText('Forecast unavailable');
-      if (emptyDetail) {
-        emptyDetail.textContent = this.translateText('At least 12 complete same-location examples from non-demo readings are needed. No prediction is shown until the data supports one.');
-      }
+      if (emptyTitle) emptyTitle.textContent = this.translateText(title);
+      if (emptyDetail) emptyDetail.textContent = this.translateText(detail);
       setAction('View forecast details', 'forecast');
-      canvas.setAttribute('aria-label', 'Forecast unavailable because there is not enough eligible data.');
+      canvas.setAttribute('aria-label', ariaLabel);
+    };
+
+    const forecast = await this.buildForecastComparison();
+    if (this.currentTab !== 'dashboard') return;
+    if (!forecast) {
+      showEmpty(
+        'Forecast unavailable',
+        'The published 60-minute forecast could not be loaded. Open the Forecast tab for details.',
+        'A forecast is unavailable because the published forecast file could not be loaded.'
+      );
+      return;
+    }
+    if (forecast.pending) {
+      showEmpty(
+        'Forecast not generated',
+        forecast.message || 'The scheduled Python forecast has not run yet.',
+        'The scheduled Python forecast has not been generated yet.'
+      );
+      return;
+    }
+
+    const best = this.getBestForecastModel(forecast);
+    if (!best?.result || !Number.isFinite(best.result.value)) {
+      showEmpty(
+        'Forecast unavailable',
+        'The published forecast does not contain a usable 60-minute prediction.',
+        'The published forecast does not contain a usable prediction.'
+      );
       return;
     }
 
@@ -3261,9 +3261,11 @@ class SchoolHeatApp {
       statusElement.className = `status-pill ${status || 'nodata'}`;
     }
     if (model) {
-      model.textContent = best.metric
-        ? `${best.label} · MAE ${best.metric.mae.toFixed(1)}°C`
-        : `${best.label} · no validation score`;
+      const score = best.metric && Number.isFinite(best.metric.rmse)
+        ? ` · RMSE ${best.metric.rmse.toFixed(1)}°C`
+        : '';
+      const dataDate = forecast.dataEnd ? ` · data through ${this.formatDate(forecast.dataEnd.toISOString())}` : '';
+      model.textContent = `${best.label}${score}${dataDate}`;
     }
     if (time) time.textContent = `For ${this.formatTime(forecast.date.toISOString())}`;
 
@@ -3297,8 +3299,8 @@ class SchoolHeatApp {
     const minimum = Math.min(...values) - 1;
     const maximum = Math.max(...values) + 1;
     const valueRange = Math.max(maximum - minimum, 2);
-    const firstMinute = forecast.current.minute - 30;
-    const x = minute => padding.left + ((minute - firstMinute) / 60) * chartWidth;
+    const firstMinute = forecast.current.minute - FORECAST_HORIZON_MINUTES;
+    const x = minute => padding.left + ((minute - firstMinute) / (FORECAST_HORIZON_MINUTES * 2)) * chartWidth;
     const y = value => padding.top + ((maximum - value) / valueRange) * chartHeight;
 
     context.clearRect(0, 0, width, height);
@@ -3335,7 +3337,7 @@ class SchoolHeatApp {
     context.beginPath();
     context.setLineDash([5, 4]);
     context.moveTo(x(currentPoint.minute), y(currentPoint.value));
-    context.lineTo(x(forecast.current.minute + 30), y(prediction.value));
+    context.lineTo(x(forecast.current.minute + FORECAST_HORIZON_MINUTES), y(prediction.value));
     context.strokeStyle = predictionColor;
     context.lineWidth = 2.5;
     context.stroke();
@@ -3343,7 +3345,7 @@ class SchoolHeatApp {
 
     [
       { minute: currentPoint.minute, value: currentPoint.value, color: chartLine },
-      { minute: forecast.current.minute + 30, value: prediction.value, color: predictionColor }
+      { minute: forecast.current.minute + FORECAST_HORIZON_MINUTES, value: prediction.value, color: predictionColor }
     ].forEach(point => {
       context.beginPath();
       context.arc(x(point.minute), y(point.value), 3.5, 0, Math.PI * 2);
@@ -3354,12 +3356,12 @@ class SchoolHeatApp {
     context.textAlign = 'center';
     context.textBaseline = 'top';
     context.fillStyle = chartLabel;
-    context.fillText('−30 min', padding.left, height - 15);
+    context.fillText(`−${FORECAST_HORIZON_MINUTES} min`, padding.left, height - 15);
     context.fillText('Now', x(forecast.current.minute), height - 15);
-    context.fillText('+30 min', width - padding.right, height - 15);
+    context.fillText(`+${FORECAST_HORIZON_MINUTES} min`, width - padding.right, height - 15);
     canvas.setAttribute(
       'aria-label',
-      `Recorded Heat Index is ${forecast.current.value.toFixed(1)} degrees Celsius at ${forecast.location}; the forecast for ${this.formatTime(forecast.date.toISOString())} is ${prediction.value.toFixed(1)} degrees Celsius.`
+      `Recorded Heat Index is ${forecast.current.value.toFixed(1)} degrees Celsius at ${forecast.location}; the ${FORECAST_HORIZON_MINUTES}-minute forecast for ${this.formatTime(forecast.date.toISOString())} is ${prediction.value.toFixed(1)} degrees Celsius. ${forecast.dataEnd ? `Based on data through ${this.formatDate(forecast.dataEnd.toISOString())}.` : ''}`
     );
   }
 
@@ -3773,14 +3775,15 @@ class SchoolHeatApp {
     if (query.includes('forecast') || query.includes('prediction')) {
       const result = await this.buildForecastComparison();
       if (!result) {
-        return 'No forecast is available. The existing model needs at least 12 complete same-location, non-demo 30-minute examples; gaps can extend the collection period.';
+        return 'No forecast is available. The published 60-minute Python forecast could not be loaded.';
       }
+      if (result.pending) return result.message || 'The scheduled Python forecast has not run yet.';
       const best = this.getBestForecastModel(result);
       const metric = best.metric;
       const generatedAt = result.generatedAt ? this.formatTime(result.generatedAt.toISOString()) : 'not recorded';
       const estimate = `${best.label} predicts ${best.result.value.toFixed(1)}°C Heat Index at ${this.formatTime(result.date.toISOString())} for ${result.location}.`;
       const evaluation = metric
-        ? `Walk-forward evaluation used ${metric.samples} holdout sample(s) from ${this.formatTime(metric.evaluationStart.toISOString())} to ${this.formatTime(metric.evaluationEnd.toISOString())}; MAE was ${metric.mae.toFixed(2)}°C.`
+        ? `Walk-forward evaluation used ${metric.samples} non-overlapping 60-minute holdout(s) from ${this.formatTime(metric.evaluationStart.toISOString())} to ${this.formatTime(metric.evaluationEnd.toISOString())}; RMSE was ${metric.rmse.toFixed(2)}°C.`
         : 'There are not yet enough holdout samples to report validated model performance; this selection is provisional.';
       return `${estimate} Forecast generated ${generatedAt}. ${evaluation} This is a prediction, not a measured value or official safety decision.`;
     }
@@ -4720,7 +4723,112 @@ class SchoolHeatApp {
     };
   }
 
-  async buildForecastComparison(historyData = this.getMinuteForecastHistory()) {
+  normalizePublishedForecast(payload) {
+    if (!payload || typeof payload !== 'object') return null;
+    const parsed = value => value ? new Date(value) : null;
+    if (payload.status === 'pending') {
+      return {
+        published: true,
+        pending: true,
+        message: String(payload.message || 'The scheduled Python forecast has not run yet.'),
+        horizonMinutes: payload.horizonMinutes ?? null,
+        generatedAt: parsed(payload.generatedAt)
+      };
+    }
+    if (payload.status !== 'ready' || payload.horizonMinutes !== FORECAST_HORIZON_MINUTES) return null;
+
+    const currentDate = parsed(payload.current?.date);
+    const forecastDate = parsed(payload.forecast?.date || payload.forecast?.[0]?.date);
+    const currentValue = Number(payload.current?.value);
+    if (!currentDate || !forecastDate || !Number.isFinite(currentValue)) return null;
+
+    const history = (Array.isArray(payload.history) ? payload.history : []).map(point => {
+      const date = parsed(point.date);
+      const value = Number(point.value);
+      if (!date || !Number.isFinite(value)) return null;
+      return { minute: Math.floor(date.getTime() / 60000), date, value };
+    }).filter(Boolean).sort((a, b) => a.minute - b.minute);
+
+    const models = {};
+    for (const name of FORECAST_CANDIDATE_MODELS) {
+      const value = Number(payload.models?.[name]?.value);
+      if (!Number.isFinite(value)) return null;
+      const rawStatus = payload.models[name].status;
+      models[name] = {
+        value,
+        status: STATUS_LABELS[rawStatus] ? rawStatus : this.getStatus(value)
+      };
+    }
+
+    const metrics = {};
+    for (const name of [...FORECAST_CANDIDATE_MODELS, 'persistence']) {
+      const metric = payload.metrics?.[name];
+      if (!metric) continue;
+      metrics[name] = {
+        mae: Number.isFinite(Number(metric.mae)) ? Number(metric.mae) : null,
+        rmse: Number.isFinite(Number(metric.rmse)) ? Number(metric.rmse) : null,
+        mape: Number.isFinite(Number(metric.mape)) ? Number(metric.mape) : null,
+        r2: Number.isFinite(Number(metric.r2)) ? Number(metric.r2) : null,
+        samples: Number.isFinite(Number(metric.samples)) ? Number(metric.samples) : 0,
+        hazardMisses: Number.isFinite(Number(metric.hazardMisses)) ? Number(metric.hazardMisses) : 0,
+        hazardSamples: Number.isFinite(Number(metric.hazardSamples)) ? Number(metric.hazardSamples) : 0,
+        hazardMissRate: Number.isFinite(Number(metric.hazardMissRate)) ? Number(metric.hazardMissRate) : null,
+        evaluationStart: parsed(metric.evaluationStart),
+        evaluationEnd: parsed(metric.evaluationEnd)
+      };
+    }
+
+    return {
+      published: true,
+      pending: false,
+      status: 'ready',
+      horizonMinutes: FORECAST_HORIZON_MINUTES,
+      generatedAt: parsed(payload.generatedAt),
+      dataStart: parsed(payload.dataStart),
+      dataEnd: parsed(payload.dataEnd) || currentDate,
+      sourceFile: String(payload.sourceFile || ''),
+      deviceId: String(payload.deviceId || ''),
+      location: String(payload.location || 'Classroom device'),
+      locationNote: String(payload.locationNote || ''),
+      current: { minute: Math.floor(currentDate.getTime() / 60000), date: currentDate, value: currentValue },
+      date: forecastDate,
+      history,
+      models,
+      metrics,
+      bestModel: FORECAST_CANDIDATE_MODELS.includes(payload.bestModel) ? payload.bestModel : null,
+      trainingSamples: Number.isFinite(Number(payload.trainingSamples)) ? Number(payload.trainingSamples) : 0
+    };
+  }
+
+  async fetchPublishedForecast() {
+    const base = document.baseURI || (typeof window !== 'undefined' ? window.location?.href : null) || './';
+    const url = new URL('./forecast.json', base);
+    url.searchParams.set('v', String(Date.now()));
+    const response = await fetch(url.href, { cache: 'reload' });
+    if (!response.ok) return null;
+    return this.normalizePublishedForecast(await response.json());
+  }
+
+  async loadPublishedForecast() {
+    const maxAge = 5 * 60 * 1000;
+    if (this.publishedForecastCache && Date.now() - this.publishedForecastCache.at < maxAge) {
+      return this.publishedForecastCache.value;
+    }
+    let value = null;
+    try {
+      value = await this.fetchPublishedForecast();
+    } catch (error) {
+      console.warn('Published forecast unavailable:', error.message);
+    }
+    this.publishedForecastCache = { at: Date.now(), value };
+    return value;
+  }
+
+  async buildForecastComparison() {
+    return this.loadPublishedForecast();
+  }
+
+  async buildLegacyForecastComparison(historyData = this.getMinuteForecastHistory()) {
     const { location, history, byMinute } = historyData;
     if (history.length === 0) return null;
     const current = history[history.length - 1];
@@ -4760,7 +4868,7 @@ class SchoolHeatApp {
         models,
         metrics: await this.evaluateForecastModels(examples)
       };
-      if (this.forecastComparisonCache !== cacheEntry) return this.buildForecastComparison();
+      if (this.forecastComparisonCache !== cacheEntry) return this.buildLegacyForecastComparison();
       cacheEntry.result = result;
       cacheEntry.promise = null;
       return result;
@@ -4774,16 +4882,20 @@ class SchoolHeatApp {
   }
 
   getBestForecastModel(modelResult) {
-    const scoredModels = Object.entries(modelResult.metrics)
+    const scoredModels = Object.entries(modelResult.metrics || {})
       .filter(([name, metric]) =>
-        FORECAST_CANDIDATE_MODELS.includes(name) && metric.samples >= 10 && Number.isFinite(metric.mae))
-      .sort((a, b) => a[1].mae - b[1].mae);
-    const name = scoredModels[0]?.[0] || 'mlr';
+        FORECAST_CANDIDATE_MODELS.includes(name) && metric.samples >= 10 && Number.isFinite(metric.rmse))
+      .sort((a, b) => a[1].rmse - b[1].rmse || a[1].mae - b[1].mae);
+    const preferred = FORECAST_CANDIDATE_MODELS.includes(modelResult.bestModel) ? modelResult.bestModel : null;
+    const selected = preferred && scoredModels.find(([name]) => name === preferred)
+      || scoredModels[0]
+      || [FORECAST_DEFAULT_MODEL, null];
+    const [name, metric] = selected;
     return {
       name,
-      label: FORECAST_MODEL_LABELS[name],
-      result: modelResult.models[name],
-      metric: scoredModels[0]?.[1] || null
+      label: FORECAST_MODEL_LABELS[name] || name,
+      result: modelResult.models?.[name] || null,
+      metric: metric || null
     };
   }
 
@@ -4842,23 +4954,23 @@ class SchoolHeatApp {
       return;
     }
     const badge = document.getElementById('forecast-badge');
-    if (!modelResult) {
+    const showForecastEmpty = (message, chartText) => {
       const generatedAt = document.getElementById('forecast-generated-at');
       if (generatedAt) generatedAt.textContent = 'Forecast generation time unavailable';
       ctx.fillStyle = chartLabel;
       ctx.font = '12px Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('More same-location readings needed', w / 2, h / 2);
+      ctx.fillText(chartText, w / 2, h / 2);
       const summary = document.getElementById('forecast-summary');
       if (summary) summary.innerHTML = `
         <div class="empty-state compact">
-          <div class="empty-desc">The models need at least 12 complete 30-minute examples. With readings every 5 minutes, collect at the same location for about 115 minutes (roughly 2 hours) before the first forecast is available. Gaps in readings may extend this time.</div>
+          <div class="empty-desc">${this.escapeHTML(message)}</div>
         </div>`;
       const cards = document.getElementById('forecast-cards');
       if (cards) cards.innerHTML = '';
       const comparison = document.getElementById('forecast-comparison');
-      if (comparison) comparison.innerHTML = '<div class="forecast-accuracy-empty">At least 12 complete 30-minute examples from non-demo readings are needed for a forecast. App-generated demo readings are excluded.</div>';
+      if (comparison) comparison.innerHTML = `<div class="forecast-accuracy-empty">${this.escapeHTML(message)}</div>`;
       const bestBadge = document.getElementById('forecast-best-badge');
       if (bestBadge) bestBadge.textContent = 'Accuracy not measured';
       const bestModelName = document.getElementById('forecast-best-model-name');
@@ -4867,6 +4979,16 @@ class SchoolHeatApp {
       if (legend) legend.textContent = 'Best model prediction';
       if (badge) badge.textContent = 'Best prediction';
       if (tooltip) tooltip.classList.remove('visible');
+    };
+    if (!modelResult) {
+      showForecastEmpty(
+        'The published 60-minute forecast could not be loaded. Check that forecast.json is available and try again.',
+        'Published forecast unavailable'
+      );
+      return;
+    }
+    if (modelResult.pending) {
+      showForecastEmpty(modelResult.message || 'The scheduled Python forecast has not run yet.', 'Forecast not generated');
       return;
     }
 
@@ -4892,7 +5014,7 @@ class SchoolHeatApp {
     }
     const step = 2;
     const niceRange = maxVal - minVal || 1;
-    const xForMinute = minute => pad.left + ((minute - anchorMinute + 30) / 60) * chartW;
+    const xForMinute = minute => pad.left + ((minute - anchorMinute + FORECAST_HORIZON_MINUTES) / (FORECAST_HORIZON_MINUTES * 2)) * chartW;
     const yForValue = value => pad.top + chartH - ((value - minVal) / niceRange) * chartH;
 
     ctx.strokeStyle = chartGrid;
@@ -4919,7 +5041,7 @@ class SchoolHeatApp {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    const timeLabels = [-30, -20, -10, 0, 10, 20, 30];
+    const timeLabels = [-60, -45, -30, -15, 0, 15, 30, 45, 60];
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.fillStyle = chartLabel;
@@ -4956,7 +5078,7 @@ class SchoolHeatApp {
       date: modelResult.current.date
     };
     const forecastPoint = {
-      x: xForMinute(anchorMinute + 30),
+      x: xForMinute(anchorMinute + FORECAST_HORIZON_MINUTES),
       y: yForValue(forecast.value),
       val: forecast.value,
       status: forecast.status,
@@ -4994,7 +5116,7 @@ class SchoolHeatApp {
       cardsEl.innerHTML = `
         <div class="forecast-day model-comparison-card selected">
           <div class="forecast-day-name">${bestModel.label}${isMeasuredBest ? ' · Best so far' : ' · Provisional'}</div>
-          <div class="forecast-day-date">+30 min · ${modelResult.date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+          <div class="forecast-day-date">+${FORECAST_HORIZON_MINUTES} min · ${modelResult.date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
           <div class="forecast-day-temp ${forecast.status}">${forecast.value.toFixed(1)}°C</div>
           <div class="forecast-day-label ${forecast.status}">${STATUS_LABELS[forecast.status]}</div>
         </div>
@@ -5008,14 +5130,14 @@ class SchoolHeatApp {
           <span>Current: <strong>${modelResult.current.value.toFixed(1)}°C</strong></span>
           <span>Best prediction: <strong style="color:${predictionColor}">${forecast.value.toFixed(1)}°C</strong></span>
         </div>
-        <div style="margin-top:6px;font-size:0.72rem;color:var(--text-muted);">${bestModel.label} uses the latest ${modelResult.trainingSamples} same-location examples at ${this.escapeHTML(modelResult.location || 'the current location')} to predict 30 minutes ahead.</div>
+        <div style="margin-top:6px;font-size:0.72rem;color:var(--text-muted);">${bestModel.label} predicts ${FORECAST_HORIZON_MINUTES} minutes ahead for ${this.escapeHTML(modelResult.location || 'the current location')} using ${modelResult.trainingSamples} complete examples. ${modelResult.dataEnd ? `Source data ends ${this.formatDate(modelResult.dataEnd.toISOString())}.` : ''}${modelResult.locationNote ? ` ${this.escapeHTML(modelResult.locationNote)}` : ''}</div>
       `;
     }
 
     const bestBadge = document.getElementById('forecast-best-badge');
     if (bestBadge) bestBadge.textContent = bestModel.metric
-      ? `Lowest holdout MAE (${bestModel.metric.samples} samples): ${bestModel.label} · ${bestModel.metric.mae.toFixed(2)}°C`
-      : 'At least 10 holdout samples needed · showing provisional Multiple Linear Regression';
+      ? `Lowest holdout RMSE (${bestModel.metric.samples} samples): ${bestModel.label} · ${bestModel.metric.rmse.toFixed(2)}°C`
+      : `At least 10 holdout samples needed · showing provisional ${FORECAST_MODEL_LABELS[FORECAST_DEFAULT_MODEL]}`;
     const legend = document.getElementById('forecast-best-legend');
     if (legend) legend.textContent = `${bestModel.label} prediction`;
     const comparison = document.getElementById('forecast-comparison');
@@ -5024,10 +5146,10 @@ class SchoolHeatApp {
       const evaluationPeriod = evaluationMetric?.evaluationStart && evaluationMetric?.evaluationEnd
         ? ` Evaluation period: ${this.formatTime(evaluationMetric.evaluationStart.toISOString())} to ${this.formatTime(evaluationMetric.evaluationEnd.toISOString())}.`
         : ' Evaluation period unavailable because no holdout samples were generated.';
-      const evaluatedModels = Object.entries(modelResult.metrics)
-        .filter(([, metric]) => metric.samples > 0 && Number.isFinite(metric.mae))
+      const evaluatedModels = Object.entries(modelResult.metrics || {})
+        .filter(([, metric]) => metric.samples > 0 && Number.isFinite(metric.rmse))
         .map(([name, metric]) => {
-          const label = `${modelLabels[name]}${name === bestModel.name && bestModel.metric ? ' · Selected by MAE' : ''}`;
+          const label = `${modelLabels[name] || name}${name === bestModel.name && bestModel.metric ? ' · Selected by RMSE' : ''}`;
           const r2 = Number.isFinite(metric.r2) ? metric.r2.toFixed(2) : 'not defined';
           const mape = Number.isFinite(metric.mape) ? `${metric.mape.toFixed(1)}%` : 'not defined';
           const hazardRate = metric.hazardSamples
@@ -5036,7 +5158,7 @@ class SchoolHeatApp {
           return `<p class="forecast-accuracy-caption">${label}: MAE ${metric.mae.toFixed(2)}°C · RMSE ${metric.rmse.toFixed(2)}°C · MAPE ${mape} · R² ${r2} · Hinga/Hinto under-predictions ${metric.hazardMisses}/${metric.hazardSamples}${hazardRate}.</p>`;
         }).join('');
       comparison.innerHTML = `<div class="forecast-accuracy-heading">Walk-forward model comparison <span>Lower MAE/RMSE/MAPE is better; higher R² is better.</span></div>
-        <p class="forecast-accuracy-caption">${modelResult.metrics.mlr.samples} non-overlapping holdouts per model.${evaluationPeriod} An under-prediction means an actual heat index of at least 33°C was predicted below 33°C.</p>
+        <p class="forecast-accuracy-caption">${evaluationMetric?.samples || 0} non-overlapping 60-minute holdouts per model.${evaluationPeriod} An under-prediction means an actual heat index of at least 33°C was predicted below 33°C.</p>
         ${evaluatedModels}
         ${bestModel.metric ? '' : '<div class="forecast-accuracy-empty">At least 10 holdout forecasts are required before declaring a best model; the prediction above is provisional.</div>'}`;
     }
@@ -5808,13 +5930,13 @@ class SchoolHeatApp {
       return;
     }
     if (!forecast || forecast.length === 0) {
-      this.toast('Not enough same-location history for a 30-minute forecast yet', 'warning');
+      this.toast('The published 60-minute forecast is not available yet', 'warning');
       return;
     }
     const prediction = forecast[0];
     const time = prediction.date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     const hazardous = prediction.status === 'danger' || prediction.status === 'extreme';
-    this.toast(`30-minute forecast (${time}): ${prediction.value.toFixed(1)}°C — ${STATUS_LABELS[prediction.status]}`, hazardous ? 'error' : 'info');
+    this.toast(`60-minute forecast (${time}): ${prediction.value.toFixed(1)}°C — ${STATUS_LABELS[prediction.status]}`, hazardous ? 'error' : 'info');
   }
 
   testBrowserNotification() {
@@ -5836,8 +5958,9 @@ class SchoolHeatApp {
 
   async generateForecastData() {
     const modelResult = await this.buildForecastComparison();
-    if (!modelResult) return [];
+    if (!modelResult || modelResult.pending) return [];
     const bestModel = this.getBestForecastModel(modelResult);
+    if (!bestModel.result || !Number.isFinite(bestModel.result.value)) return [];
     return [{
       date: modelResult.date,
       value: bestModel.result.value,
