@@ -63,10 +63,9 @@ History has one file action. **Choose data file** imports a CSV or XLSX into thi
 browser's `sh_readings`, converts the valid imported rows to the six-column
 forecast CSV, and sends that CSV to the forecast upload Worker in the same step.
 The Worker validates the readings, replaces `data/schoolheat_readings.csv`, and
-the commit triggers exactly one Python forecast job. Enter the forecast access
-code once; with **Remember code on this device** checked, later files update
-History and the published forecast automatically. Firebase sign-in, App Check,
-and one upload per Firebase account every five minutes are required. The GitHub
+the commit triggers exactly one Python forecast job. No sign-in, access code, or
+rate-limit prompt is shown. This means anyone who opens the app can replace the
+published forecast; the simplification was requested explicitly. The GitHub
 token stays in the Worker secret and is never in the static app. Demo readings
 are never uploaded.
 
@@ -103,11 +102,10 @@ and also runs when `data/schoolheat_readings.csv` changes on `main`. It writes
 Worker on its own beyond the workflow's own repository commit.
 
 The upload Worker lives in `forecast-upload-worker/`. Deploy it to Cloudflare
-Workers with `GITHUB_TOKEN` plus either `FORECAST_UPLOAD_CODE` or
-`FORECAST_UPLOADER_UIDS` configured as Worker secrets. The GitHub token needs
+Workers with `GITHUB_TOKEN` configured as a Worker secret. The GitHub token needs
 contents write access to this repository; the forecast job starts from the
-workflow's push trigger. Until those secrets are configured, the upload card
-will report that upload is not configured.
+workflow's push trigger. Until that secret is configured, the upload card will
+report that upload is not configured.
 
 App-generated demo readings are never part of the Python forecast dataset. The
 published forecast is generated from the last uploaded source CSV, not directly

@@ -710,12 +710,9 @@
           <h3>Import readings & refresh forecast</h3>
           <p>Choose a CSV or Excel (.xlsx) file once. Readings are saved in History and the same readings are used to regenerate the live 60-minute forecast.</p>
         </div>
-        <label class="upload-code-label" for="forecast-upload-code">Forecast access code</label>
-        <input type="password" id="forecast-upload-code" class="upload-code-input" placeholder="Enter the upload code" autocomplete="off" maxlength="200">
-        <label class="upload-remember"><input type="checkbox" id="forecast-remember-code" checked> Remember code on this device</label>
         <input type="file" id="history-file-input" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
         <button class="btn-secondary" id="history-upload-button" type="button">Choose data file</button>
-        <p class="upload-hint" id="forecast-upload-status" role="status" aria-live="polite">Enter the access code once. Future uploads update both History and the published forecast automatically.</p>
+        <p class="upload-hint" id="forecast-upload-status" role="status" aria-live="polite">Choosing a file updates both History and the published forecast automatically.</p>
       </div>
 
       <div class="glass-card filter-bar">

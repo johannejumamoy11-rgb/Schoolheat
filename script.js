@@ -546,7 +546,6 @@ class SchoolHeatApp {
   init() {
     this.populateLocations();
     this.applySettings();
-    this.restoreForecastUploadCode();
     this.bindEvents();
     this.renderLocalContacts();
     this.setupNavigation();
@@ -1164,51 +1163,11 @@ class SchoolHeatApp {
     return `${lines.join('\n')}\n`;
   }
 
-  getForecastUploadCode() {
-    const inputCode = document.getElementById('forecast-upload-code')?.value?.trim() || '';
-    if (inputCode) return inputCode;
-    try {
-      if (localStorage.getItem('sh_forecast_remember_code') === 'false') return '';
-      return String(localStorage.getItem('sh_forecast_upload_code') || '').trim();
-    } catch {
-      return '';
-    }
-  }
-
-  restoreForecastUploadCode() {
-    const input = document.getElementById('forecast-upload-code');
-    const remember = document.getElementById('forecast-remember-code');
-    if (!input) return;
-    try {
-      const shouldRemember = localStorage.getItem('sh_forecast_remember_code') !== 'false';
-      if (remember) remember.checked = shouldRemember;
-      if (shouldRemember) {
-        input.value = String(localStorage.getItem('sh_forecast_upload_code') || '');
-      } else {
-        input.value = '';
-      }
-    } catch {
-      // Storage can be unavailable in private browsing; the code can still be typed.
-    }
-  }
-
-  saveForecastUploadCode(code) {
-    const remember = document.getElementById('forecast-remember-code')?.checked !== false;
-    try {
-      localStorage.setItem('sh_forecast_remember_code', remember ? 'true' : 'false');
-      if (remember && code) localStorage.setItem('sh_forecast_upload_code', code);
-      else localStorage.removeItem('sh_forecast_upload_code');
-    } catch {
-      // Storage can be unavailable in private browsing; the code still works this session.
-    }
-  }
-
-  async publishForecastCsv(csvText, accessCode) {
+  async publishForecastCsv(csvText) {
     const status = document.getElementById('forecast-upload-status');
     const setStatus = message => {
       if (status) status.textContent = message;
     };
-    if (!accessCode) throw new Error('Enter the forecast access code before uploading.');
     if (typeof csvText !== 'string' || !csvText.trim()) {
       throw new Error('No forecast data is available to upload.');
     }
@@ -1216,34 +1175,15 @@ class SchoolHeatApp {
       throw new Error('The forecast CSV is larger than 2 MB.');
     }
 
-    setStatus('Signing in and checking this device…');
     const config = window.SCHOOLHEAT_CLOUD;
     if (!config?.forecastUploadWorkerUrl) {
       throw new Error('The forecast upload Worker URL is not configured.');
     }
-    const service = await this.getAlertService();
-    if (service.error) {
-      throw new Error('Firebase sign-in and App Check are required for forecast upload.');
-    }
-    if (!service.auth.currentUser) await service.authSdk.signInAnonymously(service.auth);
-    const [idToken, appCheckToken] = await Promise.all([
-      service.auth.currentUser.getIdToken(),
-      service.appCheckSdk.getToken(service.appCheck, false)
-    ]);
-    const requestId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-      ? crypto.randomUUID()
-      : `forecast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
     setStatus('Uploading readings and regenerating the 60-minute forecast…');
     const response = await fetch(config.forecastUploadWorkerUrl, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${idToken}`,
-        'Content-Type': 'text/csv; charset=utf-8',
-        'Idempotency-Key': requestId,
-        'X-Firebase-AppCheck': appCheckToken.token,
-        'X-Forecast-Upload-Code': accessCode
-      },
+      headers: { 'Content-Type': 'text/csv; charset=utf-8' },
       body: csvText
     });
     let result;
@@ -1253,16 +1193,12 @@ class SchoolHeatApp {
       throw new Error('The forecast upload Worker returned an invalid response.');
     }
     if (!response.ok) {
-      const retry = Number.isFinite(result.retryAfterSeconds)
-        ? ` Try again in about ${result.retryAfterSeconds} seconds.`
-        : '';
-      throw new Error(`${result.error || `Upload failed (HTTP ${response.status}).`}${retry}`);
+      throw new Error(result.error || `Upload failed (HTTP ${response.status}).`);
     }
 
     this.publishedForecastCache = null;
     this.forecastComparisonCache = null;
     this.scheduleDashboardForecastRender?.();
-    this.saveForecastUploadCode(accessCode);
     const rows = Number.isFinite(result.rows) ? `${result.rows} rows` : 'the new readings';
     setStatus(`Saved ${rows}. The 60-minute forecast is regenerating.`);
     return result;
@@ -1274,13 +1210,6 @@ class SchoolHeatApp {
       if (status) status.textContent = message;
     };
     try {
-      const accessCode = this.getForecastUploadCode();
-      if (!accessCode) {
-        setStatus('Enter the forecast access code once. After that, choosing a file updates both History and the forecast.');
-        this.toast('Enter the forecast access code before choosing a file.', 'error');
-        return;
-      }
-
       setStatus('Reading the file, saving History, and preparing the forecast…');
       const imported = await this.importReadingsFile(file, { silent: true });
       const sourceReadings = imported.duplicate
@@ -1294,7 +1223,7 @@ class SchoolHeatApp {
       }
 
       const csvText = this.buildForecastCsvFromReadings(sourceReadings);
-      const result = await this.publishForecastCsv(csvText, accessCode);
+      const result = await this.publishForecastCsv(csvText);
       const skipped = imported.skipped ? ` ${imported.skipped} invalid row(s) skipped.` : '';
       const rows = Number.isFinite(result.rows) ? `${result.rows} rows` : 'the saved readings';
       const historyNote = imported.duplicate

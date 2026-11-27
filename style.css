@@ -1261,39 +1261,6 @@ button { touch-action: manipulation; }
   flex-basis: 100%;
   font-size: 0.76rem;
 }
-.upload-code-label {
-  flex-basis: 100%;
-  color: var(--text-muted);
-  font-size: 0.76rem;
-}
-.upload-code-input {
-  flex: 0 1 220px;
-  min-width: 160px;
-  padding: 9px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: rgba(255,255,255,0.04);
-  color: var(--text-primary);
-  font: inherit;
-  font-size: 0.85rem;
-}
-.upload-code-input:focus {
-  outline: none;
-  border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-}
-.upload-remember {
-  flex-basis: 100%;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-muted);
-  font-size: 0.76rem;
-}
-.upload-remember input {
-  accent-color: var(--accent-blue);
-}
-
 .filter-bar {
   display: flex;
   gap: 8px;

@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
-import { corsHeaders, isAuthorizedUploader, normalizeForecastCsv, parseCsv } from "../src/index.js";
+import { corsHeaders, normalizeForecastCsv, parseCsv } from "../src/index.js";
+
+const workerSource = fs.readFileSync(path.join(import.meta.dirname, "..", "src", "index.js"), "utf8");
 
 const averagesCsv = [
   "Reading #,Location,Date,Time,Average Temperature (ï¿½C),Average Humidity (%),Average Heat Index (ï¿½C)",
@@ -50,16 +54,12 @@ test("rejects duplicate timestamps and invalid measurements", () => {
 test("only allows known app origins", () => {
   const headers = corsHeaders("https://johannejumamoy11-rgb.github.io");
   assert.equal(headers["Access-Control-Allow-Origin"], "https://johannejumamoy11-rgb.github.io");
-  assert.match(headers["Access-Control-Allow-Headers"], /X-Forecast-Upload-Code/);
+  assert.equal(headers["Access-Control-Allow-Headers"], "Content-Type");
   assert.equal(corsHeaders("https://example.com")["Access-Control-Allow-Origin"], undefined);
 });
 
-test("requires an allowlisted UID or the forecast access code", () => {
-  const request = code => new Request("https://example.test/", {
-    headers: code ? { "X-Forecast-Upload-Code": code } : {}
-  });
-  assert.equal(isAuthorizedUploader({}, "any-uid", request()), false);
-  assert.equal(isAuthorizedUploader({ FORECAST_UPLOADER_UIDS: "one, two" }, "two", request()), true);
-  assert.equal(isAuthorizedUploader({ FORECAST_UPLOAD_CODE: "secret-code" }, "any-uid", request("secret-code")), true);
-  assert.equal(isAuthorizedUploader({ FORECAST_UPLOAD_CODE: "secret-code" }, "any-uid", request("wrong")), false);
+test("does not require sign-in, an access code, or a rate limit", () => {
+  assert.doesNotMatch(workerSource, /verifyFirebaseTokens|isAuthorizedUploader|checkRateLimit/);
+  assert.doesNotMatch(workerSource, /FORECAST_UPLOAD_CODE|FORECAST_UPLOADER_UIDS|X-Forecast-Upload-Code/);
+  assert.doesNotMatch(workerSource, /X-Firebase-AppCheck|Idempotency-Key|ForecastUploadRateLimiter/);
 });

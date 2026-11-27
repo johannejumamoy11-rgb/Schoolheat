@@ -3,27 +3,20 @@ const ALLOWED_ORIGINS = [
   "https://schoolheat-final.web.app",
   "https://schoolheat-final.firebaseapp.com"
 ];
-const FIREBASE_PROJECT_ID = "schoolheat-final";
-const FIREBASE_PROJECT_NUMBER = "960776018094";
-const FIREBASE_APP_ID = "1:960776018094:web:2d61dc050347340c86f53f";
-const APP_CHECK_JWKS_URL = "https://firebaseappcheck.googleapis.com/v1/jwks";
-const AUTH_JWKS_URL = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
 const GITHUB_API = "https://api.github.com";
 const GITHUB_REPO = "johannejumamoy11-rgb/Schoolheat";
 const GITHUB_BRANCH = "main";
 const DATA_PATH = "data/schoolheat_readings.csv";
 const SOURCE_PATH = "data/schoolheat_forecast_source.json";
-const RATE_LIMIT_MS = 5 * 60 * 1000;
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
 const MAX_ROWS = 20000;
-const jwksCache = new Map();
 
 export function corsHeaders(origin) {
   const headers = { Vary: "Origin", "Cache-Control": "no-store" };
   if (ALLOWED_ORIGINS.includes(origin)) {
     headers["Access-Control-Allow-Origin"] = origin;
     headers["Access-Control-Allow-Methods"] = "POST, OPTIONS";
-    headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Idempotency-Key, X-Firebase-AppCheck, X-Forecast-Upload-Code";
+    headers["Access-Control-Allow-Headers"] = "Content-Type";
     headers["Access-Control-Max-Age"] = "600";
   }
   return headers;
@@ -37,92 +30,6 @@ function jsonResponse(origin, status, value) {
       "Content-Type": "application/json; charset=utf-8"
     }
   });
-}
-
-function decodeBase64Url(value) {
-  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = base64 + "=".repeat((4 - base64.length % 4) % 4);
-  return Uint8Array.from(atob(padded), character => character.charCodeAt(0));
-}
-
-async function getJwk(url, keyId) {
-  let cached = jwksCache.get(url);
-  if (!cached || cached.expiresAt <= Date.now() || !cached.keys.some(key => key.kid === keyId)) {
-    let response;
-    try {
-      response = await fetch(url);
-    } catch {
-      throw new Error("Firebase signing keys are temporarily unavailable.");
-    }
-    if (!response.ok) throw new Error("Firebase signing keys are temporarily unavailable.");
-    const data = await response.json();
-    if (!Array.isArray(data.keys)) throw new Error("Firebase signing keys were invalid.");
-    cached = { keys: data.keys, expiresAt: Date.now() + 6 * 60 * 60 * 1000 };
-    jwksCache.set(url, cached);
-  }
-  const key = cached.keys.find(candidate => candidate.kid === keyId);
-  if (!key) throw new Error("The Firebase token signing key was not found.");
-  return key;
-}
-
-async function verifyJwt(token, jwksUrl) {
-  if (typeof token !== "string" || token.length > 8192) {
-    throw new Error("The Firebase token is missing or invalid.");
-  }
-  const parts = token.split(".");
-  if (parts.length !== 3) throw new Error("The Firebase token is malformed.");
-  const header = JSON.parse(new TextDecoder().decode(decodeBase64Url(parts[0])));
-  const claims = JSON.parse(new TextDecoder().decode(decodeBase64Url(parts[1])));
-  if (header.alg !== "RS256" || header.typ !== "JWT" || typeof header.kid !== "string") {
-    throw new Error("The Firebase token header is invalid.");
-  }
-  const jwk = await getJwk(jwksUrl, header.kid);
-  const publicKey = await crypto.subtle.importKey(
-    "jwk",
-    jwk,
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["verify"]
-  );
-  const signatureIsValid = await crypto.subtle.verify(
-    "RSASSA-PKCS1-v1_5",
-    publicKey,
-    decodeBase64Url(parts[2]),
-    new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
-  );
-  if (!signatureIsValid) throw new Error("The Firebase token signature is invalid.");
-  const nowSeconds = Math.floor(Date.now() / 1000);
-  if (!Number.isFinite(claims.exp) || claims.exp <= nowSeconds ||
-      !Number.isFinite(claims.iat) || claims.iat > nowSeconds + 60 ||
-      (Number.isFinite(claims.nbf) && claims.nbf > nowSeconds + 60)) {
-    throw new Error("The Firebase token has expired or is not yet valid.");
-  }
-  return claims;
-}
-
-async function verifyFirebaseTokens(request) {
-  const authorization = request.headers.get("Authorization") || "";
-  const idToken = authorization.match(/^Bearer (.+)$/i)?.[1];
-  const appCheckToken = request.headers.get("X-Firebase-AppCheck");
-  if (!idToken || !appCheckToken) throw new Error("Firebase sign-in and App Check are required.");
-
-  const [authClaims, appCheckClaims] = await Promise.all([
-    verifyJwt(idToken, AUTH_JWKS_URL),
-    verifyJwt(appCheckToken, APP_CHECK_JWKS_URL)
-  ]);
-  if (authClaims.iss !== `https://securetoken.google.com/${FIREBASE_PROJECT_ID}` ||
-      authClaims.aud !== FIREBASE_PROJECT_ID ||
-      typeof authClaims.sub !== "string" || !authClaims.sub ||
-      !Number.isFinite(authClaims.auth_time) || authClaims.auth_time > Date.now() / 1000 + 60) {
-    throw new Error("Firebase sign-in is invalid.");
-  }
-  const appCheckAudience = Array.isArray(appCheckClaims.aud) ? appCheckClaims.aud : [appCheckClaims.aud];
-  if (appCheckClaims.iss !== `https://firebaseappcheck.googleapis.com/${FIREBASE_PROJECT_NUMBER}` ||
-      !appCheckAudience.includes(`projects/${FIREBASE_PROJECT_NUMBER}`) ||
-      appCheckClaims.sub !== FIREBASE_APP_ID) {
-    throw new Error("Firebase App Check is invalid.");
-  }
-  return authClaims.sub;
 }
 
 export function parseCsv(text) {
@@ -395,44 +302,6 @@ async function commitForecastData(env, normalized) {
   };
 }
 
-function limiterStub(env, uid) {
-  const binding = env.FORECAST_UPLOAD_RATE_LIMITER;
-  if (!binding || typeof uid !== "string") return null;
-  return binding.get(binding.idFromName(uid));
-}
-
-async function checkRateLimit(env, uid, requestId) {
-  const stub = limiterStub(env, uid);
-  if (!stub) return null;
-  const response = await stub.fetch(new Request("https://forecast-upload/", {
-    method: "POST",
-    body: JSON.stringify({ requestId })
-  }));
-  return response.json();
-}
-
-async function completeRateLimit(env, uid, requestId, response) {
-  const stub = limiterStub(env, uid);
-  if (!stub) return;
-  await stub.fetch(new Request("https://forecast-upload/", {
-    method: "POST",
-    body: JSON.stringify({ action: "complete", requestId, response: await response.clone().json() })
-  }));
-}
-
-export function isAuthorizedUploader(env, uid, request) {
-  const allowedUids = String(env.FORECAST_UPLOADER_UIDS || "")
-    .split(",")
-    .map(value => value.trim())
-    .filter(Boolean);
-  if (uid && allowedUids.includes(uid)) return true;
-
-  const expectedCode = env.FORECAST_UPLOAD_CODE?.trim();
-  if (!expectedCode) return false;
-  const providedCode = request.headers.get("X-Forecast-Upload-Code") || "";
-  return providedCode.length > 0 && providedCode.length <= 200 && providedCode === expectedCode;
-}
-
 async function handleUpload(request, env) {
   const origin = request.headers.get("Origin") || "";
   if (request.method === "OPTIONS") {
@@ -442,50 +311,28 @@ async function handleUpload(request, env) {
     return jsonResponse(origin, 405, { error: "Use POST to upload a forecast CSV." });
   }
 
-  let uid = null;
-  let requestId = "";
   try {
-    uid = await verifyFirebaseTokens(request);
-    if (!isAuthorizedUploader(env, uid, request)) {
-      throw new Error("This account is not allowed to refresh the published forecast.");
-    }
-    requestId = (request.headers.get("Idempotency-Key") || crypto.randomUUID()).slice(0, 120);
-    const decision = await checkRateLimit(env, uid, requestId);
-    if (decision?.cached) return jsonResponse(origin, decision.cached.status || 200, decision.cached.body);
-    if (decision && decision.allowed === false) {
-      return jsonResponse(origin, 429, {
-        error: "Please wait before uploading another forecast CSV.",
-        retryAfterSeconds: decision.retryAfterSeconds
-      });
-    }
     if (!env.GITHUB_TOKEN?.trim()) {
       throw new Error("Forecast upload is not configured on the Worker yet.");
     }
-
     const bytes = new Uint8Array(await request.arrayBuffer());
     if (bytes.byteLength > MAX_BODY_BYTES) {
       throw new Error("Choose a CSV smaller than 2 MB.");
     }
     const normalized = normalizeForecastCsv(new TextDecoder().decode(bytes));
     const result = await commitForecastData(env, normalized);
-    const response = jsonResponse(origin, 202, {
+    return jsonResponse(origin, 202, {
       ...result,
       message: "CSV saved. The 60-minute forecast is regenerating."
     });
-    await completeRateLimit(env, uid, requestId, response);
-    return response;
   } catch (error) {
     const message = error.message || "The forecast CSV could not be uploaded.";
-    const status = /sign-in|App Check|token/i.test(message)
-      ? 401
-      : /not allowed|access|configured on the Worker/i.test(message)
-        ? 403
-        : /CSV|column|row|date|timestamp|temperature|humidity|heat index|device|location|smaller/i.test(message)
-          ? 400
-          : 500;
-    const response = jsonResponse(origin, status, { error: message });
-    if (uid) await completeRateLimit(env, uid, requestId, response);
-    return response;
+    const status = /configured on the Worker/i.test(message)
+      ? 403
+      : /CSV|column|row|date|timestamp|temperature|humidity|heat index|device|location|smaller/i.test(message)
+        ? 400
+        : 500;
+    return jsonResponse(origin, status, { error: message });
   }
 }
 
@@ -494,44 +341,3 @@ export default {
     return handleUpload(request, env);
   }
 };
-
-export class ForecastUploadRateLimiter {
-  constructor(state) {
-    this.state = state;
-    this.pendingCheck = Promise.resolve();
-  }
-
-  async fetch(request) {
-    const body = await request.json();
-    const operation = this.pendingCheck.then(async () => {
-      if (body.action === "complete") {
-        const lastRequestId = await this.state.storage.get("lastRequestId");
-        if (lastRequestId === body.requestId) {
-          await this.state.storage.put("lastResponse", body.response);
-        }
-        return { completed: true };
-      }
-
-      const lastRequestId = await this.state.storage.get("lastRequestId");
-      const lastResponse = await this.state.storage.get("lastResponse");
-      if (lastRequestId === body.requestId && lastResponse) {
-        return { cached: lastResponse };
-      }
-
-      const now = Date.now();
-      const lastUploadAt = await this.state.storage.get("lastUploadAt");
-      if (Number.isFinite(lastUploadAt) && now - lastUploadAt < RATE_LIMIT_MS) {
-        return {
-          allowed: false,
-          retryAfterSeconds: Math.ceil((RATE_LIMIT_MS - (now - lastUploadAt)) / 1000)
-        };
-      }
-      await this.state.storage.put("lastUploadAt", now);
-      await this.state.storage.put("lastRequestId", body.requestId);
-      await this.state.storage.delete("lastResponse");
-      return { allowed: true };
-    });
-    this.pendingCheck = operation.then(() => undefined, () => undefined);
-    return Response.json(await operation);
-  }
-}

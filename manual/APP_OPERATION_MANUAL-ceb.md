@@ -202,11 +202,10 @@ limitasyon sa limang minuto ug mahimong mogamit og usa ka credit.
 - Ang **Choose data file (Pilia ang data file)** karon duha ang nahimo: nag-import
   og CSV o XLSX ngadto sa `sh_readings` niining browser, gihimo ang balidong
   mga rows ngadto sa six-column forecast CSV, ug gipadala kini sa upload Worker.
-  Isulod ang forecast access code kausa ug ibilin nga naka-check ang **Remember
-  code on this device**; ang sunod nga file awtomatikong mag-update sa History
-  ug sa na-publish nga forecast. Gikinahanglan ang Firebase sign-in, App Check,
-  ug usa ka upload matag account matag limang minuto. Ang GitHub token anaa
-  lamang sa upload Worker. Ang demo readings dili gayud i-upload.
+  Walay code o sign-in ang pangayoon; usa ka pagpili sa file awtomatikong
+  mag-update sa History ug sa na-publish nga forecast. Bisan kinsa nga may app
+  makapuli sa na-publish nga forecast. Ang GitHub token anaa lamang sa upload
+  Worker. Ang demo readings dili gayud i-upload.
 - Ang **Export CSV (I-export ang CSV)** naglakip og kolumn nga **Demo Data (Data
   sa Demo)**. Ang **Export JSON (I-export ang JSON)** nagtipig og
   `schoolheat_readings.json`.

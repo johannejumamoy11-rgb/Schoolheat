@@ -174,12 +174,11 @@ five-minute limit and may use one credit.
   forecast uses the separate CSV dataset and is not changed.
 - **Choose data file** now does both jobs: it imports a CSV or XLSX into this
   browser's `sh_readings`, converts the valid imported rows to the six-column
-  forecast CSV, and sends that CSV to the upload Worker. Enter the forecast
-  access code once and leave **Remember code on this device** checked; later
-  files update History and the published forecast automatically. Firebase
-  sign-in, App Check, and one upload per account every five minutes are
-  required. The GitHub token is stored only on the upload Worker. Demo
-  readings are never uploaded.
+  forecast CSV, and sends that CSV to the upload Worker. No code or sign-in is
+  asked; one file selection updates History and the published forecast
+  automatically. Anyone with the app can replace the published forecast. The
+  GitHub token is stored only on the upload Worker. Demo readings are never
+  uploaded.
 - **Export CSV** includes a **Demo Data** column. **Export JSON** saves
   `schoolheat_readings.json`.
 
